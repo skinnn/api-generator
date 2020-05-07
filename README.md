@@ -11,10 +11,10 @@
 		+ Node
 		+ Express
 		+ MongoDB
-	+ **REST API** - [Documentation](https://github.com/skinnn/e-commerce#Documentation)
+	+ **REST API** - [Documentation](#API-Documentation)
 	+ **Token based authentication** (JWT)
 	+ **Roles** (root, admin, user)
 	+ **Integrated payment systems** (Paypal, Stripe)
 	+ **Stripe customers**
 
-#Documentation
+#API Documentation
