@@ -11,10 +11,10 @@
 		+ Node
 		+ Express
 		+ MongoDB
-	+ **REST API** - [Documentation](#-api-documentation)
+	+ **REST API** - [Documentation](#documentation)
 	+ **Token based authentication** (JWT)
 	+ **Roles** (root, admin, user)
 	+ **Integrated payment systems** (Paypal, Stripe)
 	+ **Stripe customers**
 
-# API Documentation
+#Documentation
