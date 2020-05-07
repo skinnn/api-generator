@@ -17,4 +17,4 @@
 	+ **Integrated payment systems** (Paypal, Stripe)
 	+ **Stripe customers**
 
-#Documentation
+# Documentation
