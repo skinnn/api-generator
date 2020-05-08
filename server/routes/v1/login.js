@@ -1,12 +1,15 @@
 const express = require('express')
-const loginRouter = express.Router()
+const router = express.Router()
 const LoginController = require('../../controllers/v1/LoginController.js')
 
 /*
 	Base: /api/login
 */
+// Define resource name
+router.use((req, res, next) => { req.resource = 'login'; next() })
 
-// loginRouter.get('/', LoginController.getUser)
-loginRouter.post('/', LoginController.createLogin)
+router.get('/', (req, res) => res.render('login', { title: 'Login page' }))
+router.post('/', LoginController.createLogin)
+router.delete('/', LoginController.deleteLogin)
 
-module.exports = loginRouter
+module.exports = router

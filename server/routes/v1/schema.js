@@ -1,17 +1,30 @@
 const express = require('express')
-const schemaRouter = express.Router()
+const router = express.Router()
 const SchemaController = require('../../controllers/v1/SchemaController.js')
 
 const auth = require('../../middleware/authentication.js')
-
 /*
 	Base: /api/schema
 */
 
-// Authentication middleware
-// schemaRouter.use(auth.ensureAuthenticated)
+// Define resource name
+router.use((req, res, next) => { req.resource = 'schema'; next() })
+
+/**
+ * Unprotected routes
+ * ============================================================ */
 
 /* GET */
-schemaRouter.get('/:name', SchemaController.getSchemaByName)
+router.get('/:name', SchemaController.getSchemaByName)
 
-module.exports = schemaRouter
+
+/**
+ * Protected routes
+ * ============================================================ */
+
+// Authentication middleware
+router.use(auth.ensureAuthenticated)
+
+router.post('/', SchemaController.createSchema)
+
+module.exports = router

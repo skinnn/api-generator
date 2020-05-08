@@ -8,6 +8,7 @@ console.log(StripeController)
 /**
  *	Base: /api/transaction
  */
+router.use((req, res, next) => { req.resource = 'transaction'; next() })
 
 /**
  * Paypal

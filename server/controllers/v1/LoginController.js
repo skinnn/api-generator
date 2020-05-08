@@ -8,9 +8,10 @@ class LoginController extends Controller {
 
 	static async createLogin(req, res) {
 		try {
+			res.set('Accept', 'application/json')
 			const user = await UserModel.getUserByUsername(req.body.username)
 			if (!user) {
-				return res.status(404).json({
+				return res.status(400).json({
 					success: false,
 					message: 'The username or password specified is not valid'
 				})
@@ -34,7 +35,6 @@ class LoginController extends Controller {
 
 			return res.status(200).json({
 				success: true,
-				message: 'Logged in',
 				login: newLogin
 			})
 		} catch (err) {
@@ -42,8 +42,35 @@ class LoginController extends Controller {
 		}
 	}
 
+	// User logout
+	static async deleteLogin(req, res) {
+		try {
+			let token = req.headers['authorization'] || req.headers['x-access-token'] || ''
+			if (token.startsWith('Bearer')) token = token.split(' ')[1]
+			const removedLogin = await LoginModel.deleteLoginByToken(token)
+			
+			if (!removedLogin) {
+				return res.status(500).json({
+					success: false,
+					message: 'An error occurred.'
+				})
+			}
+	
+			return res.status(200).json({
+				success: true
+			})
+			
+		} catch (err) {
+			console.error(err)
+			return res.status(500).json({
+				success: false,
+				message: err
+			})
+		}
+	}
+
 	static async getLogins(req, res) {
-		// TODO: Only return all logins if admin/root is making a request
+		// TODO: Only return all logins if admin or root is making a request
 		const logins = await LoginModel.getLogins()
 
 		return res.status(200).json({

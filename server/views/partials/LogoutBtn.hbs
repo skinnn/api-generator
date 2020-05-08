@@ -1,0 +1,44 @@
+<div class="logout-btn">
+	<button onclick="doLogout()">Logout</button>
+</div>
+
+<script>
+	function createCookie(name, value, days) {
+		if (days) {
+			var date = new Date();
+			date.setTime(date.getTime()+(days*24*60*60*1000));
+			var expires = '; expires='+date.toGMTString();
+		}
+		else var expires = '';
+		document.cookie = name+'='+(value || '')+expires+'; path=/api';
+	}
+
+	function eraseCookie(name) {
+		createCookie(name, '', null);
+	}
+
+	function getCookie(name) {
+		const value = `; ${document.cookie}`;
+		const parts = value.split(`; ${name}=`);
+		if (parts.length === 2) return parts.pop().split(';').shift();
+	}
+	
+	function doLogout() {
+		const token = getCookie('token')
+		const data = { token }
+
+		fetch('/api/login', {
+			method: 'DELETE',
+			headers: {
+				'Authorization': `Bearer ${token}`
+			}
+		})
+			.then(res => res.json())
+			.then(res => {
+				if (res && res.success === true) {
+					eraseCookie('token')
+					return window.location.href = '/api/login'
+				}
+			})
+	}
+</script>

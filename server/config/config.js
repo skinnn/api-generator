@@ -11,7 +11,7 @@ const config = {
 	},
 
 	rootUser: {
-		username: env.rootUserNAME || 'admin',
+		username: env.ROOT_USERNAME || 'admin',
 		password: env.ROOT_PASSWORD || '123123',
 		email: 'admin@example.com'
 	},

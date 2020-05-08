@@ -6,6 +6,7 @@ const UserModel = require('../../models/User.js')
 class UserController {
 
 	static async createUser(req, res) {
+		res.set('Accept', 'application/json')
 		try {
 			const userExist = await UserModel.getUserByUsername(req.body.username)
 			if (userExist) {
@@ -129,6 +130,7 @@ class UserController {
 	}
 
 	static async updateUserById(req, res) {
+		res.set('Accept', 'application/json')
 		// TODO: Only root user can update itself
 		const fields = req.body.fields
 		const fieldsEmpty = helpers.emptyObject(fields)

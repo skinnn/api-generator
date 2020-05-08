@@ -1,0 +1,78 @@
+<div class="login-box">
+	<header>
+		<h2>API</h2>
+	</header>
+	<main>
+		<input type="text" id="u" placeholder="Username"><br>
+		<input type="password" id="p" placeholder="Password"><br>
+		<div class="remember-wrapper">
+			<input type="checkbox" id="remember">
+			<label for="remember">Remember me</label>
+		</div>
+		<button onclick="doLogin()">Login</button><br>
+	</main>
+</div>
+<div id="m" class="message"></div>
+
+<script>
+
+	function createCookie(name, value, days) {
+		if (days) {
+				var date = new Date()
+				date.setTime(date.getTime() + (days*24*60*60*1000))
+				var expires = " ;expires="+date.toGMTString()
+			}
+			else var expires = ""
+			document.cookie = name+"="+value+expires+"; path=/api"
+	}
+
+	function eraseCookie(name) {
+		createCookie(name, "", -1)
+	}
+
+	const loadRememberMe = () => {
+		// Remember me
+		let u = document.getElementById('u')
+		let checbox = document.getElementById('remember')
+		let remember = localStorage.getItem('rememberme')
+		if (remember) {
+			u.value = remember
+			checbox.checked = true
+		}
+	}
+
+	const rememberMeHandle = (username) => {
+		const remember = document.getElementById('remember').checked
+		if (remember) localStorage.setItem('rememberme', username)
+		else localStorage.setItem('rememberme', '')
+	}
+
+	function doLogin() {
+		const u = document.getElementById('u').value
+		const p = document.getElementById('p').value
+		const data = { username: u, password: p }
+
+		fetch('login', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(data)
+		})
+			.then(res => res.json())
+			.then(res => {
+				if (res && res.login && res.login.token) {
+					createCookie('token', res.login.token, 365)
+					rememberMeHandle(u)
+        	window.location.href = '/api/dashboard'
+					
+				} else {
+					// TODO: Print error message
+					console.log(res.message)
+					document.getElementById('m').textContent = res.message
+				}
+			})
+	}
+
+	loadRememberMe()
+</script>
