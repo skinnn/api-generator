@@ -1,6 +1,7 @@
 const Token = require('../lib/Token.js')
 const Login = require('../models/Login.js')
 const Access = require('../models/AccessSchema.js')
+const helpers = require('../lib/helpers.js')
 
 /**
  * Make sure that user sending the request is authenticated && authorized.
@@ -26,7 +27,6 @@ class Authentication {
 		
 			if(!token) {
 				return res.status(401).json({
-					success: false,
 					message: 'Token is not provided.'
 				})
 			}
@@ -39,22 +39,20 @@ class Authentication {
 	
 			if (!loginRecord) {
 				return res.status(401).json({
-					success: false,
-					message: 'Access denied. No login record found for this user.'
+					message: 'Access denied.'
 				})
 			}
 	
-			const user = loginRecord.user
+			// const user = loginRecord.user
+			// Set user to decoded user/data from the token
 			req.user = decoded
-			// console.log(req.user)
-			// req.decoded = decoded
 
 			// Check permissions
 			const havePermission = await this.checkPermissions(req, res)
 			if (havePermission) return next()
-		
+			else res.status(403).send({ message: 'Access denied.' })
+
 		} catch (err) {
-			console.error(err)
 			this.handleErrors(err)
 		}
 	}
@@ -62,31 +60,38 @@ class Authentication {
 	// Check privileges/permissions of user sending the request
 	static checkPermissions = async (req, res) => {
 		try {
-			// TODO: Roles access - (is user/admin/anon authorized to access the route & CRUD operation)
 			if (req.user) {
-				var allow = false
-				console.log('REQUESTED RESOURCE: ', req.resource)
+				var authorized = false
 				// const resource = req.originalUrl.split('/').pop().toLowerCase() || null
 				const resource = req.resource
 				const schema = resource ? await Access.getSchemaByName(resource) : null
 				if (schema) {
-					// TODO: When in roles is user he can only change the record if he
-					// is the owner
 					const operation = this.getCRUDFromRequest(req.method)
-					// TODO: If there is a possibility/need of having multiple roles
-					// in the roles array, handle that
-					const role = req.user.roles[0]
-					if (schema.access[operation].roles.includes(role)) allow = true
-					else allow = false
+					const roles = req.user.roles
+					console.log(`Requested operation ${operation.toUpperCase()} on protected resource: ${req.resource} `)
 
-				// If there is no schema for this resource
+					// If user has the right privilege
+					const hasRole = helpers.haveCommonElements(schema.access[operation].roles, roles)
+					if (hasRole) {
+						authorized = true
+						// TODO: If its not a root/admin, authorize the request only
+						// if he is the owner
+						// if (role !== 'root' && role !== 'admin') {
+						// 	const userIsOwner = this.isOwner(req.user, schema)
+						// 	if (schema.access[operation].owner && userIsOwner) authorized = true
+						// }
+
+					} else authorized = false
+
 				} else {
-					console.log(`There is no defined access schema for this resource: ${resource}`)
-					// throw new Error(`There is no defined access schema for this resource: ${resource}`)
+					// console.error(`There is no defined access schema for this resource: ${resource}`)
+					throw new Error(`There is no defined access schema for this resource: ${resource}`)
 				}
 				
-				if (allow) return true
-			}
+				if (authorized) return true
+				else return false
+				
+			} else res.status(400).send({ message: 'Invalid token.'})
 
 			// if(req.user) { 
 			// 	db.getPerms({ role_id: req.user.role_id, resource_id: req.resource.id })
@@ -122,9 +127,15 @@ class Authentication {
       case 'DELETE':
         return 'delete'
     }
-  }
+	}
+	
+	// TODO: Finish
+	static isOwner(user, resource) {
+
+	}
 
 	static handleErrors(err) {
+		console.error(err)
 		// JWT errors
 		if (err.name === 'JsonWebTokenError') {
 			if (err.message === 'jwt malformed') {
@@ -149,44 +160,16 @@ class Authentication {
 		}
 	}
 
-	// static isAdmin = (req, res, next) => {
-	// 	if (req.user.roles === 'admin') {
+	// static isAdmin = (req) => {
+	// 	if (req.user.roles.includes('admin')) {
 	// 		console.log(req.admin)
-	// 		return next()
+	// 		return true
 	// 	} else {
 	// 		console.log('Access denied, not Admin.')
-	// 		return res.status(403).json({
-	// 			success: false,
-	// 			message: 'You are not Admin.'
-	// 		})
+	// 		return false
 	// 	}
 	// }
 
-	// static isUser = (req, res, next) => {
-	// 	if (req.user.roles === 'user') {
-	// 		console.log(req.user)
-	// 		return next()
-	// 	} else {
-	// 		console.log('Access denied, not User.')
-	// 		return res.status(403).json({
-	// 			success: false,
-	// 			message: 'You are not User.'
-	// 		})
-	// 	}
-	// }
-
-	// static isRoot = (req, res, next) => {
-	// 	if (req.user.roles === 'root') {
-	// 		console.log(req.user)
-	// 		return next()
-	// 	} else {
-	// 		console.log('Access denied, not User.')
-	// 		return res.status(403).json({
-	// 			success: false,
-	// 			message: 'You are not User.'
-	// 		})
-	// 	}
-	// }
 }
 
 module.exports = Authentication

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const config = require('../../config/config.js')
 const UserController = require('./UserController.js')
-const defaultAccessSchemas = require('../../config/schemas/access.js')
+const defaultAccessSchemas = require('../../config/schemas/Access.js')
 const AccessSchema = require('../../models/AccessSchema.js')
 
 class Controller {

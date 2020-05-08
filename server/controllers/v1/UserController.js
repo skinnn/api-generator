@@ -131,9 +131,8 @@ class UserController {
 
 	static async updateUserById(req, res) {
 		res.set('Accept', 'application/json')
-		// TODO: Only root user can update itself
 		const fields = req.body.fields
-		const fieldsEmpty = helpers.emptyObject(fields)
+		const fieldsEmpty = helpers.isEmptyObject(fields)
 
 		if (!fields) {
 			return res.status(400).json({

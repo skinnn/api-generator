@@ -45,6 +45,14 @@ const AccessSchema = new MongooseSchema({
 				required: true
 			}
 		}
+	},
+	created: {
+		type: Date,
+		default: Date.now
+	},
+	updated: {
+		type: Date,
+		default: null
 	}
 })
 
@@ -62,7 +70,6 @@ module.exports.createSchema = (schema) => {
 module.exports.getSchemaByName = (name) => {
 	return new Promise((resolve, reject) => {
 		Access.findOne({ resource: name }, (err, doc) => {
-			console.log(doc)
 			if (err) reject(err)
 			resolve(doc)
 		})
@@ -78,59 +85,50 @@ module.exports.getSchemaByResource = (name) => {
 	})
 }
 
-module.exports.createMultiple = (schemas) => {
+module.exports.getSchemaById = (id) => {
 	return new Promise((resolve, reject) => {
-		Access.insertMany(schemas, (err, docs) => {
+		Access.findById(id, (err, doc) => {
 			if (err) reject(err)
-			resolve(docs)
+			resolve(doc)
 		})
 	})
 }
 
-// module.exports.getUsers = () => {
-// 	return new Promise((resolve, reject) => {
-// 		User.find({}, (err, docs) => {
-// 			if (err) reject(err)
-// 			resolve(docs)
-// 		})
-// 	})
-// }
+module.exports.updateSchemaById = async (id, fields) => {
+	// Initial fields
+	var fieldsToUpdate = {
+		resource: fields.resource,
+		updated: Date.now()
+	}
 
-// module.exports.getUserById = (id) => {
-// 	return new Promise((resolve, reject) => {
-// 		User.findById({ _id: id }, (err, doc) => {
-// 			if (err) reject(err)
-// 			resolve(doc)
-// 		})
-// 	})
-// }
+	// Handle access fields update
+	if (fields.access) {
+		for (const f in fields.access) {
+			// Roles field
+			let rolesProp = `access.${f}.roles`
+			let rolesVal = fields.access[f].roles
+			rolesVal ? fieldsToUpdate[rolesProp] = rolesVal : null
+			// Owner field
+			let ownerProp = `access.${f}.owner`
+			let ownerVal = fields.access[f].owner
+			if (ownerVal === true || ownerVal === false) {
+				fieldsToUpdate[ownerProp] = ownerVal
+			}
+		}
+	}
 
-// module.exports.getUserByUsername = (username) => {
-// 	return new Promise((resolve, reject) => {
-// 		User.findOne({ username: username }, (err, doc) => {
-// 			if (err) reject(err)
-// 			resolve(doc)
-// 		})
-// 	})
-// }
+	const data = {
+		$set: fieldsToUpdate
+	}
 
-// module.exports.updateUserById = (id, fields) => {
-// 	const options = { new: true }
-// 	fields.updated = Date.now()
-// 	return new Promise((resolve, reject) => {
-// 		User.findByIdAndUpdate(id, fields, options, (err, doc) => {
-// 			if (err) reject(err)
-// 			resolve(doc)
-// 		})
-// 	})
-// }
+	const options = {
+		new: true
+	}
 
-// module.exports.deleteUserById = (id) => {
-// 	return new Promise((resolve, reject) => {
-// 		// TODO: Dont allow deleting of root user
-// 		User.findByIdAndDelete({ id }, (err, doc) => {
-// 			if (err) reject(err)
-// 			resolve(doc)
-// 		})
-// 	})
-// }
+	return new Promise((resolve, reject) => {
+		Access.findByIdAndUpdate(id, data, options, (err, doc) => {
+			if (err) reject(err)
+			resolve(doc)
+		})
+	})
+}

@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const UserController = require('../../controllers/v1/UserController.js')
 
-const auth = require('../../middleware/authentication.js')
+const Auth = require('../../middleware/authentication.js')
 
 /**
  * Base: /api/user
@@ -17,7 +17,7 @@ router.use((req, res, next) => { req.resource = 'user'; next() })
 router.post('/', UserController.createUser)
 
 // Authentication middleware
-router.use(auth.ensureAuthenticated)
+router.use(Auth.ensureAuthenticated)
 
 /**
  * Protected routes

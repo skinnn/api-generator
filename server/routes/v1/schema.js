@@ -2,7 +2,7 @@ const express = require('express')
 const router = express.Router()
 const SchemaController = require('../../controllers/v1/SchemaController.js')
 
-const auth = require('../../middleware/authentication.js')
+const Auth = require('../../middleware/authentication.js')
 /*
 	Base: /api/schema
 */
@@ -23,8 +23,9 @@ router.get('/:name', SchemaController.getSchemaByName)
  * ============================================================ */
 
 // Authentication middleware
-router.use(auth.ensureAuthenticated)
+router.use(Auth.ensureAuthenticated)
 
 router.post('/', SchemaController.createSchema)
+router.patch('/:id', SchemaController.updateSchemaById)
 
 module.exports = router

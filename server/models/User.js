@@ -109,7 +109,6 @@ module.exports.createUser = (user) => {
 			// TODO: Send response from controller for this error
 		}
 		User.create(user, (err, doc) => {
-			console.log(user)
 			if (err) reject(err)
 			resolve(doc)
 		})
