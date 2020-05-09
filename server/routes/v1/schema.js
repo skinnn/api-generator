@@ -17,11 +17,9 @@ const Authentication = require('../../lib/Authentication.js')
 /* GET */
 router.get('/:name', SchemaController.getSchemaByName)
 
-
 /**
  * Protected routes
  * ============================================================ */
-
 // Authentication middleware
 router.use(Authentication.ensureAuthenticated)
 

@@ -17,12 +17,11 @@ const Authentication = require('../../lib/Authentication.js')
 /* POST */
 router.post('/', UserController.createUser)
 
-// Authentication middleware
-router.use(Authentication.ensureAuthenticated)
-
 /**
  * Protected routes
  * ============================================================ */
+// Authentication middleware
+router.use(Authentication.ensureAuthenticated)
 
 /* GET */
 router.get('/', UserController.getUsers)

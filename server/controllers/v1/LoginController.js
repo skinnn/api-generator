@@ -42,8 +42,9 @@ class LoginController extends Controller {
 	// User logout
 	static async deleteLogin(req, res) {
 		try {
-			let token = req.headers['authorization'] || req.headers['x-access-token'] || ''
-			if (token.startsWith('Bearer')) token = token.split(' ')[1]
+			// let token = req.headers['authorization'] || req.headers['x-access-token'] || ''
+			let token = req.user.token
+			// if (token.startsWith('Bearer')) token = token.split(' ')[1]
 			const removedLogin = await LoginModel.deleteLoginByToken(token)
 			
 			if (!removedLogin) {

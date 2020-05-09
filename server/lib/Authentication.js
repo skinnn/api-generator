@@ -7,37 +7,23 @@ const helpers = require('../lib/helpers.js')
 /**
  * Make sure that user sending the request is authenticated && authorized.
  * 
- * First check that there is a token in the headers.
- * Then check that token is a valid JSON Web Token.
- * Then check that there is a login record with that token.
- * Then check that user making the request has correct privileges (roles).
+ * 1. First check that there is a token in the headers.
+ * 2. Then check that token is a valid JSON Web Token.
+ * 3. Then check that there is a login record with that token.
+ * 4. Then check that user making the request has the correct permission (role).
  */
 
 class Authentication extends Controller {
 
 	static ensureAuthenticated = async (req, res, next) => {
 		try {
-			// Express headers are auto converted to lowercase
-			let token = req.headers['authorization'] || req.headers['cookie'] || req.headers['x-access-token'] || ''
-			if (token.startsWith('Bearer')) {
-				// Remove Bearer from string
-				token = token.split(' ')[1]
-			} else if (token.startsWith('token=')) {
-				token = token.split('token=')[1]
-			}
-		
-			if(!token) {
-				return res.status(401).json({
-					message: 'Token is not provided.'
-				})
-			}
+			const token = Token.getTokenFromHeaders(req.headers)
 			
 			// Validate JWT
 			const { validToken, decoded } = await Token.validateToken(token)
 		
 			// Check that there is a login record with this token
-			const loginRecord = await Login.findOne({ token: validToken })
-	
+			const loginRecord = await Login.getLoginByToken(validToken)
 			if (!loginRecord) {
 				return res.status(401).json({
 					message: 'Access denied.'
@@ -46,12 +32,13 @@ class Authentication extends Controller {
 	
 			// const user = loginRecord.user
 			// Set user to decoded user/data from the token
+			decoded.token = validToken
 			req.user = decoded || null
 
 			// Check permissions
 			if (req.user) {
-				const havePermission = await this.checkPermissions(req, res)
-				if (havePermission) return next()
+				const authorized = await this.ensureAuthorized(req, res)
+				if (authorized) return next()
 				else return res.status(403).json({ message: 'Access denied' })
 
 			} else return res.status(400).send({ message: 'Invalid token'})
@@ -61,7 +48,7 @@ class Authentication extends Controller {
 	}
 
 	// Check privileges/permissions of user sending the request
-	static checkPermissions = async (req, res) => {
+	static ensureAuthorized = async (req, res) => {
 		try {
 			var authorized = false
 			const resource = this.getResourceFromRequest(req)
@@ -69,7 +56,7 @@ class Authentication extends Controller {
 			if (schema) {
 				const operation = this.getCRUDFromRequest(req)
 				const roles = req.user.roles
-				console.log(`Requested operation ${operation.toUpperCase()} on protected resource: ${req.resource} `)
+				console.log(`Requested operation ${operation.toUpperCase()} on protected resource: ${resource} `)
 
 				// If user has the right privilege
 				const hasRole = helpers.haveCommonElements(schema.access[operation].roles, roles)
@@ -104,7 +91,7 @@ class Authentication extends Controller {
 	static getResourceFromRequest(req) {
 		const resource = req.baseUrl.split('/').pop().toLowerCase() || null
 		// req.resource = resource
-		if (!resource) throw new Error(`Resource for this route is not defined: ${req.baseUrl}`)
+		if (!resource) throw new Error(`Resource for this route is not defined: ${resource}`)
 		else return resource
 	}
 

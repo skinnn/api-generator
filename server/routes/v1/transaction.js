@@ -3,6 +3,7 @@ const router = express.Router()
 const PaypalController = require('../../controllers/v1/transactions/PaypalController.js')
 const PaypalInstance = new PaypalController()
 const StripeController = require('../../controllers/v1/transactions/StripeController.js')
+const Authentication = require('../../lib/Authentication.js')
 
 /**
  *	Base: /api/transaction
@@ -10,6 +11,15 @@ const StripeController = require('../../controllers/v1/transactions/StripeContro
 // // Define resource name
 // router.use((req, res, next) => { req.resource = 'transaction'; next() })
 
+/**
+ * Unprotected routes
+ * ============================================================ */
+
+/**
+ * Protected routes
+ * ============================================================ */
+// Authentication middleware
+router.use(Authentication.ensureAuthenticated)
 /**
  * Paypal
  */
