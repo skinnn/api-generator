@@ -14,9 +14,6 @@ router.get('/', (req, res) => {
 })
 router.use('/dashboard', require('./v1/dashboard/dashboard.js')) 
 
-
-
-
 router.use('/docs', require('./v1/docs.js'))
 router.use('/schema', require('./v1/schema.js'))
 

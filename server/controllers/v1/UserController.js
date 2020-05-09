@@ -40,49 +40,7 @@ class UserController {
 			// Save user in the db
 			const savedUser = await UserModel.createUser(user)
 
-			return res.status(201).json({
-				success: true,
-				message: 'User created',
-				user: savedUser
-			})
-		} catch (err) {
-			throw err
-		}
-	}
-
-	// Create root admin if it doesnt exist
-	static async createRootUser(user) {
-		try {
-			const rootExist = await UserModel.getUserByUsername(user.username)
-			
-			if (!rootExist) {
-				// If root's username changes in config.js,
-				// delete the previous root user
-				await UserModel.deleteOne({ roles: 'root' })
-
-				// Create Stripe customer for this root user
-				const customer = await stripe.customers.create({
-					name: user.name || null,
-					email: user.email || null,
-					address: user.address || null,
-					phone: user.phone || null,
-					description: 'Root user. Customer created while creating a root user account.'
-				})
-				user.stripeCustomer = customer.id
-				const hashedPassword = await UserModel.hashPassword(user.password) 
-				user.roles = ['root']
-				user.password = hashedPassword
-				// Save root user
-				const root = await new Promise((resolve, reject) => {
-					UserModel.create(user, (err, doc) => {
-						if (err) reject(err)
-						resolve(doc)
-					})
-				})
-
-				console.log(`Root user created: ${root.username}`)
-				console.log(`Customer for root created: ${customer}`)
-			}
+			return res.status(201).json(savedUser)
 		} catch (err) {
 			throw err
 		}
@@ -93,10 +51,7 @@ class UserController {
 			// TODO: Only return all users if admin/root is making a request
 			const users = await UserModel.getUsers()
 
-			return res.status(200).json({
-				success: true,
-				users: users
-			})
+			return res.status(200).json(users)
 		} catch (err) {
 			throw err
 		}
@@ -106,10 +61,7 @@ class UserController {
 		try {
 			const user = await UserModel.getUserById(req.params.id)
 
-			return res.status(200).json({
-				success: true,
-				user: user
-			})
+			return res.status(200).json(user)
 		} catch (err) {
 			throw err
 		}
@@ -119,11 +71,7 @@ class UserController {
 		try {
 			const user = await UserModel.deleteUserById(req.params.id)
 
-			return res.status(200).json({
-				success: true,
-				message: 'Updated user successfully',
-				user: user
-			})
+			return res.status(200).json(user)
 		} catch (err) {
 			throw err
 		}
@@ -131,7 +79,7 @@ class UserController {
 
 	static async updateUserById(req, res) {
 		res.set('Accept', 'application/json')
-		const fields = req.body.fields
+		const fields = req.body.replace
 		const fieldsEmpty = helpers.isEmptyObject(fields)
 
 		if (!fields) {
@@ -145,17 +93,19 @@ class UserController {
 				message: 'Fields are not specified.'
 			})
 		}
+		// Prevent users (non-admins) to update roles field
+		if (!req.user.roles.includes('admin') && !req.user.roles.includes('root')) {
+			delete fields.roles
+		}
 		try {
 			const user = await UserModel.updateUserById(req.params.id, fields)
-			console.log('updated user: ', user)
 
-			return res.status(200).json({
-				success: true,
-				message: 'Updated user successfully',
-				user: user
-			})
+			return res.status(200).json(user)
 		} catch (err) {
-			throw err
+			console.error(err)
+			return res.status(500).json({
+				message: err
+			})
 		}
 	}
 }

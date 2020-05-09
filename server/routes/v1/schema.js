@@ -2,13 +2,13 @@ const express = require('express')
 const router = express.Router()
 const SchemaController = require('../../controllers/v1/SchemaController.js')
 
-const Auth = require('../../middleware/authentication.js')
+const Authentication = require('../../lib/Authentication.js')
 /*
 	Base: /api/schema
 */
 
-// Define resource name
-router.use((req, res, next) => { req.resource = 'schema'; next() })
+// // Define resource name
+// router.use((req, res, next) => { req.resource = 'schema'; next() })
 
 /**
  * Unprotected routes
@@ -23,7 +23,7 @@ router.get('/:name', SchemaController.getSchemaByName)
  * ============================================================ */
 
 // Authentication middleware
-router.use(Auth.ensureAuthenticated)
+router.use(Authentication.ensureAuthenticated)
 
 router.post('/', SchemaController.createSchema)
 router.patch('/:id', SchemaController.updateSchemaById)

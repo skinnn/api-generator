@@ -95,36 +95,9 @@ module.exports.getSchemaById = (id) => {
 }
 
 module.exports.updateSchemaById = async (id, fields) => {
-	// Initial fields
-	var fieldsToUpdate = {
-		resource: fields.resource,
-		updated: Date.now()
-	}
-
-	// Handle access fields update
-	if (fields.access) {
-		for (const f in fields.access) {
-			// Roles field
-			let rolesProp = `access.${f}.roles`
-			let rolesVal = fields.access[f].roles
-			rolesVal ? fieldsToUpdate[rolesProp] = rolesVal : null
-			// Owner field
-			let ownerProp = `access.${f}.owner`
-			let ownerVal = fields.access[f].owner
-			if (ownerVal === true || ownerVal === false) {
-				fieldsToUpdate[ownerProp] = ownerVal
-			}
-		}
-	}
-
-	const data = {
-		$set: fieldsToUpdate
-	}
-
-	const options = {
-		new: true
-	}
-
+	fields.updated = Date.now()
+	const data = { $set: fields }
+	const options = { new: true }
 	return new Promise((resolve, reject) => {
 		Access.findByIdAndUpdate(id, data, options, (err, doc) => {
 			if (err) reject(err)

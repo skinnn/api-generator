@@ -143,10 +143,11 @@ module.exports.getUserByUsername = (username) => {
 }
 
 module.exports.updateUserById = (id, fields) => {
-	const options = { new: true }
 	fields.updated = Date.now()
+	const data = { $set: fields }
+	const options = { new: true }
 	return new Promise((resolve, reject) => {
-		User.findByIdAndUpdate(id, fields, options, (err, doc) => {
+		User.findByIdAndUpdate(id, data, options, (err, doc) => {
 			if (err) reject(err)
 			resolve(doc)
 		})

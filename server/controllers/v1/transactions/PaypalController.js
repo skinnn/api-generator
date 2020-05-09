@@ -27,7 +27,6 @@ class PaypalController extends Controller {
 			for (let i = 0; i < payment.links.length; i++) {
 				if (payment.links[i].rel === 'approval_url') {
 					return res.status(200).json({
-						success: true,
 						message: 'Redirect',
 						url: payment.links[i].href
 					})
@@ -66,7 +65,6 @@ class PaypalController extends Controller {
 			console.log(JSON.stringify(payment, null, 4))
 
 			return res.status(200).json({
-				success: true,
 				message: 'Payment success',
 				transaction: payment
 			})

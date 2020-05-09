@@ -13,7 +13,6 @@ class StripeController extends Controller {
 			console.log(paymentIntent)
 
 			res.status(200).json({
-				success: true,
 				message: 'Transaction success'
 			})
 		} catch (err) {

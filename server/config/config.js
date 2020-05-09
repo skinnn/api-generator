@@ -5,7 +5,10 @@ const config = {
 	mode: env.NODE_ENV || 'development',
 
 	db: {
+		user: env.DB_USER || 'ecommerce',
+		password: env.DB_PASSWORD || '123123',
 		// TODO: DB user info and create db user on app init
+		host: env.DB_HOST || 'localhost',
 		name: env.DB_NAME || 'ecommerce',
 		port: env.DB_PORT || '27017' // Default MongoDB port
 	},

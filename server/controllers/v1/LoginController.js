@@ -33,10 +33,7 @@ class LoginController extends Controller {
 			// Save login record in the db
 			const newLogin = await LoginModel.createLogin(data)
 
-			return res.status(200).json({
-				success: true,
-				login: newLogin
-			})
+			return res.status(200).json(newLogin)
 		} catch (err) {
 			throw err
 		}
@@ -73,10 +70,7 @@ class LoginController extends Controller {
 		// TODO: Only return all logins if admin or root is making a request
 		const logins = await LoginModel.getLogins()
 
-		return res.status(200).json({
-			success: true,
-			logins: logins
-		})
+		return res.status(200).json(logins)
 	}
 }
 

@@ -6,6 +6,9 @@ const AccessSchema = require('../../models/AccessSchema.js')
 const builtInAccessSchemas = require('../../config/schemas/Access.js')
 
 class SchemaController extends Controller {
+	constructor() {
+		super()
+	}
 
 	static async getSchemaByName(req, res) {
 		try {
@@ -31,8 +34,6 @@ class SchemaController extends Controller {
 			const b = req.body
 			// Save schema to db
 			const dbSchema = await AccessSchema.createSchema(b)
-			// Save schema to file
-			await SchemaController.writeSchemaToFile(b.resource, b.body)
 
 			return res.status(200).json(dbSchema)
 		} catch (err) {
@@ -45,7 +46,7 @@ class SchemaController extends Controller {
 
 	static async updateSchemaById(req, res) {
 		res.set('Accept', 'application/json')
-		const fields = req.body.fields
+		const fields = req.body.replace
 
 		if (!fields) {
 			return res.status(400).json({
@@ -60,56 +61,47 @@ class SchemaController extends Controller {
 				message: 'Fields are not specified.'
 			})
 		}
+
+		// // Initial fields
+		// var fieldsToUpdate = {
+		// 	resource: fields.resource
+		// }
+		// // Handle access fields update
+		// if (fields.access) {
+		// 	for (const f in fields.access) {
+		// 		// Roles field
+		// 		let rolesProp = `access.${f}.roles`
+		// 		let rolesVal = fields.access[f].roles
+		// 		rolesVal ? fieldsToUpdate[rolesProp] = rolesVal : null
+		// 		// Owner field
+		// 		let ownerProp = `access.${f}.owner`
+		// 		let ownerVal = fields.access[f].owner
+		// 		if (ownerVal === true || ownerVal === false) {
+		// 			fieldsToUpdate[ownerProp] = ownerVal
+		// 		}
+		// 	}
+		// }
 		try {
 			const schema = await AccessSchema.updateSchemaById(req.params.id, fields)
-			console.log('updated schema: ', schema)
 
-			return res.status(200).json({
-				success: true,
-				schema: schema
-			})
+			return res.status(200).json(schema)
 		} catch (err) {
 			throw err
 		}
 	}
 
+	// Get contents from schema file, add new schema and save file
 	static writeSchemaToFile(resource, schemaToSave) {
 		return new Promise((resolve, reject) => {
 			const schemaFile = path.join(__dirname, '../../config/schemas/Access.js')
 			builtInAccessSchemas[resource] = schemaToSave
-			const data = 'module.exports = ' + JSON.stringify(builtInAccessSchemas)
-
+			const data = 'module.exports = ' + JSON.stringify(builtInAccessSchemas, null, 2)
 			fs.writeFile(schemaFile, data, 'utf-8', (err) => {
 				if (err) reject(err)
-				else {
-					resolve(data)
-				}
+				resolve(data)
 			})
 		})
 	}
-
-	// static async getSchemaByName(req, res) {
-	// 	try {
-	// 		const filePath = path.join(__dirname, `../../config/schemas/${req.params.name}.json`)
-
-	// 		const file = fs.readFileSync(filePath)
-	// 		if (file) {
-	// 			let json = JSON.parse(file)
-	// 			let formatted = JSON.stringify(json, null, 2)
-				
-	// 			return res.status(200).send(`<pre>${formatted}<pre>`)
-	// 		}
-	// 	} catch (err) {
-	// 		if (err.code === 'ENOENT') {
-	// 			// console.error('File not found. ', err)
-	// 			return res.status(404).json({
-	// 				success: false,
-	// 				message: `Resource: ${req.params.name} is not found.`
-	// 			})
-	// 		}
-	// 		throw err
-	// 	}
-	// }
 }
 
 module.exports = SchemaController

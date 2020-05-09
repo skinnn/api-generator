@@ -1,3 +1,5 @@
+const moment = require('moment')
+
 /**
  * Checks if an object is empty (if obj has any properties)
  * @param 	{Object} 	obj	 [Object to be evaluated]
@@ -45,7 +47,21 @@ const strigifyProps = (obj, replacer, space) => {
 	return JSON.stringify(obj, replacer, space)
 }
 
+const logger = (req, res, next) => {
+	const time = moment().format('hh:mm:ss')
+	const log = [
+		`${req.protocol} `,
+		`${req.method} `,
+		`${req.path} `,
+		`- Time: ${time}`
+	]
+
+	console.log(log.join(''))
+	next()
+}
+
 module.exports = {
+	logger: logger,
 	isEmptyObject: isEmptyObject,
 	haveCommonElements: haveCommonElements,
 	strigifyProps: strigifyProps

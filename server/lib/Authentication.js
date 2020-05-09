@@ -1,3 +1,4 @@
+const Controller = require('../controllers/v1/Controller.js')
 const Token = require('../lib/Token.js')
 const Login = require('../models/Login.js')
 const Access = require('../models/AccessSchema.js')
@@ -12,7 +13,7 @@ const helpers = require('../lib/helpers.js')
  * Then check that user making the request has correct privileges (roles).
  */
 
-class Authentication {
+class Authentication extends Controller {
 
 	static ensureAuthenticated = async (req, res, next) => {
 		try {
@@ -45,13 +46,15 @@ class Authentication {
 	
 			// const user = loginRecord.user
 			// Set user to decoded user/data from the token
-			req.user = decoded
+			req.user = decoded || null
 
 			// Check permissions
-			const havePermission = await this.checkPermissions(req, res)
-			if (havePermission) return next()
-			else res.status(403).send({ message: 'Access denied.' })
+			if (req.user) {
+				const havePermission = await this.checkPermissions(req, res)
+				if (havePermission) return next()
+				else return res.status(403).json({ message: 'Access denied' })
 
+			} else return res.status(400).send({ message: 'Invalid token'})
 		} catch (err) {
 			this.handleErrors(err)
 		}
@@ -60,63 +63,53 @@ class Authentication {
 	// Check privileges/permissions of user sending the request
 	static checkPermissions = async (req, res) => {
 		try {
-			if (req.user) {
-				var authorized = false
-				// const resource = req.originalUrl.split('/').pop().toLowerCase() || null
-				const resource = req.resource
-				const schema = resource ? await Access.getSchemaByName(resource) : null
-				if (schema) {
-					const operation = this.getCRUDFromRequest(req.method)
-					const roles = req.user.roles
-					console.log(`Requested operation ${operation.toUpperCase()} on protected resource: ${req.resource} `)
+			var authorized = false
+			const resource = this.getResourceFromRequest(req)
+			const schema = resource ? await Access.getSchemaByName(resource) : null
+			if (schema) {
+				const operation = this.getCRUDFromRequest(req)
+				const roles = req.user.roles
+				console.log(`Requested operation ${operation.toUpperCase()} on protected resource: ${req.resource} `)
 
-					// If user has the right privilege
-					const hasRole = helpers.haveCommonElements(schema.access[operation].roles, roles)
-					if (hasRole) {
-						authorized = true
-						// TODO: If its not a root/admin, authorize the request only
-						// if he is the owner
-						// if (role !== 'root' && role !== 'admin') {
-						// 	const userIsOwner = this.isOwner(req.user, schema)
-						// 	if (schema.access[operation].owner && userIsOwner) authorized = true
-						// }
+				// If user has the right privilege
+				const hasRole = helpers.haveCommonElements(schema.access[operation].roles, roles)
+				if (hasRole) {
+					authorized = true
+					// TODO: If its not a root/admin, authorize the request only
+					// if he is the owner
+					// if (role !== 'root' && role !== 'admin') {
+					// 	const userIsOwner = this.isOwner(req.user, schema)
+					// 	if (schema.access[operation].owner && userIsOwner) authorized = true
+					// }
 
-					} else authorized = false
+				} else authorized = false
 
-				} else {
-					// console.error(`There is no defined access schema for this resource: ${resource}`)
-					throw new Error(`There is no defined access schema for this resource: ${resource}`)
-				}
+			} else {
+				res.status(500).json({
+					message: `There is no defined access schema for this resource: ${resource}`
+				})
+				let err = new Error(`There is no defined access schema for this resource: ${resource}`)
+				err.name = 'Access schema'
+				throw err
+			}
+			
+			if (authorized) return true
+			else return false
 				
-				if (authorized) return true
-				else return false
-				
-			} else res.status(400).send({ message: 'Invalid token.'})
-
-			// if(req.user) { 
-			// 	db.getPerms({ role_id: req.user.role_id, resource_id: req.resource.id })
-			// 			.then(function(perms) {
-			// 				var allow = false
-			// 				//you can do this mapping of methods to permissions before the db call and just get the specific permission you want. 
-			// 				perms.forEach(function(perm) {
-			// 						if (req.method == "POST" && perms.create) allow = true
-			// 						else if (req.method == "GET" && perms.read) allow = true
-			// 						else if (req.method == "PUT" && perms.write) allow = true
-			// 						else if (req.method == "DELETE" && perm.delete) allow = true
-		
-			// 				})
-			// 				if (allow) return next()
-			// 				else return res.status(403).send({ message: 'access denied' })
-			// 			})//handle your reject and catch here
-			// 	} else return res.status(400).send({ message: 'invalid token' })
-		
 		} catch (err) {
 			throw err
 		}
 	}
 
-	static getCRUDFromRequest(method) {
-    switch(method) {
+	static getResourceFromRequest(req) {
+		const resource = req.baseUrl.split('/').pop().toLowerCase() || null
+		// req.resource = resource
+		if (!resource) throw new Error(`Resource for this route is not defined: ${req.baseUrl}`)
+		else return resource
+	}
+
+	static getCRUDFromRequest(req) {
+    switch(req.method) {
       case 'GET':
         return 'read'
       case 'POST':

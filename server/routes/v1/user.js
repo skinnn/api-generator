@@ -2,12 +2,13 @@ const express = require('express')
 const router = express.Router()
 const UserController = require('../../controllers/v1/UserController.js')
 
-const Auth = require('../../middleware/authentication.js')
+const Authentication = require('../../lib/Authentication.js')
 
 /**
  * Base: /api/user
  */
-router.use((req, res, next) => { req.resource = 'user'; next() })
+// // Define resource name
+// router.use((req, res, next) => { req.resource = 'user'; next() })
 
 /**
  * Unprotected routes
@@ -17,7 +18,7 @@ router.use((req, res, next) => { req.resource = 'user'; next() })
 router.post('/', UserController.createUser)
 
 // Authentication middleware
-router.use(Auth.ensureAuthenticated)
+router.use(Authentication.ensureAuthenticated)
 
 /**
  * Protected routes

@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const Auth = require('../../../middleware/authentication.js')
+const Authentication = require('../../../lib/Authentication.js')
 const DashboardController = require('../../../controllers/v1/dashboard/DashboardController.js')
 
 /*
@@ -13,7 +13,7 @@ router.use((req, res, next) => { req.resource = 'dashboard'; next() })
  * ============================================================ */
 
 // Authentication middleware
-router.use(Auth.ensureAuthenticated)
+router.use(Authentication.ensureAuthenticated)
 
 /**
  * Protected routes

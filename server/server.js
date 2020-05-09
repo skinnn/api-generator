@@ -3,9 +3,8 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const config = require('./config/config.js')
 const exphbs = require('express-handlebars')
-const logger = require('./middleware/logger.js')
+const helpers = require('./lib/helpers.js')
 const Controller = require('./controllers/v1/Controller.js')
-const path = require('path')
 
 const app = express()
 
@@ -13,7 +12,7 @@ const app = express()
 app.use(cors({ origin: '*' }))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
-app.use(logger)
+app.use(helpers.logger)
 
 // Routes
 app.use('/api', require('./routes/index.js'))

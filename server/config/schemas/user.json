@@ -37,13 +37,17 @@
 			"title": "Email",
 			"type": "string"
 		},
-		"full_name": {
-			"title": "Full name",
+		"firstName": {
+			"title": "First name",
+			"type": "string"
+		},
+		"lastName": {
+			"title": "First name",
 			"type": "string"
 		},
 		"roles": {
 			"title": "Roles",
-			"description": "User roles",
+			"description": "User roles (root, admin, user, anon)",
 			"type": "array",
 			"default": ["anon"]
 		},
@@ -61,5 +65,5 @@
 		}
 	},
 	"type": "object",
-	"required": ["username", "password", "name"]
+	"required": ["username", "password"]
 }	
