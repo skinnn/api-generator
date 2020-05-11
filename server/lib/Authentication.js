@@ -18,6 +18,11 @@ class Authentication extends Controller {
 	static ensureAuthenticated = async (req, res, next) => {
 		try {
 			const token = Token.getTokenFromHeaders(req.headers)
+			if(!token) {
+				return res.status(401).json({
+					message: 'Token not provided'
+				})
+			}
 			
 			// Validate JWT
 			const { validToken, decoded } = await Token.validateToken(token)
@@ -43,7 +48,7 @@ class Authentication extends Controller {
 
 			} else return res.status(400).send({ message: 'Invalid token'})
 		} catch (err) {
-			this.handleErrors(err)
+			this.handleErrors(err, res)
 		}
 	}
 
@@ -62,8 +67,8 @@ class Authentication extends Controller {
 				const hasRole = helpers.haveCommonElements(schema.access[operation].roles, roles)
 				if (hasRole) {
 					authorized = true
-					// TODO: If its not a root/admin, authorize the request only
-					// if he is the owner
+					// TODO: If its neither root or admin, authorize the request only
+					// if he is the owner && owner flag is true
 					// if (role !== 'root' && role !== 'admin') {
 					// 	const userIsOwner = this.isOwner(req.user, schema)
 					// 	if (schema.access[operation].owner && userIsOwner) authorized = true
@@ -72,10 +77,11 @@ class Authentication extends Controller {
 				} else authorized = false
 
 			} else {
+				const msg = `There is no defined access schema for this resource: ${resource}`
 				res.status(500).json({
-					message: `There is no defined access schema for this resource: ${resource}`
+					message: msg
 				})
-				let err = new Error(`There is no defined access schema for this resource: ${resource}`)
+				let err = new Error(msg)
 				err.name = 'Access schema'
 				throw err
 			}
@@ -114,27 +120,27 @@ class Authentication extends Controller {
 
 	}
 
-	static handleErrors(err) {
+	static handleErrors(err, res) {
 		console.error(err)
 		// JWT errors
 		if (err.name === 'JsonWebTokenError') {
 			if (err.message === 'jwt malformed') {
 			return res.status(401).json({
 				success: false,
-				message: 'Token is not valid.'
+				message: 'Token is not valid'
 			})
 
 			}	else if (err.message === 'invalid signature') {
 				return res.status(401).json({
 					success: false,
-					message: 'Token is not valid.'
+					message: 'Token is not valid'
 				})
 			
 			// If nothing matches send generic 401
 			} else {
 				return res.status(401).json({
 					success: false,
-					message: 'Forbidden.'
+					message: 'Forbidden'
 				})
 			}
 		}

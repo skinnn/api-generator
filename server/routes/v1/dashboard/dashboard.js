@@ -6,7 +6,7 @@ const DashboardController = require('../../../controllers/v1/dashboard/Dashboard
 /*
 	Base: /api/dashboard
 */
-router.use((req, res, next) => { req.resource = 'dashboard'; next() })
+// router.use((req, res, next) => { req.resource = 'dashboard'; next() })
 
 /**
  * Unprotected routes

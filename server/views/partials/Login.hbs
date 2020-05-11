@@ -60,8 +60,8 @@
 		})
 			.then(res => res.json())
 			.then(res => {
-				if (res && res.login && res.login.token) {
-					createCookie('token', res.login.token, 365)
+				if (res && res.token) {
+					createCookie('token', res.token, 365)
 					rememberMeHandle(u)
         	window.location.href = '/api/dashboard'
 					

@@ -9,7 +9,9 @@ class Token {
 	static jwtSignUser(user) {
 		// Token expires in 1h
 		const ONE_HOUR = 60 * 60 * 24
-		return jwt.sign(user.toJSON(), config.auth.jwtSecret, {
+		// TODO: Remove sensitive data from encoding in the token
+		// leave: roles, username
+		return jwt.sign(user.toJSON(), secret, {
 			// expiresIn: ONE_HOUR
 		})
 	}
@@ -39,11 +41,6 @@ class Token {
 			token = token.split('token=')[1]
 		}
 	
-		if(!token) {
-			return res.status(401).json({
-				message: 'Token not provided'
-			})
-		}
 		return token
 	}
 }

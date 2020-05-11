@@ -18,6 +18,7 @@ class LoginController extends Controller {
 			}
 
 			const passwordsMatch = await UserModel.comparePassword(req.body.password, user.password)
+			console.log('passwordsMatch: ', passwordsMatch)
 			if (!passwordsMatch) {
 				return res.status(404).json({
 					success: false,
@@ -26,7 +27,7 @@ class LoginController extends Controller {
 			}
 
 			const data = {
-				userId: user.username,
+				userId: user._id,
 				password: user.password,
 				token: await Token.jwtSignUser(user)
 			}
@@ -42,7 +43,6 @@ class LoginController extends Controller {
 	// User logout
 	static async deleteLogin(req, res) {
 		try {
-			// let token = req.headers['authorization'] || req.headers['x-access-token'] || ''
 			let token = req.user.token
 			// if (token.startsWith('Bearer')) token = token.split(' ')[1]
 			const removedLogin = await LoginModel.deleteLoginByToken(token)

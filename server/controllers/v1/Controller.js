@@ -6,7 +6,7 @@ const AccessSchema = require('../../models/AccessSchema.js')
 
 class Controller {
 	constructor() {}
-	
+
 	// App initialization - Runs when server starts/restarts
 	static async init() {
 		try {
@@ -63,12 +63,12 @@ class Controller {
 	static async loadDefaultSchemas() {
 		try {
 			const defaultSchemas = defaultAccessSchemas
+			// Array of built-in schema names
 			let schemaNames = []
+			// Array of built-in schemas
 			let schemasArr = []
 			for (const p in defaultSchemas) {
-				// Create array of schema names
 				schemaNames.push(p)
-				// Crate array of schemas from object props
 				schemasArr.push(defaultSchemas[p])
 			}
 			
