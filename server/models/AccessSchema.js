@@ -1,7 +1,5 @@
 const mongoose = require('mongoose')
 const MongooseSchema = mongoose.Schema
-// Subschemas
-// const AccessSchema = require('./subschemas/Access.js')
 
 const AccessSchema = new MongooseSchema({
 	resource: {
@@ -9,18 +7,15 @@ const AccessSchema = new MongooseSchema({
 		required: true
 	},
 	access: {
-		type: Object,
 		create: {
-			type: Object,
 			roles: {
-				type: Array,
+				type: [String],
 				required: true
 			}
 		},
 		read: {
-			type: Object,
 			roles: {
-				type: Array,
+				type: [String],
 				required: true
 			},
 			owner: {
@@ -29,9 +24,8 @@ const AccessSchema = new MongooseSchema({
 			}
 		},
 		update: {
-			type: Object,
 			roles: {
-				type: Array,
+				type: [String],
 				required: true
 			},
 			owner: {
@@ -40,9 +34,8 @@ const AccessSchema = new MongooseSchema({
 			}
 		},
 		delete: {
-			type: Object,
 			roles: {
-				type: Array,
+				type: [String],
 				required: true
 			},
 			owner: {

@@ -59,7 +59,6 @@
 		const users = await fetch('/api/user')
 		.then(res => res.json())
 		.then(res => {
-			// users.map(user => `<li>${user.name}</li>`)
 			console.log(res)
 			return res
 		})
@@ -69,7 +68,7 @@
 					<tr>
 						<th>${user._id}</th>
 						<td>${user.roles}</td>
-						<td>${user.firstName ? user.firstName + ' ' + user.lastName : ''}</td>
+						<td>${user.firstName + ' ' + user.lastName}</td>
 						<td>${user.username}</td>
 						<td>${user.email}</td>
 						<td class="created">${user.created}</td>
