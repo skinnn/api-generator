@@ -9,13 +9,16 @@ const AccessSchema = new MongooseSchema({
 		required: true
 	},
 	access: {
+		type: Object,
 		create: {
+			type: Object,
 			roles: {
 				type: Array,
 				required: true
 			}
 		},
 		read: {
+			type: Object,
 			roles: {
 				type: Array,
 				required: true
@@ -26,6 +29,7 @@ const AccessSchema = new MongooseSchema({
 			}
 		},
 		update: {
+			type: Object,
 			roles: {
 				type: Array,
 				required: true
@@ -36,6 +40,7 @@ const AccessSchema = new MongooseSchema({
 			}
 		},
 		delete: {
+			type: Object,
 			roles: {
 				type: Array,
 				required: true

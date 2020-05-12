@@ -18,16 +18,11 @@ class Token {
 
 	static validateToken = (token) => {
 		return new Promise((resolve, reject) => {
+			jwt.verify(token, secret, (err, decoded) => {
+				if (err) reject(err)
 
-			if (token) {
-				jwt.verify(token, secret, (err, decoded) => {
-					if (err) reject(err)
-
-					resolve({ validToken: token, decoded })
-				})
-			}
-
-			throw new Error('Token is not provided.')
+				resolve({ validToken: token, decoded })
+			})
 		})
 	}
 

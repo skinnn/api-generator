@@ -41,12 +41,9 @@ class Authentication extends Controller {
 			req.user = decoded || null
 
 			// Check permissions
-			if (req.user) {
-				const authorized = await this.ensureAuthorized(req, res)
-				if (authorized) return next()
-				else return res.status(403).json({ message: 'Access denied' })
-
-			} else return res.status(400).send({ message: 'Invalid token'})
+			const authorized = await this.ensureAuthorized(req, res)
+			if (authorized) return next()
+			else return res.status(403).json({ message: 'Access denied' })
 		} catch (err) {
 			this.handleErrors(err, res)
 		}
@@ -54,9 +51,12 @@ class Authentication extends Controller {
 
 	// Check privileges/permissions of user sending the request
 	static ensureAuthorized = async (req, res) => {
+		if (!req.user) {
+			return false
+		}
+		var authorized = false
+		const resource = this.getResourceFromRequest(req)
 		try {
-			var authorized = false
-			const resource = this.getResourceFromRequest(req)
 			const schema = resource ? await Access.getSchemaByName(resource) : null
 			if (schema) {
 				const operation = this.getCRUDFromRequest(req)
@@ -93,6 +93,36 @@ class Authentication extends Controller {
 			throw err
 		}
 	}
+
+	// static async dashboardAuthentication(req, res, next) {
+	// 	const token = Token.getTokenFromHeaders(req.headers)
+	// 	if(!token) {
+	// 		return res.status(401).redirect('/api/login')
+	// 	}
+	// 	try {
+	// 		// Validate JWT
+	// 		const { validToken, decoded } = await Token.validateToken(token)
+
+	// 		// Check that there is a login record with this token
+	// 		const loginRecord = await Login.getLoginByToken(validToken)
+	// 		if (!loginRecord) {
+	// 			return res.status(403).json({
+	// 				message: 'Access denied'
+	// 			})
+	// 		}
+	
+	// 		// Set user to decoded user/data from the token
+	// 		decoded.token = validToken
+	// 		req.user = decoded || null
+
+	// 		// Check permissions
+	// 		const authorized = await this.ensureAuthorized(req, res)
+	// 		if (authorized) return next()
+	// 		else return res.status(403).json({ message: 'Access denied' })
+	// 	} catch (err) {
+	// 		throw err
+	// 	}
+	// }
 
 	static getResourceFromRequest(req) {
 		const resource = req.baseUrl.split('/').pop().toLowerCase() || null

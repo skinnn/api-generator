@@ -8,7 +8,8 @@ const ShippingSubschema = require('./subschemas/Shipping.js')
 const UserSchema = new MongooseSchema({
 	// Roles: root, admin, user, anon
 	roles: {
-		type: Array,
+		type: [String],
+		enum: ['root', 'admin', 'user', 'anon'],
 		default: ['anon']
 	},
 	username: {
