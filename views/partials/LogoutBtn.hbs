@@ -1,6 +1,12 @@
-<div class="logout-btn">
-	<button onclick="doLogout()">Logout</button>
-</div>
+<style>
+	.logout-btn {
+		background: transparent;
+		border: none;
+		color: inherit;
+	}
+</style>
+
+<button class="logout-btn" onclick="doLogout()">Logout</button>
 
 <script>
 	function createCookie(name, value, days) {
@@ -10,7 +16,7 @@
 			var expires = '; expires='+date.toGMTString();
 		}
 		else var expires = '';
-		document.cookie = name+'='+(value || '')+expires+'; path=/api';
+		document.cookie = name+'='+value+expires+'; path=/';
 	}
 
 	function eraseCookie(name) {
@@ -35,9 +41,10 @@
 		})
 			.then(res => res.json())
 			.then(res => {
+				console.log(res)
 				if (res && res.success === true) {
 					eraseCookie('token')
-					return window.location.href = '/api/login'
+					return window.location.href = '/login'
 				}
 			})
 	}

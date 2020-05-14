@@ -23,7 +23,7 @@
 				var expires = " ;expires="+date.toGMTString()
 			}
 			else var expires = ""
-			document.cookie = name+"="+value+expires+"; path=/api"
+			document.cookie = name+"="+value+expires+"; path=/"
 	}
 
 	function eraseCookie(name) {
@@ -51,7 +51,7 @@
 		const p = document.getElementById('p').value
 		const data = { username: u, password: p }
 
-		fetch('login', {
+		fetch('/api/login', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -60,10 +60,12 @@
 		})
 			.then(res => res.json())
 			.then(res => {
+				console.log(res)
 				if (res && res.token) {
 					createCookie('token', res.token, 365)
+					localStorage.setItem('user', res.userId)
 					rememberMeHandle(u)
-        	window.location.href = '/api/dashboard'
+        	window.location.href = '/dashboard'
 					
 				} else {
 					document.getElementById('message').textContent = res.message

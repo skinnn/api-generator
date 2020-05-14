@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const SchemaController = require('../../controllers/v1/SchemaController.js')
+const SchemaController = require('../../../controllers/v1/SchemaController.js')
 
-const Authentication = require('../../lib/Authentication.js')
+const Authentication = require('../../../lib/Authentication.js')
 /*
 	Base: /api/schema
 */

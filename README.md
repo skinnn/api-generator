@@ -1,31 +1,44 @@
-## E-Commerce template  
+## E-Commerce Platform 
 
-###### Template for creating a basic e-commerce store.
+E-Commerce backend & REST API with dashboard (API Administration panel) for accessing backend services via GUI.
 
-+ #### Frontend  
-	+ **Technologies**:
-		+ Vue.js
+## Installation
+1. Install [Node.js](https://nodejs.org/en/) and [MongoDB](https://www.mongodb.com/download)  
+2. Clone this repository  
+3. Install dependencies with `npm run install` from the **root** directory  
+4. Start
+	+ Development mode: `npm run dev`
+	+ Production mode: `npm start`
+	+ http://localhost:8090
 
-+ #### Backend  
-	+ **Technologies**:
-		+ Node
-		+ Express
-		+ MongoDB
-	+ **REST API** - [Documentation](#api-documentation)
-	+ **Token based authentication** (JWT)
-	+ **Roles** (root, admin, user)
-	+ **Integrated payment systems** (Paypal, Stripe)
-	+ **Stripe customers**
+## Description
+
++ **Technologies**: Node, Express, MongoDB, Vue.js
++ [REST API Documentation](#api-documentation)
++ **Token based authentication** (JWT)
++ **Roles & permissions** (root, admin, user, anon)
++ **Integrated payment systems** (Paypal, Stripe & Stripe customers)  
+
+##### Admin dashboard: http://localhost:8090
+##### REST API: http://localhost:8090/api
 
 # API Documentation
-##### Client: http://localhost:8080
-##### API: http://localhost:8090/api
+#### Routes:
+**Index**:
++ /login
++ /dashboard
 
-+ #### Endpoints:
+Base: **/api**  
++ /schema
++ /user
++ /login
++ /transaction
+
++ #### REST Endpoints:
 	+ #### **/user**
 		+	**POST**
-		Example: http://localhost:8090/api/user
-		```Content-Type: application/json```
+		URL: http://localhost:8090/api/user  
+		```Content-Type: application/json```  
 		Body:
 			```json
 			{
@@ -68,55 +81,57 @@
 				}
 			}
 			```
-		+	**GET** 
-		Example: http://localhost:8090/api/user
-		Example: http://localhost:8090/api/user/:id
-		+	**PATCH**
-		Example: http://localhost:8090/api/user/:id
-		```Content-Type: application/json```
+		+	**GET**   
+		URL: http://localhost:8090/api/user  
+		URL: http://localhost:8090/api/user/:id
+		+	**PATCH**  
+		URL: http://localhost:8090/api/user/:id  
+		```Content-Type: application/json```  
 		Body:
 			```json
-			"replace": {
-				"username": "skinnn",
-				"roles": ["user"],
-				"firstName": "John",
-				"lastName": "Doe",
-				"country": "Serbia",
-				"city": "Belgrade",
-				"postalCode": 11000,
-				"address": "Street address...",
-				"suiteNumber": 101,
-				"phone": "381654289534",
-				"description": "User description...",
-				"stripeCustomer": "cus_HEpHRrw71Gkjn8",
-				"password": "$2b$10$RqheOQv2O19zufH7AV2rk.kteCqXK7k5zvPYXt9ndKKHnCrI3//M6",
-				"email": "skinnn1@gmail.com",
+			{
+				"replace": {
+					"username": "skinnn",
+					"roles": ["user"],
+					"firstName": "John",
+					"lastName": "Doe",
+					"country": "Serbia",
+					"city": "Belgrade",
+					"postalCode": 11000,
+					"address": "Street address...",
+					"suiteNumber": 101,
+					"phone": "381654289534",
+					"description": "User description...",
+					"stripeCustomer": "cus_HEpHRrw71Gkjn8",
+					"password": "$2b$10$RqheOQv2O19zufH7AV2rk.kteCqXK7k5zvPYXt9ndKKHnCrI3//M6",
+					"email": "skinnn1@gmail.com",
+					
+					"billingInfo.firstName": "John2",
+					"billingInfo.lastName": "Doe",
+					"billingInfo.company": "Company 2",
+					"billingInfo.city": "Chicago",
+					"billingInfo.state": "Illinois",
+					"billingInfo.country": "USA",
+					"billingInfo.postalCode": 11000,
+					"billingInfo.address": "Some st. 123",
+					"billingInfo.suiteNumber": 123,
+					"billingInfo.phone": "+1231233123",
+					"billingInfo.email": "skinnn@URL.com",
 				
-				"billingInfo.firstName": "John2",
-				"billingInfo.lastName": "Doe",
-				"billingInfo.company": "Company 2",
-				"billingInfo.city": "Chicago",
-				"billingInfo.state": "Illinois",
-				"billingInfo.country": "USA",
-				"billingInfo.postalCode": 11000,
-				"billingInfo.address": "Some st. 123",
-				"billingInfo.suiteNumber": 123,
-				"billingInfo.phone": "+1231233123",
-				"billingInfo.email": "skinnn@example.com",
-			
-				"shippingInfo.firstName": "John2",
-				"shippingInfo.lastName": "Doe",
-				"shippingInfo.company": "Company 2",
-				"shippingInfo.city": "Chicago",
-				"shippingInfo.state": "Illinois",
-				"shippingInfo.country": "USA",
-				"shippingInfo.postalCode": 11000,
-				"shippingInfo.address": "Some st. 123",
-				"shippingInfo.suiteNumber": 123
+					"shippingInfo.firstName": "John2",
+					"shippingInfo.lastName": "Doe",
+					"shippingInfo.company": "Company 2",
+					"shippingInfo.city": "Chicago",
+					"shippingInfo.state": "Illinois",
+					"shippingInfo.country": "USA",
+					"shippingInfo.postalCode": 11000,
+					"shippingInfo.address": "Some st. 123",
+					"shippingInfo.suiteNumber": 123
+				}
 			}
 			```
 		+	**DELETE**
-		Example: http://localhost:8090/api/user/:id
+		URL: http://localhost:8090/api/user/:id
 
 	+ #### **/login**
 	

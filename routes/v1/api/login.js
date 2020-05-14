@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
-const LoginController = require('../../controllers/v1/LoginController.js')
-const Authentication = require('../../lib/Authentication.js')
+const LoginController = require('../../../controllers/v1/LoginController.js')
+const Authentication = require('../../../lib/Authentication.js')
 
 /*
 	Base: /api/login
@@ -12,7 +12,6 @@ const Authentication = require('../../lib/Authentication.js')
 /**
  * Unprotected routes
  * ============================================================ */
-router.get('/', (req, res) => res.render('login', { title: 'Login page' }))
 router.post('/', LoginController.createLogin)
 
 /**

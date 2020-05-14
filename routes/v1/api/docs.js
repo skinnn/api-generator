@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 const path = require('path')
-const DocsController = require('../../controllers/v1/DocsController.js')
-const Authentication = require('../../lib/Authentication.js')
+const DocsController = require('../../../controllers/v1/DocsController.js')
+const Authentication = require('../../../lib/Authentication.js')
 
 /*
 	Base: /api/docs

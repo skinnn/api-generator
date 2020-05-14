@@ -15,7 +15,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.use(helpers.logger)
 
 // Routes
-app.use('/api', require('./routes/index.js'))
+app.use('/', require('./routes/index.js'))
 
 // Template engine
 app.engine('hbs', exphbs({
@@ -30,5 +30,6 @@ app.listen(config.port, () => {
 	// App initialization
 	Controller.init()
 
-	console.log(`Server started on port ${config.port} - ${config.mode}`)
+	console.log(`Server started in ${config.mode} mode`)
+	console.log(`http://localhost:${config.port}`)
 })

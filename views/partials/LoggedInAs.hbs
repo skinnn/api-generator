@@ -1,0 +1,11 @@
+<span id="loggedInAs"></span>
+
+<script>
+	const id = localStorage.getItem('user') || null
+	fetch(`/api/user/${id}`)
+	.then(res => res.json())
+	.then(res => {
+		console.log('res: ', res)
+		document.getElementById('loggedInAs').innerText = res.username
+	})
+</script>
