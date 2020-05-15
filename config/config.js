@@ -20,7 +20,7 @@ const config = {
 	},
 
 	auth: {
-		jwtSecret: env.JWT_SECRET || '321@_+tcretster2@!-;sl-vdmas,fmvm@#3'
+		jwtSecret: env.JWT_SECRET || '321@_+tcretster2@!-;sl-vdmas,fmvm@#3321@_+tcretster2@!-;sl-vdmas,fmvm@#3321@_+tcretster2@!-;sl-vdmas,fmvm@#3'
 	},
 
 	paymentOptions: {

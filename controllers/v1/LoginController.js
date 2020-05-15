@@ -18,7 +18,6 @@ class LoginController extends Controller {
 			}
 
 			const passwordsMatch = await UserModel.comparePassword(req.body.password, user.password)
-			console.log('passwordsMatch: ', passwordsMatch)
 			if (!passwordsMatch) {
 				return res.status(404).json({
 					success: false,
@@ -68,7 +67,6 @@ class LoginController extends Controller {
 	}
 
 	static async getLogins(req, res) {
-		// TODO: Only return all logins if admin or root is making a request
 		const logins = await LoginModel.getLogins()
 
 		return res.status(200).json(logins)

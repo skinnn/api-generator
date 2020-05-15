@@ -1,3 +1,7 @@
+html {
+	scroll-behavior: smooth;
+}
+
 .index-page {
   font-size: .875rem;
 }
@@ -97,4 +101,59 @@
 .form-control-dark:focus {
   border-color: transparent;
   box-shadow: 0 0 0 3px rgba(255, 255, 255, .25);
+}
+
+/* 
+ * Table
+ */
+table {
+	display: block;
+	overflow-x: auto;
+	width: 100%;
+
+	border-collapse: unset;
+	border-spacing: 2px 10px;
+	
+ }
+
+table thead .updated,
+table thead .created {
+	min-width: 180px;
+}
+
+table td,
+table th {
+	font-size: 14px;
+	vertical-align: middle !important;
+}
+
+.table th,
+.table td {
+	min-width: 120px;
+	border-top: none;
+}
+
+.table td {
+	/* padding: 0px 15px; */
+}
+
+.table-hover tbody tr:hover {
+	cursor: pointer;
+	color: #212529;
+	background-color: rgba(0,0,0,.2);
+}
+
+table tbody .btn {
+	padding: 5px 10px;
+	font-size: 13px;
+	border: none;
+	border-radius: 5px;
+}
+table tbody .btn:nth-child(1) {
+	margin-right: 5px;
+}
+
+table tbody .created,
+table tbody .updated {
+	font-size: 12px;
 }

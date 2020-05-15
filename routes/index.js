@@ -1,6 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const path = require('path')
+const Authentication = require('../lib/Authentication.js')
 
 router.use('/', express.static(path.join(__dirname, '../public')))
 
@@ -9,7 +10,11 @@ router.use('/', express.static(path.join(__dirname, '../public')))
 */
 
 // API routes
-router.use('/api', require('./v1/api/index.js'))
+router.use('/api',
+	// Authentication middleware
+	Authentication.ensureAuthenticated,
+	require('./v1/api/index.js'))
+
 // Index routes
 router.use('/', require('./v1/indexRoutes.js'))
 

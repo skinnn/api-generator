@@ -19,6 +19,7 @@ class UserController {
 			const b = req.body
 			const fullName = b.firstName && b.lastName ? `${b.firstName.trim()} ${b.lastName.trim()}` : null
 			// Create Stripe customer
+			// TODO: Move to Stripe/other controller
 			const customer = await stripe.customers.create({
 				name: fullName,
 				email: b.email,

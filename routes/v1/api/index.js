@@ -8,13 +8,12 @@ router.use('/', express.static(path.join(__dirname, '../../../public')))
 	Base: /api
 */
 
-
 // Force login page if user is not authenticated as admin
 router.get('/', (req, res) => res.redirect('/api/login'))
 
+router.use('/dashboard', require('./dashboard.js'))
 router.use('/docs', require('./docs.js'))
 router.use('/schema', require('./schema.js'))
-
 router.use('/user', require('./user.js'))
 router.use('/login', require('./login.js'))
 router.use('/transaction', require('./transaction.js'))

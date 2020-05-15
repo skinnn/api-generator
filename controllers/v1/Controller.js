@@ -96,6 +96,7 @@ class Controller {
 				await UserModel.deleteOne({ roles: 'root' })
 
 				// Create Stripe customer for this root user
+				// TODO: Move to Strpe/other controller
 				const customer = await stripe.customers.create({
 					name: user.name || null,
 					email: user.email || null,

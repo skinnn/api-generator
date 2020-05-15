@@ -9,13 +9,24 @@ const Controller = require('./controllers/v1/Controller.js')
 const app = express()
 
 // Middleware
-app.use(cors({ origin: '*' }))
+app.use(cors({
+	origin: '*',
+	allowedHeaders: ['Content-Type', 'Authorization', 'Location', 'X-Total-Count'],
+	methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE']
+}))
+// Disable x-powered-by header for security
+app.disable('x-powered-by')
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
-app.use(helpers.logger)
+app.use(helpers.routeLogger)
 
 // Routes
 app.use('/', require('./routes/index.js'))
+// Error handler (always should be the last middleware)
+app.use((err, req, res, next) => {
+  console.log('ERR: ', err)
+  console.log('Stack: ', err.stack)
+})
 
 // Template engine
 app.engine('hbs', exphbs({

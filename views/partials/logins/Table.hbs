@@ -1,0 +1,60 @@
+{{!-- <style>
+	
+</style> --}}
+
+<div class="logins">
+	<div class="table-sm table-hover table-striped">
+		<table class="table">
+			<thead class="thead-dark">
+				<tr>
+					{{!-- TODO: Generate head from user properties --}}
+					<th scope="col">ID</th>
+					<th scope="col">User ID</th>
+					<th scope="col">Hash</th>
+					<th scope="col">Token</th>
+					<th scope="col" class="created">Created</th>
+					<th scope="col" class="updated">Updated</th>
+					<th scope="col" class="operation">Operation</th>
+				</tr>
+			</thead>
+			<tbody id="loginsTableBody"></tbody>
+		</table>
+	</div>
+</div>
+
+<script>
+	async function getLoginRecords() {
+		const loginRecords = await fetch('/api/login')
+		.then(res => res.json())
+		.then(res => {
+			console.log(res)
+			return res
+		})
+
+		const mappedLogins = loginRecords.map(rec => {
+				return `
+					<tr>
+						<th>${rec._id}</th>
+						<td>${rec.userId}</td>
+						<td>${rec.password}</td>
+						<td>${rec.token}</td>
+						<td class="created">${rec.created}</td>
+						<td class="updated">${rec.updated}</td>
+
+						<td>
+							<button type="button" class="btn btn-info" data-id="${rec._id}" onclick="editLogin()">Edit</button>
+							<button type="button" class="btn btn-danger" data-id="${rec._id}" onclick="deleteLogin()">Delete</button>
+						</td>
+					</tr>
+				`
+		}).join('')
+		document.getElementById('loginsTableBody').innerHTML = mappedLogins
+	}
+
+	function editUser() {
+		const id = event.target.getAttribute('data-id')
+		console.log('id: ', id)
+	}
+
+	getLoginRecords()
+</script>
