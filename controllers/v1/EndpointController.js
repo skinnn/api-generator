@@ -32,23 +32,34 @@ class EndpointController extends Controller {
 					message: `Endpoint already exist. Endpoint: ${endpoint.name}`
 				})
 			}
-			
+
+			// Delete unnecessary endpoint property keys
+			for (const prop in endpoint.properties) {
+				if (endpoint.properties.hasOwnProperty(prop)) {
+					// Delete unnecessary endpoint property data
+					delete endpoint.properties[prop].id
+					delete endpoint.properties[prop].name
+					delete endpoint.properties[prop].required
+					// Allow prop type only if prop format is string
+					if (!endpoint.properties[prop].format || endpoint.properties[prop].type !== 'string') delete endpoint.properties[prop].format
+					// TODO use relation and then delete it
+					delete endpoint.properties[prop].relation
+				}
+			}
+
 			const newEndpoint = {
 				name: endpoint.name,
 				_schema: endpoint
 			}
-			// TODO: Create and save endpoint model (e.g post) in the db so it can be loaded for
-			// the Default controller
 			// Save endpoint in db
 			const savedEndpoint = await Endpoint.createEndpoint(newEndpoint)
 			console.log('Created endpoint: ', savedEndpoint)
-			// TODO: Load new endpoint in express app
-			// Reload dynamic routes so new endpoint is added
-			Controller.loadDynamicRoutes()
+			// Reload dynamic routes so new endpoint is added, no need to await
+			Controller.loadDynamicEndpoints()
 
 			// TODO: Generate docs for created endpoint (DocsController)
 
-			return res.status(201).json(savedEndpoint)
+			return res.status(201).json({ success: true, record: savedEndpoint })
 		} catch (err) {
 			console.error(err)
 			return res.status(400).json({

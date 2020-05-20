@@ -1,6 +1,7 @@
 const path = require('path')
 const mongoose = require('mongoose')
-const config = require('../../config/config.js')
+// const config = require('../../config/config.js')
+const Ajv = require('ajv')
 const UserModel = require('../../models/User.js')
 const builtinEndpoints = require('../../config/schemas/Endpoints.js')
 const Endpoint = require('../../models/Endpoint.js')
@@ -13,12 +14,14 @@ var _instances = {}
 
 class Controller {
 	constructor(api) {
-		this.api = {}
+		this.api = api
+		this.ajv = new Ajv()
 	}
 
 	static boot(express, masterConfig) {
-		Controller.app = express
 		Controller.api = masterConfig	
+		Controller.api.app = express
+		Controller.ajv = new Ajv()
 		Controller.api.model = builtinEndpoints
 		// TODO: Create and load builtin models
 
@@ -38,9 +41,9 @@ class Controller {
 			// Connect to MongoDB
 			await Controller.connectDB()
 			// Save default schemas in the db
-			await Controller.loadDefaultEndpoints()
+			await Controller.loadStaticEndpoints()
 			// Load dynamic routes created from the GUI/endpoint builder
-			await Controller.loadDynamicRoutes()
+			await Controller.loadDynamicEndpoints()
 			// Create root user from the config
 			await Controller.createRootUser()
 			
@@ -85,24 +88,18 @@ class Controller {
 		}
 	}
 
-	static async loadDefaultEndpoints() {
+	static async loadStaticEndpoints() {
 		try {
 			const defaultEndpoints = builtinEndpoints
-			// Array of built-in endpoint names
-			let endpointNames = []
-			// Array of built-in endpoints
-			let endpointsArr = []
-			for (const p in defaultEndpoints) {
-				endpointNames.push(p)
-				endpointsArr.push(defaultEndpoints[p])
-			}
-			
-			for (let name of endpointNames) {
-				const endpoint = await Endpoint.getEndpointByName(name)
-				// If a default endpoint does not exist, create one
-				if (!endpoint) {
-					console.log(`Created default endpoint: ${name}`)
-					await Endpoint.createEndpoint(defaultEndpoints[name])
+
+			for (const endpointName in defaultEndpoints) {
+				if (defaultEndpoints.hasOwnProperty(endpointName)) {
+					const endpoint = await Endpoint.getEndpointByName(endpointName)
+					// If a default endpoint does not exist, create one
+					if (!endpoint) {
+						await Endpoint.createEndpoint(defaultEndpoints[endpointName])
+						console.log(`Created new static endpoint: ${endpointName}`)
+					}
 				}
 			}
 		} catch (err) {
@@ -110,15 +107,15 @@ class Controller {
 		}
 	}
 
-	static async loadDynamicRoutes() {
+	static async loadDynamicEndpoints() {
 		const router = require('../../routes/v1/api/index.js')
 		const endpoints = await Endpoint.getEndpoints()
 		const methods = ['get', 'post', 'patch', 'delete']
 		
 		endpoints.forEach(endpoint => {
 			const endpointName = endpoint.name[0].toUpperCase() + endpoint.name.slice(1)
-			// TODO: Default controllers loading (GET, POST, PATCH, DELETE)
-			// TODO: Option to add custom controller/middleware to dynamic routes - before || after generic controller
+			// Load models for dynamic endpoints
+			Controller.api.model[endpoint.name] = endpoint._schema
 
 			methods.forEach(method => {
 				router[method]('/' + endpoint.name, (req, res, next) => {
@@ -177,9 +174,54 @@ class Controller {
 		}
 	}
 
+	static validateSchema(modelName, record) {
+		console.log('modelName: ', modelName)
+		console.log('record: ', record)
+		if(!this.api.validators) this.api.validators = {}
+		// let schema = this.api.model[modelName]
+		let schema = {
+			access: {
+				create: { roles: [Array] },
+				read: { roles: [Array], owner: true },
+				update: { roles: [Array], owner: true },
+				delete: { roles: [Array], owner: true }
+			},
+			type: 'object',
+			required: [ 'categories' ],
+			_id: '5ec4882c02c87d2a84228251', // can be removed since its igored in schema validation
+			name: 'posts',
+			title: 'Post title',
+			description: 'Post description',
+			properties: {
+				categories: {
+					title: 'Post categories',
+					description: 'Array of post categories',
+					type: 'array',
+					// format: 'date-time', // should exist only if property type is string
+					// relation: [Object], // remove 
+					// required: true // remove 
+				}
+			}
+		}
+		// console.log('this.api.model: ', this.api.model)
+		// console.log('model schema: ', schema)
+		if(!this.api.validators[modelName]) {
+			this.api.validators[modelName] = this.ajv.compile(schema)
+		}
+		// var valid = this.api.validators[modelName]
+		// var validate = ajv.compile(schema)
+		var valid = this.api.validators[modelName](record)
+		if (!valid) {
+			console.log('validator: ', this.api.validators[modelName])
+			return false
+		}
+		console.log('validator errors: ', this.api.validators[modelName].errors)
+		return true
+	}
+
 	// Create root user if it doesnt exist
 	static async createRootUser() {
-		const user = config.rootUser
+		const user = Controller.api.rootUser
 		try {
 			const rootExist = await UserModel.getUserByUsername(user.username)
 			

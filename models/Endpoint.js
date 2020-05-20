@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const MongooseSchema = mongoose.Schema
+// const tst = require('../controllers/v1/Users.ctrl.js')
 
 const Schema = new MongooseSchema({
 	name: { type: String, required: true },
