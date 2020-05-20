@@ -1,7 +1,9 @@
+const http = require('http')
+const https = require('https')
 const express = require('express')
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const config = require('./config/config.js')
+const masterConfig = require('./config/config.js')
 const exphbs = require('express-handlebars')
 const helpers = require('./lib/helpers.js')
 const Controller = require('./controllers/v1/Controller.js')
@@ -22,11 +24,6 @@ app.use(helpers.routeLogger)
 
 // Routes
 app.use('/', require('./routes/index.js'))
-// Error handler (always should be the last middleware)
-app.use((err, req, res, next) => {
-  console.log('ERR: ', err)
-  console.log('Stack: ', err.stack)
-})
 
 // Template engine
 app.engine('hbs', exphbs({
@@ -37,10 +34,34 @@ app.engine('hbs', exphbs({
 }))
 app.set('view engine', 'hbs')
 
-app.listen(config.port, () => {
-	// App initialization
-	Controller.init()
-
-	console.log(`Server started in ${config.mode} mode`)
-	console.log(`http://localhost:${config.port}`)
+// Error handler (always should be the last middleware)
+app.use((err, req, res, next) => {
+  console.log('Error handler middleware: ', err)
+  console.log('Stack: ', err.stack)
 })
+
+
+// Boot the server with configuration
+Controller.boot(app, masterConfig).then(() => {
+
+	// Create http/https erver
+	if (Controller.api.protocol === 'https') {
+		Controller.api.server = https.createServer(app)
+	} else {
+		Controller.api.server = http.createServer(app)
+	}
+
+	// Spin up the server
+	Controller.api.server.listen(Controller.api.port)
+
+	console.log(`Running in ${Controller.api.mode} mode - http://localhost:${Controller.api.port}`)
+})
+.catch(err => Controller.logError(err))
+
+// app.listen(config.port, () => {
+// 	// App initialization
+// 	Controller.init()
+
+// 	console.log(`Server started in ${config.mode} mode`)
+// 	console.log(`http://localhost:${config.port}`)
+// })

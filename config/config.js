@@ -1,13 +1,15 @@
 const env = process.env
 
 const config = {
+	version: 'v1',
 	port: env.PORT || '8090',
+	host:'localhost',
 	mode: env.NODE_ENV || 'development',
+	protocol: 'http',
 
 	db: {
 		user: env.DB_USER || 'ecommerce',
 		password: env.DB_PASSWORD || '123123',
-		// TODO: DB user info and create db user on app init
 		host: env.DB_HOST || 'localhost',
 		name: env.DB_NAME || 'ecommerce',
 		port: env.DB_PORT || '27017' // Default MongoDB port

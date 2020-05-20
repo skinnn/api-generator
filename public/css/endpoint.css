@@ -1,0 +1,46 @@
+li.single-property {
+	max-width: 500px;
+	margin-left: 25px;
+	/* margin: 0 auto; */
+}
+
+li.single-property h5 {
+	padding: 5px 10px;
+	border-radius: 5px;
+	transition: background-color 500ms ease-in-out,
+							color 500ms ease-in-out;
+}
+li.single-property h5.duplicate-error {
+	color: #fff;
+	background-color: red;
+}
+
+form.endpoint-form input,
+form.endpoint-form select {
+	font-size: 14px;
+}
+
+form.endpoint-form .required {
+	color: red;
+}
+form.endpoint-form .optional {
+	font-size: 12px;
+	color: rgba(0, 0, 0, 0.4);
+}
+
+li.single-property select {
+	overflow: auto;
+}
+li.single-property select option {
+	font-size: 13px;
+}
+
+li.single-property .relation-group div {
+	/* margin-left: 15px; */
+}
+
+form.endpoint-form .create-endpoint-btn .feather {
+	position: relative;
+	bottom: 2px;
+	margin-right: 5px;
+}

@@ -88,7 +88,7 @@ body {
 	background-color: #333;
 }
 
-.login-box main .remember-wrapper {
+ber-wrapper {
 	margin-top: 10px;
 }
 .login-box main .remember-wrapper input[type='checkbox'] {
@@ -101,6 +101,7 @@ body {
 	font-weight:600;
 	height: 100%;
 	vertical-align: middle;
+	margin-bottom: 0;
 }
 
 .message {

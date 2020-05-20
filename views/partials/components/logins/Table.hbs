@@ -7,7 +7,7 @@
 		<table class="table">
 			<thead class="thead-dark">
 				<tr>
-					{{!-- TODO: Generate head from user properties --}}
+					{{!-- TODO: Generate table from user properties --}}
 					<th scope="col">ID</th>
 					<th scope="col">User ID</th>
 					<th scope="col">Hash</th>
@@ -37,7 +37,7 @@
 						<th>${rec._id}</th>
 						<td>${rec.userId}</td>
 						<td>${rec.password}</td>
-						<td>${rec.token}</td>
+						<td class="token">${rec.token}</td>
 						<td class="created">${rec.created}</td>
 						<td class="updated">${rec.updated}</td>
 

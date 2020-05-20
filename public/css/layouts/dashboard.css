@@ -1,9 +1,26 @@
+* {
+	margin: 0 0;
+	padding: 0 0;
+	box-sizing: border-box;
+}
+
 html {
 	scroll-behavior: smooth;
 }
+html, body {
+	width: 100%;
+	height: 100%;
+}
 
-.index-page {
+.dashboard-content {
   font-size: .875rem;
+}
+
+.dashboard-content,
+.dashboard-content .container-fluid,
+.dashboard-content .container-fluid .row {
+	width: 100%;
+	height: 100%;
 }
 
 .feather {
@@ -133,10 +150,6 @@ table th {
 	border-top: none;
 }
 
-.table td {
-	/* padding: 0px 15px; */
-}
-
 .table-hover tbody tr:hover {
 	cursor: pointer;
 	color: #212529;
@@ -154,6 +167,7 @@ table tbody .btn:nth-child(1) {
 }
 
 table tbody .created,
-table tbody .updated {
+table tbody .updated,
+table tbody .token {
 	font-size: 12px;
 }

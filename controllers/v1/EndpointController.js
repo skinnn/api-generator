@@ -2,17 +2,17 @@ const fs = require('fs')
 const path = require('path')
 const helpers= require('../../lib/helpers.js')
 const Controller = require('./Controller.js')
-const AccessSchema = require('../../models/AccessSchema.js')
-const builtInAccessSchemas = require('../../config/schemas/Access.js')
+const Endpoint = require('../../models/Endpoint.js')
+const builtInEndpoints = require('../../config/schemas/Endpoints.js')
 
-class SchemaController extends Controller {
+class EndpointController extends Controller {
 	constructor() {
 		super()
 	}
 
-	static async getSchemaByName(req, res) {
+	static async getEndpointByName(req, res) {
 		try {
-			let schema = await AccessSchema.getSchemaByName(req.params.name)
+			let schema = await Endpoint.getEndpointByName(req.params.name)
 			if (schema) return res.status(200).json(schema)
 			else res.status(404).json({ success: false, message: 'Schema with specified name is not found.' })
 		
@@ -21,21 +21,34 @@ class SchemaController extends Controller {
 		}
 	}
 
-	static async createSchema(req, res) {
+	static async createEndpoint(req, res) {
 		res.set('Accept', 'application/json')
-		const exists = await AccessSchema.getSchemaByName(req.body.resource)
-		if (exists) {
-			return res.status(400).json({
-				success: false,
-				message: 'Schema already exist'
-			})
-		}
+		const endpoint = req.body
 		try {
-			const b = req.body
-			// Save schema to db
-			const dbSchema = await AccessSchema.createSchema(b)
+			const exists = await Endpoint.getEndpointByName(endpoint.name)
+			if (exists) {
+				return res.status(400).json({
+					success: false,
+					message: `Endpoint already exist. Endpoint: ${endpoint.name}`
+				})
+			}
+			
+			const newEndpoint = {
+				name: endpoint.name,
+				_schema: endpoint
+			}
+			// TODO: Create and save endpoint model (e.g post) in the db so it can be loaded for
+			// the Default controller
+			// Save endpoint in db
+			const savedEndpoint = await Endpoint.createEndpoint(newEndpoint)
+			console.log('Created endpoint: ', savedEndpoint)
+			// TODO: Load new endpoint in express app
+			// Reload dynamic routes so new endpoint is added
+			Controller.loadDynamicRoutes()
 
-			return res.status(200).json(dbSchema)
+			// TODO: Generate docs for created endpoint (DocsController)
+
+			return res.status(201).json(savedEndpoint)
 		} catch (err) {
 			console.error(err)
 			return res.status(400).json({
@@ -44,7 +57,7 @@ class SchemaController extends Controller {
 		}
 	}
 
-	static async updateSchemaById(req, res) {
+	static async updateEndpointById(req, res) {
 		res.set('Accept', 'application/json')
 		const fields = req.body.replace
 
@@ -82,7 +95,7 @@ class SchemaController extends Controller {
 		// 	}
 		// }
 		try {
-			const schema = await AccessSchema.updateSchemaById(req.params.id, fields)
+			const schema = await Endpoints.updateEndpointById(req.params.id, fields)
 
 			return res.status(200).json(schema)
 		} catch (err) {
@@ -94,8 +107,8 @@ class SchemaController extends Controller {
 	static writeSchemaToFile(resource, schemaToSave) {
 		return new Promise((resolve, reject) => {
 			const schemaFile = path.join(__dirname, '../../config/schemas/Access.js')
-			builtInAccessSchemas[resource] = schemaToSave
-			const data = 'module.exports = ' + JSON.stringify(builtInAccessSchemas, null, 2)
+			builtInEndpointss[resource] = schemaToSave
+			const data = 'module.exports = ' + JSON.stringify(builtInEndpointss, null, 2)
 			fs.writeFile(schemaFile, data, 'utf-8', (err) => {
 				if (err) reject(err)
 				resolve(data)
@@ -104,4 +117,4 @@ class SchemaController extends Controller {
 	}
 }
 
-module.exports = SchemaController
+module.exports = EndpointController
