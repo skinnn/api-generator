@@ -2,14 +2,11 @@ const mongoose = require('mongoose')
 const MongooseSchema = mongoose.Schema
 
 const LoginSchema = new MongooseSchema({
+	// TODO: use __owner instead of userId??
   userId: {
     type: String,
     required: true
 	},
-	// username: {
-	// 	type: String,
-	// 	required: true
-	// },
 	password: {
 		type: String,
 		required: true

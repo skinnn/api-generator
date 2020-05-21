@@ -22,6 +22,12 @@ app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(helpers.routeLogger)
 
+// Used to handle req.body errors (e.g. if body has invalid json)
+app.use((err, req, res, next) => {
+	if(err.status === 400) return res.status(err.status).json({ message: 'Dude, you messed up the JSON' });
+	return next(err)
+})
+
 // Routes
 app.use('/', require('./routes/index.js'))
 
@@ -34,12 +40,11 @@ app.engine('hbs', exphbs({
 }))
 app.set('view engine', 'hbs')
 
-// Error handler (always should be the last middleware)
+// Error handler
 app.use((err, req, res, next) => {
-  console.log('Error handler middleware: ', err)
-  console.log('Stack: ', err.stack)
+	console.log('Error handler middleware: ', err)
+	return next()
 })
-
 
 // Boot the server with configuration
 Controller.boot(app, masterConfig).then(() => {

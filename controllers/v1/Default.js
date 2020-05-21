@@ -21,18 +21,32 @@ class DefaultController extends Controller {
  	}
 
 	/**
+		*	Default CREATE logic for dynamic endpoints for method POST, PATCH.
     * @param 	{Object} 		req 		The request object
     * @param 	{Object} 		res 		The response object
     * @param 	{function} 	next 		The callback to the next program handler
-    * @return {Object} 		res 		The response object
     */
 	async create(req, res, next) {
 		const db = Controller.api.db.connection
 		
 		if (!req.body) return res.status(400).json({ message: 'No data' })
 		try {
-			// TODO: Validate req.body against JSON Schema defined in this._model._schema
-			let validate = Controller.validateSchema(this._model.name, req.body)
+			// Validate req.body against JSON Schema defined in this._model._schema
+			let errors = Controller.validateToSchema(this._model.name, req.body)
+			if (errors) {
+				let errMsg = `Property ${errors[0].dataPath ? errors[0].dataPath+' ' :''}${errors[0].message}.`
+
+				if(errors[0].params) {
+					if (errors[0].params.additionalProperty) {
+						errMsg += ` Property .${errors[0].params.additionalProperty} is not allowed.`
+					}
+					if(errors[0].params.allowedValues) {
+						errMsg += ` Allowed values: ${errors[0].params.allowedValues.join(', ')}`
+					}
+				}
+
+				return Controller.api.errors.BadRequest(res, errMsg)
+			}
 
 			const response = await db.collection(this._model.name).insertOne(req.body)
 			const doc = response.ops[0]

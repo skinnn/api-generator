@@ -42,9 +42,9 @@
 						<td class="created">${user.created}</td>
 						<td class="updated">${user.updated}</td>
 
-						<td>
-							<button type="button" class="btn btn-info" data-id="${user._id}" onclick="editUser()">Edit</button>
-							<button type="button" class="btn btn-danger" data-id="${user._id}" onclick="deleteUser()">Delete</button>
+						<td class="operation">
+							<button type="button" class="btn btn-outline-info" data-id="${user._id}" onclick="editUser()">Edit</button>
+							<button type="button" class="btn btn-outline-danger" data-id="${user._id}" onclick="deleteUser()">Delete</button>
 						</td>
 					</tr>
 				`

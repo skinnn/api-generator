@@ -19,6 +19,6 @@ router.use('/dashboard', require('./dashboard.js'))
 router.use('/docs', require('./docs.js'))
 router.use('/user', require('./user.js'))
 router.use('/login', require('./login.js'))
-router.use('/transaction', require('./transaction.js'))
+// router.use('/transaction', require('./transaction.js'))
 
 module.exports = router

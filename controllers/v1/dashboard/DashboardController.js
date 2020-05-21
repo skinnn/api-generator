@@ -6,7 +6,7 @@ class DashboardController extends Controller {
 		return res.render('dashboard/index', {
 			layout: 'dashboard',
 			title: 'Dashboard',
-			active: { index: true }
+			page: { index: true }
 		})
 	}
 
@@ -14,15 +14,15 @@ class DashboardController extends Controller {
 		return res.render('dashboard/docs', {
 			layout: 'dashboard',
 			title: 'Documentation',
-			active: { docs: true }
+			page: { docs: true }
 		})
 	}
 
 	static getEndpointPage(req, res) {
 		return res.render('dashboard/endpoint', {
 			layout: 'dashboard',
-			title: 'Endpoint builder',
-			active: { endpoint: true }
+			title: 'Endpoints',
+			page: { endpoint: true }
 		})
 	}
 
@@ -30,7 +30,7 @@ class DashboardController extends Controller {
 		return res.render('dashboard/users', {
 			layout: 'dashboard',
 			title: 'Users',
-			active: { users: true }
+			page: { users: true }
 		})
 	}
 
@@ -38,7 +38,7 @@ class DashboardController extends Controller {
 		return res.render('dashboard/logins', {
 			layout: 'dashboard',
 			title: 'Logins',
-			active: { logins: true }
+			page: { logins: true }
 		})
 	}
 }

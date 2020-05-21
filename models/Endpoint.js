@@ -26,7 +26,7 @@ const Schema = new MongooseSchema({
 	properties: { type: Object, required: true },
 	type: { type: String, default: 'object' },
 	required: { type: [String] }
-})
+}, { _id : false })
 
 const EndpointSchema = new MongooseSchema({
 	name: {
@@ -41,6 +41,10 @@ const EndpointSchema = new MongooseSchema({
 	updated: {
 		type: Date,
 		default: null
+	},
+	__owner: {
+		type: String,
+		required: true
 	}
 })
 
@@ -89,6 +93,18 @@ module.exports.updateEndpointById = async (id, fields) => {
 	return new Promise((resolve, reject) => {
 		Endpoint.findByIdAndUpdate(id, data, options, (err, doc) => {
 			if (err) reject(err)
+			resolve(doc)
+		})
+	})
+}
+
+module.exports.deleteEndpointById = async (id) => {
+	// const options = { new: true }
+	return new Promise((resolve, reject) => {
+		console.log(typeof id)
+		Endpoint.findByIdAndDelete({_id: id }, /*options,*/ (err, doc) => {
+			if (err) reject(err)
+			console.log('doc: ', doc)
 			resolve(doc)
 		})
 	})

@@ -80,9 +80,12 @@ module.exports = {
 					"owner": true
 				}
 			},
-			"properties": {},
+			"properties": {
+				"username": { "title": "Username", "description": "Username used for logging in", "type": "string" },
+				"password": { "title": "Password", "description": "User password", "type": "string" }
+			},
 			"type": "object" ,
-			"required": []
+			"required": ["username", "password"]
 		}
 	},
 
@@ -109,38 +112,14 @@ module.exports = {
 					"owner": true
 				}
 			},
-			"properties": {},
-			"type": "object" ,
-			"required": []
-		}
-	},
-
-	transaction: {
-		"name": "transaction",
-		"_schema": {
-			"name": "transaction",
-			"title": "Transaction endpoint",
-			"description": "Endpoint for transaction resource",
-			"access": {
-				"create": {
-					"roles": ["root", "admin", "user"]
-				},
-				"read": {
-					"roles": ["root", "admin", "user"],
-					"owner": true
-				},
-				"update": {
-					"roles": ["root", "admin", "user"],
-					"owner": false
-				},
-				"delete": {
-					"roles": ["root", "admin", "user"],
-					"owner": false
-				}
+			"properties": {
+				"userId": { "title": "User id", "description": "User reference for this record", "type": "string" },
+				"password": { "title": "Password", "description": "Password hash", "type": "string" },
+				"token": { "title": "Token", "description": "Authorization token", "type": "string" }
 			},
-			"properties": {},
 			"type": "object" ,
-			"required": []
+			"required": ["userId", "password", "token"]
 		}
 	}
+	
 }

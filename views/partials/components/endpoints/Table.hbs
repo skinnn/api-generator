@@ -1,0 +1,73 @@
+<div class="users">
+	<div class="table-sm table-hover table-striped">
+		<table class="table">
+			<thead class="thead-dark">
+				<tr>
+					{{!-- TODO: Generate table from user properties --}}
+					<th scope="col">ID</th>
+					<th scope="col">Name</th>
+					<th scope="col" class="schema">Schema</th>
+					<th scope="col" class="created">Created</th>
+					<th scope="col" class="updated">Updated</th>
+					<th scope="col">Owner</th>
+					<th scope="col" class="operation">Operation</th>
+				</tr>
+			</thead>
+			<tbody id="endpointsTableBody"></tbody>
+		</table>
+	</div>
+</div>
+
+<script>
+	// Get and display endpoints
+	(async function() {
+		const users = await fetch('/api/endpoint')
+		.then(res => res.json())
+		.then(res => {
+			// console.log(res[0])
+			return res
+		})
+
+		const mappedEndpoints = users.map(endpoint => {
+				return `
+					<tr>
+						<th>${endpoint._id}</th>
+						<td>${endpoint.name}</td>
+						<td class="schema">${JSON.stringify(endpoint._schema)}</td>
+						<td class="created">${endpoint.created}</td>
+						<td class="updated">${endpoint.updated}</td>
+						<td>${endpoint.__owner}</td>
+
+						<td class="operation">
+							<button type="button" class="btn btn-outline-info" data-id="${endpoint._id}" onclick="editEndpoint()">Edit</button>
+							<button type="button" class="btn btn-outline-danger" data-id="${endpoint._id}" onclick="deleteEndpoint()">Delete</button>
+						</td>
+					</tr>
+				`
+		}).join('')
+		document.getElementById('endpointsTableBody').innerHTML = mappedEndpoints
+	})()
+
+	function editEndpoint() {
+		const id = event.target.getAttribute('data-id')
+		console.log('edit id: ', id)
+	}
+
+	async function deleteEndpoint() {
+		const id = event.target.getAttribute('data-id')
+		console.log('delete id: ', id)
+		
+		try {
+			fetch(`/api/endpoint/${id}`, {
+				method: 'DELETE'
+			})
+				.then(res => res.json())
+				.then(res => {
+					console.log('deleted red: ', res)
+				})
+		} catch (err) {
+			console.error(err)
+		}
+	}
+
+</script>

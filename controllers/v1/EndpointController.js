@@ -21,6 +21,11 @@ class EndpointController extends Controller {
 		}
 	}
 
+	static async getEndpoints(req, res) {
+		let endpoints = await Endpoint.getEndpoints()
+		return res.status(200).json(endpoints)
+	}
+
 	static async createEndpoint(req, res) {
 		res.set('Accept', 'application/json')
 		const endpoint = req.body
@@ -33,7 +38,6 @@ class EndpointController extends Controller {
 				})
 			}
 
-			// Delete unnecessary endpoint property keys
 			for (const prop in endpoint.properties) {
 				if (endpoint.properties.hasOwnProperty(prop)) {
 					// Delete unnecessary endpoint property data
@@ -49,11 +53,13 @@ class EndpointController extends Controller {
 
 			const newEndpoint = {
 				name: endpoint.name,
-				_schema: endpoint
+				_schema: endpoint,
+				__owner: req.user.id
 			}
-			// Save endpoint in db
+			// Save endpoint in the db
 			const savedEndpoint = await Endpoint.createEndpoint(newEndpoint)
 			console.log('Created endpoint: ', savedEndpoint)
+			// TODO: Potentially create helper for adding a single (new) endpoint to improve performance
 			// Reload dynamic routes so new endpoint is added, no need to await
 			Controller.loadDynamicEndpoints()
 
@@ -114,18 +120,51 @@ class EndpointController extends Controller {
 		}
 	}
 
-	// Get contents from schema file, add new schema and save file
-	static writeSchemaToFile(resource, schemaToSave) {
-		return new Promise((resolve, reject) => {
-			const schemaFile = path.join(__dirname, '../../config/schemas/Access.js')
-			builtInEndpointss[resource] = schemaToSave
-			const data = 'module.exports = ' + JSON.stringify(builtInEndpointss, null, 2)
-			fs.writeFile(schemaFile, data, 'utf-8', (err) => {
-				if (err) reject(err)
-				resolve(data)
-			})
-		})
+	static async deleteEndpointById(req, res) {
+		// TODO: Reload dynamic endpoints
+		// TODO: Delete default controller instance for deleted dynamic endpoint
+		// TODO: Get schema for dynamic endpoint, e.g posts
+		try {
+			var deletedEndpoint = await Endpoint.deleteEndpointById(req.params.id)
+			try {
+				// Remove collection
+				const isCollectionDeleted = await Controller.api.db.connection.dropCollection(`${deletedEndpoint.name}`)				
+			} catch (err) {
+				if (err.name === 'MongoError') {
+					if (err.message === 'ns not found' || err.errmsg === 'ns not found' || err.codeName === 'NamespaceNotFound') {
+						// console.log(`Collection: ${deletedEndpoint.name} - doesnt exist`)
+					}
+				} else {
+					throw err
+				}
+			}
+
+			// Reload dynamic routes
+			// Controller.loadDynamicEndpoints()
+			Controller.removeDynamicEndpoint(deletedEndpoint.name)
+			return res.status(200).json(deletedEndpoint)
+		} catch (err) {
+			throw err
+		}
+		// Recreate doc for development
+		// const d = JSON.parse(JSON.stringify(deletedEndpoint))
+		// delete deletedEndpoint._id
+		// delete deletedEndpoint.created
+		// await Endpoint.createEndpoint(d)
 	}
+
+	// Get contents from schema file, add new schema and save file
+	// static writeSchemaToFile(resource, schemaToSave) {
+	// 	return new Promise((resolve, reject) => {
+	// 		const schemaFile = path.join(__dirname, '../../config/schemas/Access.js')
+	// 		builtInEndpointss[resource] = schemaToSave
+	// 		const data = 'module.exports = ' + JSON.stringify(builtInEndpointss, null, 2)
+	// 		fs.writeFile(schemaFile, data, 'utf-8', (err) => {
+	// 			if (err) reject(err)
+	// 			resolve(data)
+	// 		})
+	// 	})
+	// }
 }
 
 module.exports = EndpointController

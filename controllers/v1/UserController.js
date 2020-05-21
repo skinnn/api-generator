@@ -3,6 +3,8 @@ const helpers = require ('../../lib/helpers.js')
 // Models
 const UserModel = require('../../models/User.js')
 
+// TODO: Allow altering of user schema & model, use JSON schema instead of mongoose schema
+
 class UserController {
 
 	static async createUser(req, res) {

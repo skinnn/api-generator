@@ -1,0 +1,475 @@
+{{!--
+	TODO: Add support for maxLength / minLength validation for property types: string, number, integer
+	If not specified, it should be 255 characters for strings and numbers
+--}}
+<div id="endpoint-builder" class="endpoint-builder">
+	<h3>Endpoint builder</h3>
+	<form onsubmit="onSubmit()" class="endpoint-form">
+		<div class="form-group">
+			<label for="name">Name</label>
+			<input type="text" class="form-control" id="endpoint-name">
+			<small class="form-text text-muted">Name of your endpoint, used in URL-s, e.g. <strong>posts</strong></small>
+		</div>
+		<div class="form-group">
+			<label for="title">Title</label>
+			<input type="text" class="form-control" id="endpoint-title">
+			<small class="form-text text-muted">Descriptive title for the endpoint, e.g. <strong>Post endpoint</strong></small>
+		</div>
+		<div class="form-group">
+			<label for="description">Description</label>
+			<textarea type="text" class="form-control" id="endpoint-description"></textarea>
+		</div>
+		<div class="form-group access-group">
+			<fieldset>
+				<h4>Access <span class="required">*</span></h4>
+				<small class="form-text text-muted">Define access to CRUD for user roles and record owner. Role <strong>root</strong> has access to all operations by default.</small>
+
+				<div class="form-group">
+					<label for="endpoint-access-create"><strong>Create:</strong></label>
+					<select id="endpoint-access-create" class="custom-select" multiple>
+
+					</select>
+				</div>
+
+				<div class="form-group">
+					<label for="endpoint-access-read"><strong>Read:</strong></label>
+					<select id="endpoint-access-read" class="custom-select" multiple>
+					</select>
+					<div class="form-check">
+						<input type="checkbox" checked class="form-check-input" id="endpoint-access-read-owner">
+						<label class="form-check-label" for="endpoint-access-read-owner">Owner only</label>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="endpoint-access-update"><strong>Update:</strong></label>
+					<select id="endpoint-access-update" class="custom-select" multiple>
+
+					</select>
+					<div class="form-check">
+						<input type="checkbox" checked class="form-check-input" id="endpoint-access-update-owner">
+						<label class="form-check-label" for="endpoint-access-read-owner">Owner only</label>
+					</div>
+				</div>
+
+				<div class="form-group">
+					<label for="endpoint-access-delete"><strong>Delete:</strong></label>
+					<select id="endpoint-access-delete" class="custom-select" multiple>
+					</select>
+					<div class="form-check">
+						<input type="checkbox" checked class="form-check-input" id="endpoint-access-delete-owner">
+						<label class="form-check-label" for="endpoint-access-read-owner">Owner only</label>
+					</div>
+				</div>
+			</fieldset>
+		</div>
+		<div class="form-group">
+			<h4>Properties:</h4>
+			<hr>
+			<ul id="properties">
+
+			</ul>
+			<button onclick="addNewPropField()" type="button" class="btn btn-primary">Add property</button>
+		</div>
+		<button type="submit" class="btn btn-success create-endpoint-btn">
+			<span data-feather="aperture"></span>
+			Create endpoint
+		</button>
+	</form>
+</div>
+
+<script>
+	// Listen for event when modal is closed
+	document.querySelector('#endpoint-builder').addEventListener('endpoint-modal:close', (e) => {
+		// Reset data
+		endpointInstance.reset()
+	}, false)
+</script>
+
+<script>
+	// Initial data for Endpoint
+	class Endpoint {
+		constructor() {
+			this.reset()
+		}
+
+		reset() {
+			this.name = 'posts'
+			this.title = 'Post endpoint'
+			this.description = 'Post description'
+			this.access = {
+				// Root has access to all operations & endpoints by default
+				create: { roles: ['root'] },
+				read: { roles: ['root'], owner: true },
+				update: { roles: ['root'], owner: true },
+				delete: { roles: ['root'], owner: true },
+			}
+			this.properties = [],
+			this.required = []
+			this.type = 'object'
+		}
+	}
+	
+	// Initial data for EndpointProperty
+	class EndpointProperty {
+		constructor(id) {
+			this.id = id
+			this.name = 'categories',
+			this.title = 'Post categories',
+			this.description = 'Array of post category IDs',
+			this.type = 'array',
+			this.format = '',
+			this.relation = {
+				endpoint: 'post',
+				many: true,
+				inversed: '__inverse_test'
+			},
+			this.required = true
+		}
+	}
+
+	const endpointName = document.querySelector('#endpoint-name')
+	const endpointTitle = document.querySelector('#endpoint-title')
+	const endpointDescription = document.querySelector('#endpoint-description')
+
+	const accessCreate = document.querySelector('#endpoint-access-create')
+	const accessRead = document.querySelector('#endpoint-access-read')
+	const accessReadOwner = document.querySelector('#endpoint-access-read-owner')
+	const accessUpdate = document.querySelector('#endpoint-access-update')
+	const accessUpdateOwner = document.querySelector('#endpoint-access-update-owner')
+	const accessDelete = document.querySelector('#endpoint-access-delete')
+	const accessDeleteOwner = document.querySelector('#endpoint-access-delete-owner')
+	
+	var endpointInstance = new Endpoint()
+	// Add roles to access options
+	addRolesToAccessOptions(accessCreate, accessRead, accessUpdate, accessDelete)
+	bindEndpointInstanceToInputs(endpointInstance)
+	const propertyList = document.querySelector('#properties')
+
+
+	// Bind Endpoint instance to input fields
+	function bindEndpointInstanceToInputs(instance) {
+		// Name
+		endpointName.value = instance.name
+		endpointName.addEventListener('input', (e) => { instance.name = e.target.value })
+		// Title
+		endpointTitle.value = instance.title
+		endpointTitle.addEventListener('input', (e) => { instance.title = e.target.value })
+		// Description
+		endpointDescription.value = instance.description
+		endpointDescription.addEventListener('input', (e) => { instance.description = e.target.value })
+		// Access
+		// Create
+		accessCreate.value = instance.access.create.roles
+		accessCreate.addEventListener('change', (e) => {
+			const selectedValues = getSelectedRolesInArray(e.target)
+			instance.access.create.roles = selectedValues
+			//console.log($('#endpoint-access-create').val())
+		})
+		// Read
+		accessRead.value = instance.access.read.roles
+		accessRead.addEventListener('change', (e) => {
+			const selectedValues = getSelectedRolesInArray(e.target)
+			instance.access.read.roles = selectedValues
+		})
+		instance.access.read.owner ? accessReadOwner.checked = true : accessReadOwner.checked = false
+		accessReadOwner.addEventListener('change', (e) => {
+			if (e.target.checked) instance.access.read.owner = true
+			else instance.access.read.owner = false
+		})
+		// Update
+		accessUpdate.value = instance.access.update.roles
+		accessUpdate.addEventListener('change', (e) => {
+			const selectedValues = getSelectedRolesInArray(e.target)
+			instance.access.update.roles = selectedValues
+		})
+		instance.access.update.owner ? accessUpdateOwner.checked = true : accessUpdateOwner.checked = false
+		accessUpdateOwner.addEventListener('change', (e) => {
+			if (e.target.checked) instance.access.update.owner = true
+			else instance.access.update.owner = false
+		})
+		// Delete
+		accessDelete.value = instance.access.delete.roles
+		accessDelete.addEventListener('change', (e) => {
+			const selectedValues = getSelectedRolesInArray(e.target)
+			instance.access.delete.roles = selectedValues
+		})
+		instance.access.delete.owner ? accessDeleteOwner.checked = true : accessDeleteOwner.checked = false
+		accessDeleteOwner.addEventListener('change', (e) => {
+			if (e.target.checked) instance.access.delete.owner = true
+			else instance.access.delete.owner = false
+		})
+	}
+
+	function addNewPropField() {
+		const propHTML = `
+			<h5 style="display: inline-block;"><span></span></h5>
+			<div class="form-group">
+				<label for="prop-name">Name <span class="required">*</span></label>
+				<input type="text" class="form-control" id="prop-name">
+				<small class="form-text text-muted">E.g: <strong>categories</strong></small>
+			</div>
+			<div class="form-group">
+				<label for="prop-title">Title</label>
+				<input type="text" class="form-control" id="prop-title">
+			</div>
+			<div class="form-group">
+				<label for="prop-description">Description</label>
+				<input type="text" class="form-control" id="prop-description">
+				<small class="form-text text-muted">E.g: Array of post category IDs</small>
+			</div>
+
+			<div class="form-group">
+				<label for="prop-type"><strong>Type</strong> <span class="required">*</span></label>
+				<select id="prop-type" class="custom-select">
+					<option value="string">string</option>
+					<option value="boolean">boolean</option>
+					<option value="integer">integer</option>
+					<option value="number">number</option>
+					<option value="object">object</option>
+					<option value="array">array</option>
+				</select>
+			</div>
+
+			<div class="form-group">
+				<label for="prop-format"><strong>Format</strong><span class="optional"> (optional)</span></label>
+				<select id="prop-format" class="custom-select">
+					<option selected value="">(none)</option>
+					<option value="date">date</option>
+					<option value="time">time</option>
+					<option value="date-time">date-time</option>
+					<option value="uri">uri</option>
+					<option value="uri-reference">uri-reference</option>
+					<option value="uri-template">uri-template</option>
+					<option value="url">url</option>
+					<option value="email">email</option>
+					<option value="hostname">hostname</option>
+					<option value="ipv4">ipv4</option>
+					<option value="ipv6">ipv6</option>
+					<option value="regex">regex</option>
+					<option value="uuid">uuid</option>
+					<option value="json-pointer">json-pointer</option>
+					<option value="relative-json-pointer">relative-json-pointer</option>
+					<option value="buffer">buffer</option>
+				</select>
+			</div>
+
+			<div class="form-group relation-group">
+				<fieldset>
+					<h6>Relation <span class="optional"> (optional)</span></h6>
+					<small class="form-text text-muted">Relations to other endpoints like one-to-many, many-to-many</small>
+
+					<div class="form-group">
+						<label for="prop-relation-endpoint">Link to endpoint</label>
+						<input type="text" class="form-control" id="prop-relation-endpoint" placeholder="Endpoint name">
+					</div>
+
+					<div class="form-group">
+						<p>Link to many</p>
+						<div class="form-check">
+							<input type="checkbox" id="prop-relation-many" class="form-check-input">
+							<label class="form-check-label" for="prop-relation-many">Many</label>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label for="prop-relation-endpoint">Inverse</label>
+						<input type="text" class="form-control" id="prop-relation-inverse" placeholder="Inverse field in the linked endpoint (optional)">
+					</div>
+				</fieldset>
+			</div>
+
+			<div class="form-group">
+				<p>Is this property required?</p>
+				<div class="form-check">
+					<input id="prop-required" type="checkbox" class="form-check-input">
+					<label for="prop-required" class="form-check-label">Required</label>
+				</div>
+			</div>
+		`
+		// Generate id for each property
+		let id = Array(4).fill(null).map(() => Math.random().toString(36).substr(2)).join('')
+
+		let li = document.createElement('li')
+		li.setAttribute('data-id', id)
+		li.classList = 'single-property'
+		li.innerHTML = propHTML
+		propertyList.appendChild(li)
+
+		// Add property object to the endpoint instance properties array
+		addPropertyToEndpointInstance(id)
+	}	
+
+	function addPropertyToEndpointInstance(id) {
+		let newProp = new EndpointProperty(id)
+		const li = document.querySelector(`li[data-id="${id}"]`)
+		// Bind form inputs to endpoint object properties
+		bindInputsToProps(li, newProp)
+		endpointInstance.properties.push(newProp)
+		// console.log('newProp added: ', endpointInstance)
+	}
+
+	function addRolesToAccessOptions() {
+		const options = [{text: 'admin', value: 'admin'}, {text: 'user', value: 'user'}, {text: 'anon', value: 'anon'}]
+		let arr = [accessCreate, accessRead, accessUpdate, accessDelete]
+
+		arr.forEach((crud) => {
+			options.forEach((option) => {
+				crud.options[crud.options.length] = new Option(option.text, option.value)
+			})
+		})
+	}
+
+	function bindInputsToProps(li, newProp) {
+		// Property heading
+		const heading = li.querySelector('h5 > span')
+		heading.innerText = newProp.name
+		// Name
+		let name = li.querySelector('#prop-name')
+		name.value = newProp.name
+		name.addEventListener('input', (e) => {
+			heading.innerText = e.target.value
+			newProp.name = e.target.value
+		})
+		// Title
+		let title = li.querySelector('#prop-title')
+		title.value = newProp.title
+		title.addEventListener('input', (e) => newProp.title = e.target.value)
+		// Description
+		let propDesc = li.querySelector('#prop-description')
+		propDesc.value = newProp.description
+		propDesc.addEventListener('input', (e) => newProp.description = e.target.value)
+		// Type
+		type = li.querySelector('#prop-type')
+		type.value = newProp.type
+		type.addEventListener('change', (e) => newProp.type = e.target.value)
+		// Format
+		let format = li.querySelector('#prop-format')
+		format.value = newProp.format
+		format.addEventListener('change', (e) => newProp.format = e.target.value)
+		/* Relations */
+		// Endpoint
+		let relationEndpoint = li.querySelector('#prop-relation-endpoint')
+		relationEndpoint.value = newProp.relation.endpoint
+		relationEndpoint.addEventListener('input', (e) => newProp.relation.endpoint = e.target.value)
+		// Many
+		let relationMany = li.querySelector('#prop-relation-many')
+		newProp.relation.many ? relationMany.checked = true : relationMany.checked = false
+		relationMany.addEventListener('change', (e) => {
+			if (e.target.checked) newProp.relation.many = true
+			else newProp.relation.many = false
+		})
+		// Inverse
+		let relationInversed = li.querySelector('#prop-relation-inverse')
+		relationInversed.value = newProp.relation.inversed
+		// Required
+		let required = li.querySelector('#prop-required')
+		newProp.required ? required.checked = true : required.checked = false
+	}
+
+	function getSelectedRolesInArray(target) {
+		let selectedValues = target.querySelectorAll('option:checked')
+		const arrayFromSelected = Array.from(selectedValues).map(el => el.value)
+		// Always add root user to the array
+		arrayFromSelected.push('root')
+		return arrayFromSelected
+	}
+
+	function createObjectFromPropsArray(arr) {
+		let propsObject = {}
+		let requiredProps = []
+		let error = null
+		arr.forEach((el) => {
+			// If prop already exist return error
+			if (propsObject[el.name]) {
+				propsObject = {}
+				error = { name: 'Duplicate property', message: `Property: ${el.name} already exists`, property: el }
+				return
+			} else {
+				// If property is required add it to the required array
+				if (el.required) requiredProps.push(el.name)
+				propsObject[el.name] = el
+			}
+		})
+		
+		return { propsObject, requiredProps, error }
+	}
+
+	function resetDOM(endpointInstance) {
+		// Reset property list
+		propertyList.innerHTML = ''
+		endpointName.value = endpointInstance.name
+		endpointTitle.value = endpointInstance.title
+		endpointDescription.value = endpointInstance.description
+		// Access
+		// Create
+		accessCreate.value = endpointInstance.access.create.roles
+		// Read
+		accessRead.value = endpointInstance.access.read.roles
+		accessReadOwner.checked = endpointInstance.access.read.owner ? true : false
+		// Update
+		accessUpdate.value = endpointInstance.access.update.roles
+		accessUpdateOwner.checked = endpointInstance.access.update.owner ? true : false
+		// Delete
+		accessDelete.value = endpointInstance.access.delete.roles
+		accessDeleteOwner.checked = endpointInstance.access.delete.owner ? true : false
+	}
+
+	function onSubmit() {
+		event.preventDefault()
+
+		if (endpointInstance.properties.length === 0) {
+			if (!confirm('Creating an endpoint without any properties? \nAre you sure?')) return
+		}
+
+		const { propsObject, requiredProps, error } = createObjectFromPropsArray(endpointInstance.properties)
+
+		if (error) {
+			if (error.name === 'Duplicate property') {
+				if(confirm(`Error: Duplicate property.\nWould you like to scroll to the duplicated property?`)) {
+				// Scroll to duplicate, apply some error css to the DOM..
+				const el = document.querySelector(`li[data-id="${error.property.id}"]`)
+				const heading = el.querySelector('h5')
+				heading.classList.add('duplicate-error')
+				setTimeout(() => {
+					heading.classList.remove('duplicate-error')
+				}, 1500)
+				heading.scrollIntoView({ block: 'center' })
+				return
+				// Do nothing
+				} else return
+			}
+		}
+
+		let data = {
+			name: endpointInstance.name,
+			title: endpointInstance.title,
+			description: endpointInstance.description,
+			access: endpointInstance.access,
+			properties: propsObject,
+			required: requiredProps,
+			type: endpointInstance.type
+		}
+
+		// TODO: Validation
+		
+		fetch('/api/endpoint', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(data)
+		})
+			.then(res => res.json())
+			.then(res => {
+				// TODO: Show success message
+				if (res.success) {
+					// Reset Endpoint instance
+					endpointInstance.reset()
+					// Reset DOM
+					resetDOM(endpointInstance)
+
+				} else {
+					console.error(res)
+				}
+			})
+	}
+</script>

@@ -31,7 +31,8 @@
 	
 	function doLogout() {
 		const token = getCookie('token')
-		const data = { token }
+		// const data = { token }
+		eraseCookie('token')
 
 		fetch('/api/login', {
 			method: 'DELETE',
@@ -41,10 +42,10 @@
 		})
 			.then(res => res.json())
 			.then(res => {
-				console.log(res)
 				if (res && res.success === true) {
-					eraseCookie('token')
 					return window.location.href = '/login'
+				} else {
+					console.error(err)
 				}
 			})
 	}

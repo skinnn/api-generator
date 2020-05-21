@@ -8,10 +8,10 @@ const config = {
 	protocol: 'http',
 
 	db: {
-		user: env.DB_USER || 'ecommerce',
+		user: env.DB_USER || 'apigenerator_user',
 		password: env.DB_PASSWORD || '123123',
 		host: env.DB_HOST || 'localhost',
-		name: env.DB_NAME || 'ecommerce',
+		name: env.DB_NAME || 'apigenerator',
 		port: env.DB_PORT || '27017' // Default MongoDB port
 	},
 

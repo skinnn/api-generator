@@ -8,7 +8,7 @@ class DocsController extends Controller {
 	// }
 
 	static getIndex(req, res) {
-		res.render('docs', { title: 'Documentation' })
+		res.render('dashboard/docs', { title: 'Documentation' })
 	}
 }
 

@@ -41,9 +41,9 @@
 						<td class="created">${rec.created}</td>
 						<td class="updated">${rec.updated}</td>
 
-						<td>
-							<button type="button" class="btn btn-info" data-id="${rec._id}" onclick="editLogin()">Edit</button>
-							<button type="button" class="btn btn-danger" data-id="${rec._id}" onclick="deleteLogin()">Delete</button>
+						<td class="operation">
+							<button type="button" class="btn btn-outline-info" data-id="${rec._id}" onclick="editLogin()">Edit</button>
+							<button type="button" class="btn btn-outline-danger" data-id="${rec._id}" onclick="deleteLogin()">Delete</button>
 						</td>
 					</tr>
 				`

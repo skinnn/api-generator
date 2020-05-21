@@ -22,8 +22,9 @@ class Controller {
 		Controller.api = masterConfig	
 		Controller.api.app = express
 		Controller.ajv = new Ajv()
+
 		Controller.api.model = builtinEndpoints
-		// TODO: Create and load builtin models
+		Controller.api.bootModel = builtinEndpoints
 
 		// TODO: Create store and connect here
 		return new Promise(async (resolve, reject) => {
@@ -40,7 +41,7 @@ class Controller {
 		try {
 			// Connect to MongoDB
 			await Controller.connectDB()
-			// Save default schemas in the db
+			// Load default schemas in the db
 			await Controller.loadStaticEndpoints()
 			// Load dynamic routes created from the GUI/endpoint builder
 			await Controller.loadDynamicEndpoints()
@@ -49,7 +50,7 @@ class Controller {
 			
 			console.log('Init complete')
 		} catch (err) {
-			throw err
+			Controller.logError(err)
 		}
 	}
 
@@ -69,20 +70,19 @@ class Controller {
 		})
 		try {
 			const db = Controller.api.db
-			const url = `mongodb://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}`
-			const options = {
-				useNewUrlParser: true,
-				useUnifiedTopology: true,
-				useFindAndModify: false,
-				authSource: db.name
+			var url = `mongodb://${db.host}:${db.port}/${db.name}`
+			var options = { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
+			
+			if (process.env.NODE_ENV === 'production' ) {
+				url = `mongodb://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}`
+				options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
 			}
-			const mongooseConnection = await mongoose
-				.connect(url, options, (err) => {
-					if (err) {
-						Controller.logError(err)
-					}
-				})
-			Controller.api.db.connection = mongooseConnection.connections[0].db
+
+			await mongoose.connect(url, options, (err) => {
+				if (err) throw err
+			})
+
+			Controller.api.db.connection = mongoose.connection.db
 		} catch (err) {
 			throw err
 		}
@@ -97,8 +97,14 @@ class Controller {
 					const endpoint = await Endpoint.getEndpointByName(endpointName)
 					// If a default endpoint does not exist, create one
 					if (!endpoint) {
+						// Assign root as static/default endpoints owner
+						const db = Controller.api.db.connection
+						let rootId = (await db.collection('users').findOne({ roles: ['root'] }))._id.toString()
+						defaultEndpoints[endpointName].__owner = rootId
+						// Save endpoint
 						await Endpoint.createEndpoint(defaultEndpoints[endpointName])
 						console.log(`Created new static endpoint: ${endpointName}`)
+						console.log(`Created new static endpoint: `, defaultEndpoints[endpointName])
 					}
 				}
 			}
@@ -109,114 +115,124 @@ class Controller {
 
 	static async loadDynamicEndpoints() {
 		const router = require('../../routes/v1/api/index.js')
-		const endpoints = await Endpoint.getEndpoints()
-		const methods = ['get', 'post', 'patch', 'delete']
-		
+		try {
+			var endpoints = await Endpoint.getEndpoints()
+		} catch (err) {
+			throw err
+		}
+
 		endpoints.forEach(endpoint => {
 			const endpointName = endpoint.name[0].toUpperCase() + endpoint.name.slice(1)
+			const url = '/' + endpoint.name
+
 			// Load models for dynamic endpoints
 			Controller.api.model[endpoint.name] = endpoint._schema
+			
+			// Check if there is defined a custom controller for this endpoint before assigning the default one
+			var controllerPath = path.resolve(__dirname+'../../../'+'controllers/'+Controller.api.version+'/'+endpointName+'Controller'+'.js')
+			var ctrl
+			try {
+				ctrl = require(controllerPath)
+				// Instantiate controller for this endpoint with model/schema created for this endpoint
+				Controller.instances[endpoint.name] = new ctrl(Controller.api, endpoint._schema)
+			
+			} catch (err) {
+				if(err.code === 'MODULE_NOT_FOUND') {
+					controllerPath = path.resolve(__dirname+'../../../'+'controllers/'+Controller.api.version+'/'+'Default.js')
+					ctrl = require(controllerPath)
+					// Instantiate controller for this endpoint with model/schema created for this endpoint
+					Controller.instances[endpoint.name] = new ctrl(Controller.api, endpoint._schema)
+				} else {
+					throw err
+				}
+			}
 
-			methods.forEach(method => {
-				router[method]('/' + endpoint.name, (req, res, next) => {
-					// TODO: Check if there is defined a custom controller for this endpoint before assigning the default one
-					const operation = this.getCRUDFromRequest(method)
-					var controllerPath = path.resolve(__dirname+'../../../'+'controllers/'+Controller.api.version+'/'+endpointName+'Controller'+'.js')
-					var ctrl
-					try {
-						ctrl = require(controllerPath)
-						// TODO: Here load model created for the endpoint instead of dummy test data
-						Controller.instances[endpoint.name] = new ctrl(Controller.api, endpoint._schema)
-					
-					} catch (err) {
-						if(err.code === 'MODULE_NOT_FOUND'){
-							controllerPath = path.resolve(__dirname+'../../../'+'controllers/'+Controller.api.version+'/'+'Default.js')
-							ctrl = require(controllerPath)
-							// TODO: Here load model created for the endpoint instead of dummy test data
-							Controller.instances[endpoint.name] = new ctrl(Controller.api, endpoint._schema)
-						} else {
-							throw err
-						}
-					}
-
-					Controller.instances[endpoint.name][operation](req, res, next)
-				})
-			})
+			router.route(url).get((req, res, next) => Controller.instances[endpoint.name].read(req, res, next))
+			router.route(url).post((req, res, next) => Controller.instances[endpoint.name].create(req, res, next))
+			router.route(url).patch((req, res, next) => Controller.instances[endpoint.name].update(req, res, next))
+			router.route(url).delete((req, res, next) => Controller.instances[endpoint.name].delete(req, res, next))
 		})
+	}
 
-		return router
+	static async removeDynamicEndpoint(endpointName) {
+		const router = require('../../routes/v1/api/index.js')
+		router.stack.forEach(async (stack, i) => {
+			let url = `/${endpointName}`
+
+			if (stack && stack.route && stack.route.path === url) {
+				router.stack.splice(i, 1)
+			}
+		})
 	}
 
 	static defineResponseErrors() {
 		Controller.api.errors = {
 			/**
-			 * 
 			 * @param {Object} 		res 			[Response object]
-			 * @param {string} 		[error] 	[Optional error text]
+			 * @param {String} 		[error] 	[Optional error text]
 			 */
 			NotFound(res, error) {
-				if (!error) var error = 'Resource you are looking for is not found.'
-				return res.status(404).json({
-					message: error
-				})
+				if (!error) var error = 'Resource you are looking for is not found'
+				return res.status(404).json({ name: 'NotFoundError',  message: error })
 			},
 			/**
-			 * 
 			 * @param {Object} 		res 			[Response object]
-			 * @param {string} 		[error] 	[Optional error text]
+			 * @param {String} 		[error] 	[Optional error text]
 			 */
 			Forbidden(res, error) {
-				if (!error) var error = 'Access denied.'
-				return res.status(404).json({
-					message: error
-				})
+				if (!error) var error = 'Access denied'
+				return res.status(404).json({ name: 'ForbiddenError', message: error })
 			},
+			/**
+			 * @param {Object} 																			res 				[Response object]
+			 * @param {Array.<{name: String, message: String}>} 		[errors] 		[Optional array of error objects]
+			 */
+			BadRequest(res, error) {
+				if (!error) var error = 'Bad request error'
+				// else errors.forEach((err) => err.name = 'BadRequestError')
+				// return res.status(400).json(errors)
+				return res.status(400).json({ name: 'BadRequestError', message: error })
+			}
 		}
 	}
 
-	static validateSchema(modelName, record) {
-		console.log('modelName: ', modelName)
-		console.log('record: ', record)
+	/**
+	 * 
+	 * @param 	{String} 									modelName  	[Name of the model to be validated]
+	 * @param 	{Object} 									record 		 	[Record to be validated against JSON schema]
+	 * @return 	{Array.<Object>|Boolean} 								[Returns array of errors or boolean false]
+	 */
+	static validateToSchema(modelName, record) {
 		if(!this.api.validators) this.api.validators = {}
-		// let schema = this.api.model[modelName]
-		let schema = {
-			access: {
-				create: { roles: [Array] },
-				read: { roles: [Array], owner: true },
-				update: { roles: [Array], owner: true },
-				delete: { roles: [Array], owner: true }
-			},
-			type: 'object',
-			required: [ 'categories' ],
-			_id: '5ec4882c02c87d2a84228251', // can be removed since its igored in schema validation
-			name: 'posts',
-			title: 'Post title',
-			description: 'Post description',
-			properties: {
-				categories: {
-					title: 'Post categories',
-					description: 'Array of post categories',
-					type: 'array',
-					// format: 'date-time', // should exist only if property type is string
-					// relation: [Object], // remove 
-					// required: true // remove 
-				}
-			}
+		let schema = JSON.parse(JSON.stringify(this.api.model[modelName]))
+
+		// Add built in props to schema
+		schema.properties.created = {
+			"title": "Created date-time",
+			"type": "string",
+			"format": "date-time"
 		}
-		// console.log('this.api.model: ', this.api.model)
-		// console.log('model schema: ', schema)
+		schema.properties.updated = {
+			"title": "Updated date-time",
+			"format": "date-time",
+			"oneOf": [{ "type": "string" }, { "type": "null" }]
+		}
+		schema.additionalProperties = false
+
+		// Add built in props to record
+		record.created = new Date(Date.now()).toISOString()
+		record.updated = null
+
 		if(!this.api.validators[modelName]) {
 			this.api.validators[modelName] = this.ajv.compile(schema)
 		}
-		// var valid = this.api.validators[modelName]
-		// var validate = ajv.compile(schema)
 		var valid = this.api.validators[modelName](record)
 		if (!valid) {
-			console.log('validator: ', this.api.validators[modelName])
-			return false
+			console.log(`Endpoint: ${modelName}, schema is not valid: `, this.api.validators[modelName].errors)
+			return this.api.validators[modelName].errors
 		}
-		console.log('validator errors: ', this.api.validators[modelName].errors)
-		return true
+		// console.log('valid')
+		return false
 	}
 
 	// Create root user if it doesnt exist
@@ -232,17 +248,19 @@ class Controller {
 
 				// Create Stripe customer for this root user
 				// TODO: Move to Strpe/other controller
-				const customer = await stripe.customers.create({
-					name: user.name || null,
-					email: user.email || null,
-					address: user.address || null,
-					phone: user.phone || null,
-					description: 'Root user. Customer created while creating a root user account.'
-				})
-				user.stripeCustomer = customer.id
+				// const customer = await stripe.customers.create({
+				// 	name: user.name || null,
+				// 	email: user.email || null,
+				// 	address: user.address || null,
+				// 	phone: user.phone || null,
+				// 	description: 'Root user. Customer created while creating a root user account.'
+				// })
+				// user.stripeCustomer = customer.id
+
 				const hashedPassword = await UserModel.hashPassword(user.password) 
 				user.roles = ['root']
 				user.password = hashedPassword
+
 				// Save root user
 				const root = await new Promise((resolve, reject) => {
 					UserModel.create(user, (err, doc) => {
@@ -252,7 +270,7 @@ class Controller {
 				})
 
 				console.log(`Root user created: ${root.username}`)
-				console.log(`Customer for root created: ${customer}`)
+				// console.log(`Customer for root created: ${customer}`)
 			}
 		} catch (err) {
 			throw err
