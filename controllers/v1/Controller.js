@@ -156,6 +156,10 @@ class Controller {
 
 	static async removeDynamicEndpoint(endpointName) {
 		const router = require('../../routes/v1/api/index.js')
+
+		// Remove controller instance for this endpoint
+		delete Controller.instances[endpointName]
+
 		router.stack.forEach(async (stack, i) => {
 			let url = `/${endpointName}`
 

@@ -121,27 +121,28 @@ class EndpointController extends Controller {
 	}
 
 	static async deleteEndpointById(req, res) {
-		// TODO: Reload dynamic endpoints
 		// TODO: Delete default controller instance for deleted dynamic endpoint
 		// TODO: Get schema for dynamic endpoint, e.g posts
 		try {
 			var deletedEndpoint = await Endpoint.deleteEndpointById(req.params.id)
-			try {
-				// Remove collection
-				const isCollectionDeleted = await Controller.api.db.connection.dropCollection(`${deletedEndpoint.name}`)				
-			} catch (err) {
-				if (err.name === 'MongoError') {
-					if (err.message === 'ns not found' || err.errmsg === 'ns not found' || err.codeName === 'NamespaceNotFound') {
-						// console.log(`Collection: ${deletedEndpoint.name} - doesnt exist`)
+			if (deletedEndpoint) {
+				// Remove deleted endpoint from the app
+				// Controller.loadDynamicEndpoints()
+				Controller.removeDynamicEndpoint(deletedEndpoint.name)
+				try {
+					// Remove collection
+					const isCollectionDeleted = await Controller.api.db.connection.dropCollection(`${deletedEndpoint.name}`)				
+				} catch (err) {
+					if (err.name === 'MongoError') {
+						if (err.message === 'ns not found' || err.errmsg === 'ns not found' || err.codeName === 'NamespaceNotFound') {
+							// console.log(`Collection: ${deletedEndpoint.name} - doesnt exist`)
+						}
+					} else {
+						throw err
 					}
-				} else {
-					throw err
 				}
 			}
-
-			// Reload dynamic routes
-			// Controller.loadDynamicEndpoints()
-			Controller.removeDynamicEndpoint(deletedEndpoint.name)
+			
 			return res.status(200).json(deletedEndpoint)
 		} catch (err) {
 			throw err
