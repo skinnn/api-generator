@@ -1,3 +1,4 @@
+const Controller = require('../v1/Controller.js')
 const stripe = require('../../config/stripe.js')
 const helpers = require ('../../lib/helpers.js')
 // Models
@@ -5,7 +6,10 @@ const UserModel = require('../../models/User.js')
 
 // TODO: Allow altering of user schema & model, use JSON schema instead of mongoose schema
 
-class UserController {
+class UserController extends Controller {
+	constructor(api) {
+		super(api)
+	}
 
 	static async createUser(req, res) {
 		res.set('Accept', 'application/json')

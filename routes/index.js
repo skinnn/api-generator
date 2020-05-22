@@ -10,10 +10,13 @@ router.use('/', express.static(path.join(__dirname, '../public')))
 */
 
 // API routes
-router.use('/api',
-	// Authentication middleware is used for all /api/* endpoints
-	Authentication.ensureAuthenticated,
-	require('./v1/api/index.js'))
+// router.use('/api',
+// 	// Authentication middleware is used for all /api/* endpoints
+// 	Authentication.ensureAuthenticated,
+// 	require('./v1/api/index.js'))
+// const apiRouter = require('./v1/api/index.js')
+router.use('/api', Authentication.ensureAuthenticated)
+router.use('/api', function APIRouter(req, res, next) { require('./v1/api/index.js')(req, res, next) } )
 
 // Index routes
 router.use('/', require('./v1/indexRoutes.js'))

@@ -104,7 +104,6 @@ module.exports.deleteEndpointById = async (id) => {
 		console.log(typeof id)
 		Endpoint.findByIdAndDelete({_id: id }, /*options,*/ (err, doc) => {
 			if (err) reject(err)
-			console.log('doc: ', doc)
 			resolve(doc)
 		})
 	})

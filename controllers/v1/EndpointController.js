@@ -58,7 +58,8 @@ class EndpointController extends Controller {
 			}
 			// Save endpoint in the db
 			const savedEndpoint = await Endpoint.createEndpoint(newEndpoint)
-			console.log('Created endpoint: ', savedEndpoint)
+			// console.log('Created endpoint: ', savedEndpoint)
+			
 			// TODO: Potentially create helper for adding a single (new) endpoint to improve performance
 			// Reload dynamic routes so new endpoint is added, no need to await
 			Controller.loadDynamicEndpoints()
@@ -127,8 +128,8 @@ class EndpointController extends Controller {
 			var deletedEndpoint = await Endpoint.deleteEndpointById(req.params.id)
 			if (deletedEndpoint) {
 				// Remove deleted endpoint from the app
-				// Controller.loadDynamicEndpoints()
-				Controller.removeDynamicEndpoint(deletedEndpoint.name)
+				await Controller.removeDynamicEndpoint(deletedEndpoint.name)
+				await Controller.loadDynamicEndpoints()
 				try {
 					// Remove collection
 					const isCollectionDeleted = await Controller.api.db.connection.dropCollection(`${deletedEndpoint.name}`)				

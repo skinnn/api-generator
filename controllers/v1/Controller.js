@@ -114,13 +114,12 @@ class Controller {
 	}
 
 	static async loadDynamicEndpoints() {
-		const router = require('../../routes/v1/api/index.js')
+		var router = require('../../routes/'+Controller.api.version+'/api/index.js')
 		try {
 			var endpoints = await Endpoint.getEndpoints()
 		} catch (err) {
 			throw err
 		}
-
 		endpoints.forEach(endpoint => {
 			const endpointName = endpoint.name[0].toUpperCase() + endpoint.name.slice(1)
 			const url = '/' + endpoint.name
@@ -155,18 +154,23 @@ class Controller {
 	}
 
 	static async removeDynamicEndpoint(endpointName) {
-		const router = require('../../routes/v1/api/index.js')
-
+		var router = require('../../routes/'+Controller.api.version+'/api/index.js')
+		// var routerAPI = Controller.api.app._router
 		// Remove controller instance for this endpoint
 		delete Controller.instances[endpointName]
+		// Remove validators for this endpoint's model
+		if (Controller.api.validators && Controller.api.validators[endpointName]) delete Controller.api.validators[endpointName]
+		// Remove model
+		delete Controller.api.model[endpointName]
+		// Remove endpoints from the router [get, post, patch, delete]
+		const url = `/${endpointName}`
 
-		router.stack.forEach(async (stack, i) => {
-			let url = `/${endpointName}`
-
-			if (stack && stack.route && stack.route.path === url) {
+		var i = router.stack.length
+		while (i--) {
+			if (router.stack[i].route && router.stack[i].route.path === url) { 
 				router.stack.splice(i, 1)
-			}
-		})
+			} 
+		}
 	}
 
 	static defineResponseErrors() {
@@ -209,6 +213,7 @@ class Controller {
 	static validateToSchema(modelName, record) {
 		if(!this.api.validators) this.api.validators = {}
 		let schema = JSON.parse(JSON.stringify(this.api.model[modelName]))
+		console.log('SCHEMA: ', schema)
 
 		// Add built in props to schema
 		schema.properties.created = {
