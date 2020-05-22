@@ -1,6 +1,7 @@
 const env = process.env
 
 const config = {
+	name: 'API Generator',
 	version: 'v1',
 	port: env.PORT || '8090',
 	host:'localhost',

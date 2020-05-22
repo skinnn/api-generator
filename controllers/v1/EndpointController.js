@@ -6,8 +6,8 @@ const Endpoint = require('../../models/Endpoint.js')
 const builtInEndpoints = require('../../config/schemas/Endpoints.js')
 
 class EndpointController extends Controller {
-	constructor() {
-		super()
+	constructor(api) {
+		super(api)
 	}
 
 	static async getEndpointByName(req, res) {
@@ -27,13 +27,13 @@ class EndpointController extends Controller {
 	}
 
 	static async createEndpoint(req, res) {
+		// TODO: Create support for adding nested parameters, e.g. /posts/category/:id
 		res.set('Accept', 'application/json')
-		const endpoint = req.body
+		var endpoint = req.body
 		try {
 			const exists = await Endpoint.getEndpointByName(endpoint.name)
 			if (exists) {
 				return res.status(400).json({
-					success: false,
 					message: `Endpoint already exist. Endpoint: ${endpoint.name}`
 				})
 			}
@@ -51,15 +51,17 @@ class EndpointController extends Controller {
 				}
 			}
 
+			// If creating an endpoint without properties
+			endpoint.properties = endpoint.properties ? endpoint.properties :  {}
 			const newEndpoint = {
 				name: endpoint.name,
 				_schema: endpoint,
 				__owner: req.user.id
 			}
+
 			// Save endpoint in the db
 			const savedEndpoint = await Endpoint.createEndpoint(newEndpoint)
-			// console.log('Created endpoint: ', savedEndpoint)
-			
+
 			// TODO: Potentially create helper for adding a single (new) endpoint to improve performance
 			// Reload dynamic routes so new endpoint is added, no need to await
 			Controller.loadDynamicEndpoints()
@@ -69,9 +71,7 @@ class EndpointController extends Controller {
 			return res.status(201).json({ success: true, record: savedEndpoint })
 		} catch (err) {
 			console.error(err)
-			return res.status(400).json({
-				message: err
-			})
+			return res.status(400).json({ message: err })
 		}
 	}
 
@@ -136,7 +136,7 @@ class EndpointController extends Controller {
 				} catch (err) {
 					if (err.name === 'MongoError') {
 						if (err.message === 'ns not found' || err.errmsg === 'ns not found' || err.codeName === 'NamespaceNotFound') {
-							// console.log(`Collection: ${deletedEndpoint.name} - doesnt exist`)
+							console.log(`Collection: ${deletedEndpoint.name}, not deleted because it doesnt exist`)
 						}
 					} else {
 						throw err
@@ -148,11 +148,6 @@ class EndpointController extends Controller {
 		} catch (err) {
 			throw err
 		}
-		// Recreate doc for development
-		// const d = JSON.parse(JSON.stringify(deletedEndpoint))
-		// delete deletedEndpoint._id
-		// delete deletedEndpoint.created
-		// await Endpoint.createEndpoint(d)
 	}
 
 	// Get contents from schema file, add new schema and save file

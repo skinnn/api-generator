@@ -1,12 +1,18 @@
-const Controller = require('../Controller.js')
+const Controller = require('./Controller.js')
 
 class DashboardController extends Controller {
+	constructor(api) {
+		super(api)
+
+		this._apiData = { name: api.name }
+	}
 
 	static getIndexPage(req, res) {
 		return res.render('dashboard/index', {
 			layout: 'dashboard',
 			title: 'Dashboard',
-			page: { index: true }
+			page: { index: true },
+			api: DashboardController._apiData
 		})
 	}
 
@@ -14,7 +20,8 @@ class DashboardController extends Controller {
 		return res.render('dashboard/docs', {
 			layout: 'dashboard',
 			title: 'Documentation',
-			page: { docs: true }
+			page: { docs: true },
+			api: DashboardController._apiData
 		})
 	}
 
@@ -22,7 +29,8 @@ class DashboardController extends Controller {
 		return res.render('dashboard/endpoint', {
 			layout: 'dashboard',
 			title: 'Endpoints',
-			page: { endpoint: true }
+			page: { endpoint: true },
+			api: DashboardController._apiData
 		})
 	}
 
@@ -30,7 +38,8 @@ class DashboardController extends Controller {
 		return res.render('dashboard/users', {
 			layout: 'dashboard',
 			title: 'Users',
-			page: { users: true }
+			page: { users: true },
+			api: DashboardController._apiData
 		})
 	}
 
@@ -38,7 +47,8 @@ class DashboardController extends Controller {
 		return res.render('dashboard/logins', {
 			layout: 'dashboard',
 			title: 'Logins',
-			page: { logins: true }
+			page: { logins: true },
+			api: DashboardController._apiData
 		})
 	}
 }

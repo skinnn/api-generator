@@ -3,7 +3,7 @@ const MongooseSchema = mongoose.Schema
 // const tst = require('../controllers/v1/Users.ctrl.js')
 
 const Schema = new MongooseSchema({
-	name: { type: String, required: true },
+	name: { type: String, lowercase: true, required: true },
 	title: { type: String },
 	description: { type: String },
 	access: {
@@ -26,7 +26,8 @@ const Schema = new MongooseSchema({
 	properties: { type: Object, required: true },
 	type: { type: String, default: 'object' },
 	required: { type: [String] }
-}, { _id : false })
+	// Dont save ids for subschema and disabled
+}, { _id : false  })
 
 const EndpointSchema = new MongooseSchema({
 	name: {
@@ -46,65 +47,75 @@ const EndpointSchema = new MongooseSchema({
 		type: String,
 		required: true
 	}
-})
+// Minimize allows saving of empty objects in schema [_schema.properties]
+}, { minimize: false })
 
 const Endpoint = module.exports = mongoose.model('Endpoint', EndpointSchema)
 
-module.exports.createEndpoint = (endpoint) => {
-	return new Promise((resolve, reject) => {
-		Endpoint.create(endpoint, (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
+module.exports.createEndpoint = async (endpoint) => {
+	// Add built in props to the model
+	endpoint._schema.properties.created = {
+		title: 'Created date-time',
+		type: 'string',
+		format: 'date-time'
+	}
+	endpoint._schema.properties.updated = {
+		title: 'Updated date-time',
+		format: 'date-time',
+		oneOf: [{ type: 'string' }, { type: 'null' }]
+	}
+	try {
+		const doc = await Endpoint.create(endpoint)
+		return doc		
+	} catch (err) {
+		throw err
+	}
 }
 
-module.exports.getEndpoints = () => {
-	return new Promise((resolve, reject) => {
-		Endpoint.find({}, (err, docs) => {
-			if (err) reject(err)
-			resolve(docs)
-		})
-	})
+module.exports.getEndpoints = async () => {
+	try {
+		const doc = await Endpoint.find().lean()
+		return doc
+	} catch (err) {
+		throw err
+	}
 }
 
-module.exports.getEndpointByName = (name) => {
-	return new Promise((resolve, reject) => {
-		Endpoint.findOne({ name: name }, (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
+module.exports.getEndpointByName = async (name) => {
+	try {
+		const doc = await Endpoint.findOne({ name: name }).lean()
+		return doc
+	} catch (err) {
+		throw err
+	}
 }
 
-module.exports.getEndpointById = (id) => {
-	return new Promise((resolve, reject) => {
-		Endpoint.findById(id, (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
+module.exports.getEndpointById = async (id) => {
+	try {
+		const doc = await Endpoint.findById(id).lean()
+		return doc
+	} catch (err) {
+		throw err
+	}
 }
 
 module.exports.updateEndpointById = async (id, fields) => {
 	fields.updated = Date.now()
 	const data = { $set: fields }
 	const options = { new: true }
-	return new Promise((resolve, reject) => {
-		Endpoint.findByIdAndUpdate(id, data, options, (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
+	try {
+		const doc = Endpoint.findByIdAndUpdate(id, data, options)
+		return doc
+	} catch (err) {
+		throw err
+	}
 }
 
 module.exports.deleteEndpointById = async (id) => {
-	// const options = { new: true }
-	return new Promise((resolve, reject) => {
-		console.log(typeof id)
-		Endpoint.findByIdAndDelete({_id: id }, /*options,*/ (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
+	try {
+		const doc = Endpoint.findByIdAndDelete({_id: id })
+		return doc
+	} catch (err) {
+		throw err
+	}
 }

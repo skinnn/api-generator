@@ -23,7 +23,7 @@ class Controller {
 		Controller.api.app = express
 		Controller.ajv = new Ajv()
 
-		Controller.api.model = builtinEndpoints
+		Controller.api.model = {}
 		Controller.api.bootModel = builtinEndpoints
 
 		// TODO: Create store and connect here
@@ -104,7 +104,6 @@ class Controller {
 						// Save endpoint
 						await Endpoint.createEndpoint(defaultEndpoints[endpointName])
 						console.log(`Created new static endpoint: ${endpointName}`)
-						console.log(`Created new static endpoint: `, defaultEndpoints[endpointName])
 					}
 				}
 			}
@@ -120,42 +119,43 @@ class Controller {
 		} catch (err) {
 			throw err
 		}
+		const methods = ['get', 'post', 'patch', 'delete']
+
 		endpoints.forEach(endpoint => {
 			const endpointName = endpoint.name[0].toUpperCase() + endpoint.name.slice(1)
-			const url = '/' + endpoint.name
-
+			const url = '/' + endpoint.name + '*'
 			// Load models for dynamic endpoints
 			Controller.api.model[endpoint.name] = endpoint._schema
 			
-			// Check if there is defined a custom controller for this endpoint before assigning the default one
-			var controllerPath = path.resolve(__dirname+'../../../'+'controllers/'+Controller.api.version+'/'+endpointName+'Controller'+'.js')
+			// Check if there is a custom controller defined for this model before assigning the default one
+			var controllerPath = path.resolve(`${__dirname}../../../controllers/${Controller.api.version}/${endpointName}Controller.js`)
 			var ctrl
 			try {
 				ctrl = require(controllerPath)
-				// Instantiate controller for this endpoint with model/schema created for this endpoint
-				Controller.instances[endpoint.name] = new ctrl(Controller.api, endpoint._schema)
-			
+				// Instantiate controller for this endpoint
+				Controller.instances[endpoint.name] = new ctrl(Controller.api)
+				
 			} catch (err) {
 				if(err.code === 'MODULE_NOT_FOUND') {
-					controllerPath = path.resolve(__dirname+'../../../'+'controllers/'+Controller.api.version+'/'+'Default.js')
-					ctrl = require(controllerPath)
-					// Instantiate controller for this endpoint with model/schema created for this endpoint
-					Controller.instances[endpoint.name] = new ctrl(Controller.api, endpoint._schema)
+					controllerPath = path.resolve(`${__dirname}../../../controllers/${Controller.api.version}/Default.js`)
+					const DefaultController = require(controllerPath)
+					// Instantiate default controller with the right model for this endpoint
+					Controller.instances[endpoint.name] = new DefaultController(Controller.api, endpoint._schema)
 				} else {
 					throw err
 				}
 			}
 
-			router.route(url).get((req, res, next) => Controller.instances[endpoint.name].read(req, res, next))
-			router.route(url).post((req, res, next) => Controller.instances[endpoint.name].create(req, res, next))
-			router.route(url).patch((req, res, next) => Controller.instances[endpoint.name].update(req, res, next))
-			router.route(url).delete((req, res, next) => Controller.instances[endpoint.name].delete(req, res, next))
+			methods.forEach((method) => {
+				const operation = this.getCRUDFromMethod(method)
+				router[method](url, this.useAPIMiddleware, (req, res, next) => Controller.instances[endpoint.name][operation](req, res, next))
+			})
+			// router.route(url).get(this.useAPIMiddleware, (req, res, next) => Controller.instances[endpoint.name].read(req, res, next))
 		})
 	}
 
 	static async removeDynamicEndpoint(endpointName) {
 		var router = require('../../routes/'+Controller.api.version+'/api/index.js')
-		// var routerAPI = Controller.api.app._router
 		// Remove controller instance for this endpoint
 		delete Controller.instances[endpointName]
 		// Remove validators for this endpoint's model
@@ -173,6 +173,21 @@ class Controller {
 		}
 	}
 
+	static useAPIMiddleware (req, res, next) {
+		res.setHeader('X-Powered-By', Controller.api.name)
+		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
+		if (req.params) {
+			let par = Object.values(req.params[0].split('/'))
+			par.shift()
+			let obj = { ...par }
+			req.params = obj
+			// var containsNumber = /\d+/;
+			// if(obj[0].match(containsNumber)) console.log('Contains number')
+			next()
+		} else next()
+	}
+
+	// TODO: Create better error handler
 	static defineResponseErrors() {
 		Controller.api.errors = {
 			/**
@@ -206,31 +221,16 @@ class Controller {
 
 	/**
 	 * 
-	 * @param 	{String} 									modelName  	[Name of the model to be validated]
-	 * @param 	{Object} 									record 		 	[Record to be validated against JSON schema]
+	 * @param 	{String} 									modelName  		[Name of the model to be validated]
+	 * @param 	{Object} 									record 		 		[Record to be validated against JSON schema]
 	 * @return 	{Array.<Object>|Boolean} 								[Returns array of errors or boolean false]
 	 */
 	static validateToSchema(modelName, record) {
 		if(!this.api.validators) this.api.validators = {}
 		let schema = JSON.parse(JSON.stringify(this.api.model[modelName]))
-		console.log('SCHEMA: ', schema)
 
-		// Add built in props to schema
-		schema.properties.created = {
-			"title": "Created date-time",
-			"type": "string",
-			"format": "date-time"
-		}
-		schema.properties.updated = {
-			"title": "Updated date-time",
-			"format": "date-time",
-			"oneOf": [{ "type": "string" }, { "type": "null" }]
-		}
+		// If property which is not specified in the schema exist, give an error
 		schema.additionalProperties = false
-
-		// Add built in props to record
-		record.created = new Date(Date.now()).toISOString()
-		record.updated = null
 
 		if(!this.api.validators[modelName]) {
 			this.api.validators[modelName] = this.ajv.compile(schema)
@@ -240,7 +240,7 @@ class Controller {
 			console.log(`Endpoint: ${modelName}, schema is not valid: `, this.api.validators[modelName].errors)
 			return this.api.validators[modelName].errors
 		}
-		// console.log('valid')
+		// valid
 		return false
 	}
 
@@ -286,7 +286,7 @@ class Controller {
 		}
 	}
 
-	static getCRUDFromRequest(method) {
+	static getCRUDFromMethod(method) {
     switch(method.toUpperCase()) {
       case 'GET':
         return 'read'

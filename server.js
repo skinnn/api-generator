@@ -1,12 +1,12 @@
+const masterConfig = require('./config/config.js')
+const helpers = require('./lib/helpers.js')
+const Controller = require('./controllers/v1/Controller.js')
 const http = require('http')
 const https = require('https')
 const express = require('express')
-const bodyParser = require('body-parser')
 const cors = require('cors')
-const masterConfig = require('./config/config.js')
+const helmet = require('helmet')
 const exphbs = require('express-handlebars')
-const helpers = require('./lib/helpers.js')
-const Controller = require('./controllers/v1/Controller.js')
 
 const app = express()
 
@@ -16,10 +16,10 @@ app.use(cors({
 	allowedHeaders: ['Content-Type', 'Authorization', 'Location', 'X-Total-Count'],
 	methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE']
 }))
-// Disable x-powered-by header for security
-app.disable('x-powered-by')
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded({ extended: true }))
+// Disables x-powered-by, adds best practice security headers
+app.use(helmet())
+app.use(express.json({ limit: 1024*100, type: 'application/json' })) // Allowed JSON body size 100kb and media type
+// app.use(express.urlencoded({ extended: true })) // Enable if needed
 app.use(helpers.routeLogger)
 
 // Used to handle req.body errors (e.g. if body has invalid json)
@@ -28,10 +28,16 @@ app.use((err, req, res, next) => {
 	return next(err)
 })
 
+
 // Routes
 app.use('/', require('./routes/index.js'))
+// Error handler (always should be the last middleware)
+app.use((err, req, res, next) => {
+	console.log('Error handler middleware: ', err)
+	return next()
+})
 
-// Template engine
+// Template & view engine
 app.engine('hbs', exphbs({
 	extname: '.hbs',
 	defaultLayout: 'main',
@@ -40,33 +46,19 @@ app.engine('hbs', exphbs({
 }))
 app.set('view engine', 'hbs')
 
-// Error handler
-app.use((err, req, res, next) => {
-	console.log('Error handler middleware: ', err)
-	return next()
-})
-
 // Boot the server with configuration
 Controller.boot(app, masterConfig).then(() => {
 
 	// Create http/https erver
 	if (Controller.api.protocol === 'https') {
-		Controller.api.server = https.createServer(app)
+		Controller.api.server = https.createServer(Controller.getSSLOptions(), app)
 	} else {
 		Controller.api.server = http.createServer(app)
 	}
 
 	// Spin up the server
-	Controller.api.server.listen(Controller.api.port)
-
-	console.log(`Running in ${Controller.api.mode} mode - http://localhost:${Controller.api.port}`)
+	Controller.api.server.listen(Controller.api.port, Controller.api.host, (err) => {
+		console.log(`Running in ${Controller.api.mode} mode - http://localhost:${Controller.api.port}`)
+	})
 })
 .catch(err => Controller.logError(err))
-
-// app.listen(config.port, () => {
-// 	// App initialization
-// 	Controller.init()
-
-// 	console.log(`Server started in ${config.mode} mode`)
-// 	console.log(`http://localhost:${config.port}`)
-// })

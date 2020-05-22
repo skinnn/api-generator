@@ -9,21 +9,25 @@
   "scripts": {
     "dev": "nodemon server.js",
     "dev:debug": "set DEBUG=express:* & nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "seed": "node db/seed.js"
   },
   "author": "Nikola Jovanovic",
   "license": "ISC",
   "dependencies": {
     "ajv": "^6.12.2",
     "bcrypt": "^4.0.1",
-    "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-handlebars": "^4.0.4",
+    "helmet": "^3.22.0",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.25.1",
     "mongoose": "^5.9.11",
     "paypal-rest-sdk": "^1.8.1",
     "stripe": "^8.49.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
   }
 }

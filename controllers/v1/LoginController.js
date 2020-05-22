@@ -5,6 +5,9 @@ const LoginModel = require('../../models/Login.js')
 const UserModel = require('../../models/User.js')
 
 class LoginController extends Controller {
+	constructor(api) {
+		super(api)
+	}
 
 	static async createLogin(req, res) {
 		try {

@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const path = require('path')
-const DashboardController = require('../../../controllers/v1/dashboard/DashboardController.js')
+const DashboardController = require('../../../controllers/v1/DashboardController.js')
 
 /**
 	Base: /api/dashboard
