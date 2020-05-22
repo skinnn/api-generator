@@ -45,6 +45,7 @@ class DefaultController extends Controller {
 				const response = await db.collection(this._model.name).insertOne(req.body)
 				const doc = response.ops[0]
 				return res.status(201).json(doc)
+				
 			} else {
 				let errMsg = `Property ${errors[0].dataPath ? errors[0].dataPath+' ' :''}${errors[0].message}.`
 				if(errors[0].params) {

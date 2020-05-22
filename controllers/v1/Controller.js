@@ -174,7 +174,6 @@ class Controller {
 	}
 
 	static useAPIMiddleware (req, res, next) {
-		res.setHeader('X-Powered-By', Controller.api.name)
 		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
 		if (req.params) {
 			let par = Object.values(req.params[0].split('/'))

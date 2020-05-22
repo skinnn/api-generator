@@ -16,8 +16,15 @@ app.use(cors({
 	allowedHeaders: ['Content-Type', 'Authorization', 'Location', 'X-Total-Count'],
 	methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE']
 }))
-// Disables x-powered-by, adds best practice security headers
-app.use(helmet())
+// Add some headers for security
+app.use(helmet(), helmet.contentSecurityPolicy({
+  directives: {
+		defaultSrc: ["'self'"],
+		scriptSrc: ["'self'", "'unsafe-inline'", "cdnjs.cloudflare.com", "unpkg.com", "stackpath.bootstrapcdn.com", "cdn.jsdelivr.net", "code.jquery.com"],
+    styleSrc: ["'self'", "'unsafe-inline'","stackpath.bootstrapcdn.com"]
+  }
+}))
+app.use((req, res, next) => { res.setHeader('X-Powered-By', masterConfig.name); next() })
 app.use(express.json({ limit: 1024*100, type: 'application/json' })) // Allowed JSON body size 100kb and media type
 // app.use(express.urlencoded({ extended: true })) // Enable if needed
 app.use(helpers.routeLogger)
