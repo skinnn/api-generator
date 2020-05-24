@@ -1,138 +1,113 @@
-## E-Commerce Platform 
+## REST API Generator <sup><sub>*Inspired by Lederata*</sub></sup>
 
-E-Commerce backend & REST API with dashboard (API Administration panel) for accessing backend services via GUI.
+An open source, customizable, and performant platform built on a modern Node.js technology stack. It gives you the power of designing and creating REST APIs without needing to code everything from the scratch.
 
-## Installation
+Out of the box, it provides users, user roles, authentication, login records and admin panel.
+
+Consume the API from any client (Vue, React, Angular, etc.), mobile apps or even IoT devices, using REST.
+
+### Description
+
++ **Technologies**: [Node](https://nodejs.org/), [Express](https://expressjs.com/)
++ **Database**: [MongoDB](https://www.mongodb.com/)
++ [REST API Documentation](#api-documentation)
++ **Token based authorization** with [JSON Web Token](https://jwt.io/)
++ **Roles & permissions**
+
+### Installation
 1. Install [Node.js](https://nodejs.org/en/) and [MongoDB](https://www.mongodb.com/download)  
 2. Clone this repository  
-3. Install dependencies with `npm run install` from the **root** directory  
-4. Start
+3. Install dependencies with `npm install` form the **root** directory 
+4. Start:
 	+ Development mode: `npm run dev`
 	+ Production mode: `npm start`
-	+ http://localhost:8090
+5. Open application on http://localhost:8090
+	+ API URL: http://localhost:8090/api
+	
 
-## Description
+|*|Notes |
+|-|-|
+|`Login`| When app starts, if no `root` account is found in the system, one will be created by using `rootUser` section from [config.js](/config/config.js) file.|
+|`Databases`| Current app version *v1* is working only with MongoDB, but database abstraction layer will be implemented|
 
-+ **Technologies**: Node, Express, MongoDB, Vue.js
-+ [REST API Documentation](#api-documentation)
-+ **Token based authentication** (JWT)
-+ **Roles & permissions** (root, admin, user, anon)
-+ **Integrated payment systems** (Paypal, Stripe & Stripe customers)  
+### Authorization
+Application is based on tokens, using **JSON Web Token** open standard [RFC 7519](https://tools.ietf.org/html/rfc7519) method for securely transmitting information between parties as a JSON object.
+All endpoints going through `/api/*` route (e.g. http://localhost:8090/api/test) are going through authentication middleware.
 
-##### Admin dashboard: http://localhost:8090
-##### REST API: http://localhost:8090/api
+### Roles
+During first app initialization, `root` account will be created by using `rootUser` credentials from [config.js](/config/config.js) file.
+Each REST API endpoint can have different roles for Creating, Reading, Modifying or Deleting a record.
+>**root** &mdash; can access all endpoints and operations, used to define access permissions for all other roles; `admin`, `user`, `anon`. There can be only one root user in the system. Can not be created, deleted or modified by anyone. 
+>**admin** &mdash; can access administration dashboard and other endpoints & operations defined by the `root `.
+>**user** &mdash; can access endpoints & operations defined by the `admin` or `root`.
+>**anon** (anonymous) &mdash; can access endpoints & operations defined by the `admin` or `root`. Anons are considered users which are not registered in the application. For example, a user visiting a blog or login page.
+
+For example, take a look at this access configuration for an imaginary **/post** endpoint:
+```
+"access":{
+	"create":{
+		"roles": ["root", "admin", "user]
+	},
+	"update":{ 
+		"roles": ["root", "admin", "user"],
+		"owner": true
+	},
+	"read": {
+		"roles": ["root", "admin", "user", "anon"],
+		"owner": false
+	},
+	"delete":{
+		"roles": ["root", "admin", "user"],
+		"owner": true
+	}
+}
+```
+**Note**: Role `root` always has access to everything by default, so it will be disregarded in the explanation below.
+
+Example above means:
+- `admins` and `users` can create the post records
+- `admins` and `users` are able to update posts, but only the ones they created
+- `admins`, `users` and `anons` can read all the posts from the database
+- `admins` and `users` can delete their own posts
 
 # API Documentation
-#### Routes:
-**Index**:
-+ /login
-+ /dashboard
+#### Administration dashboard:
++ /api/dashboard - API Generator GUI
 
-Base: **/api**  
-+ /schema
-+ /user
-+ /login
-+ /transaction
-
-+ #### REST Endpoints:
++ #### Built-in REST Endpoints:
 	+ #### **/user**
 		+	**POST**
-		URL: http://localhost:8090/api/user  
+		URL: http://localhost:8090/api/users  
 		```Content-Type: application/json```  
 		Body:
 			```json
 			{
-				"username": "user1",
-				"password": "123123",
-				"email": "user1@gmail.com",
+				"username": "jdoe",
+				"password": "strongpassword123",
+				"email": "jdoe@example.com",
 				"firstName": "John",
 				"lastName": "Doe",
-				"country": "USA",
-				"city": "Los Angeles",
-				"postalCode": 90000,
-				"address": "Street address...",
-				"suiteNumber": 213,
-				"phone": "+12138885555",
-				"stripeCustomer": "",
-				"description": "User description...",
-				"billingInfo": {
-					"firstName": "John",
-					"lastName": "Doe",
-					"company": "Company name",
-					"city": "Los Angeles",
-					"state": "",
-					"country": "USA",
-					"postalCode": 90000,
-					"phone": "+12138885555",
-					"email": "test@gmail.com",
-					"address": "Some st. 123",
-					"suiteNumber": 333
-				},
-				"shippingInfo": {
-					"firstName": "John",
-					"lastName": "Doe",
-					"company": "Company name",
-					"state": "Illinois",
-					"city": "Chicago",
-					"country": "USA",
-					"postalCode": 90000,
-					"address": "Some st. 123",
-					"suiteNumber": 123
-				}
+				"description": "User description..."
 			}
 			```
 		+	**GET**   
-		URL: http://localhost:8090/api/user  
-		URL: http://localhost:8090/api/user/:id
+		URL: http://localhost:8090/api/users - Returns all users for `admin` and `root` roles
+		URL: http://localhost:8090/api/users/:id
 		+	**PATCH**  
-		URL: http://localhost:8090/api/user/:id  
+		URL: http://localhost:8090/api/users/:id  
 		```Content-Type: application/json```  
 		Body:
 			```json
 			{
-				"replace": {
-					"username": "skinnn",
-					"roles": ["user"],
-					"firstName": "John",
-					"lastName": "Doe",
-					"country": "Serbia",
-					"city": "Belgrade",
-					"postalCode": 11000,
-					"address": "Street address...",
-					"suiteNumber": 101,
-					"phone": "381654289534",
-					"description": "User description...",
-					"stripeCustomer": "cus_HEpHRrw71Gkjn8",
-					"password": "$2b$10$RqheOQv2O19zufH7AV2rk.kteCqXK7k5zvPYXt9ndKKHnCrI3//M6",
-					"email": "skinnn1@gmail.com",
-					
-					"billingInfo.firstName": "John2",
-					"billingInfo.lastName": "Doe",
-					"billingInfo.company": "Company 2",
-					"billingInfo.city": "Chicago",
-					"billingInfo.state": "Illinois",
-					"billingInfo.country": "USA",
-					"billingInfo.postalCode": 11000,
-					"billingInfo.address": "Some st. 123",
-					"billingInfo.suiteNumber": 123,
-					"billingInfo.phone": "+1231233123",
-					"billingInfo.email": "skinnn@URL.com",
-				
-					"shippingInfo.firstName": "John2",
-					"shippingInfo.lastName": "Doe",
-					"shippingInfo.company": "Company 2",
-					"shippingInfo.city": "Chicago",
-					"shippingInfo.state": "Illinois",
-					"shippingInfo.country": "USA",
-					"shippingInfo.postalCode": 11000,
-					"shippingInfo.address": "Some st. 123",
-					"shippingInfo.suiteNumber": 123
-				}
+				"username": "jdoe_updated",
+				"password": "strongestpassword123",
+				"email": "jdoe@example.com",
+				"firstName": "John",
+				"lastName": "Malkovich",
+				"description": "User description..."
 			}
 			```
 		+	**DELETE**
 		URL: http://localhost:8090/api/user/:id
 
 	+ #### **/login**
-	
-	+ #### **/transaction**

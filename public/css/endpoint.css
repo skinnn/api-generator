@@ -44,3 +44,20 @@ form.endpoint-form .create-endpoint-btn .feather {
 	bottom: 2px;
 	margin-right: 5px;
 }
+
+#error-messages .error-message {
+	color: #fff;
+	background-color:#ee4545;
+	padding: 10px 15px;
+	border-radius: 5px;
+}
+
+#success-messages .success-message {
+	color: #fff;
+	background-color: #35d535;
+	padding: 10px 15px;
+	border-radius: 5px;
+}
+#success-messages .success-message .highlighted {
+	font-weight: 600;
+}

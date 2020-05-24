@@ -1,10 +1,15 @@
 const Controller = require('./Controller.js')
 
+var apiData
+
 class DashboardController extends Controller {
 	constructor(api) {
 		super(api)
 
-		this._apiData = { name: api.name }
+		apiData = {
+			name: api.name,
+			version: api.version
+		}
 	}
 
 	static getIndexPage(req, res) {
@@ -12,7 +17,7 @@ class DashboardController extends Controller {
 			layout: 'dashboard',
 			title: 'Dashboard',
 			page: { index: true },
-			api: DashboardController._apiData
+			api: apiData
 		})
 	}
 
@@ -21,7 +26,7 @@ class DashboardController extends Controller {
 			layout: 'dashboard',
 			title: 'Documentation',
 			page: { docs: true },
-			api: DashboardController._apiData
+			api: apiData
 		})
 	}
 
@@ -30,7 +35,7 @@ class DashboardController extends Controller {
 			layout: 'dashboard',
 			title: 'Endpoints',
 			page: { endpoint: true },
-			api: DashboardController._apiData
+			api: apiData
 		})
 	}
 
@@ -39,7 +44,7 @@ class DashboardController extends Controller {
 			layout: 'dashboard',
 			title: 'Users',
 			page: { users: true },
-			api: DashboardController._apiData
+			api: apiData
 		})
 	}
 
@@ -48,7 +53,7 @@ class DashboardController extends Controller {
 			layout: 'dashboard',
 			title: 'Logins',
 			page: { logins: true },
-			api: DashboardController._apiData
+			api: apiData
 		})
 	}
 }

@@ -22,9 +22,87 @@ module.exports = {
 					"owner": true
 				}
 			},
-			"properties": {},
+			"properties": {
+				"name": { "title": "Endpoint name", "description": "Name of the endpoint name used in URLs", "type": "string" },
+				"title": { "title": "Endpoint title", "description": "Descriptive endpoint title", "type": "string" },
+				"description": { "title": "Endpoint description", "description": "Used to create dynamic endpoints", "type": "string" },
+				"required": { "type": "array"},
+				"properties": { "type": "object" },
+				"type": { "type": "string", "const": "object" },
+				"access": {
+					"type": "object",
+					"properties": {
+
+						"create": {
+							"type": "object",
+							"properties": {
+								"roles": {
+									"type": "array",
+									"items": {
+										"type": "string",
+										"enum": ["root", "admin", "user", "anon"]
+									}
+								}
+							},
+							"required": ["roles"]
+						},
+
+						"read": {
+							"type": "object",
+							"properties": {
+								"roles": {
+									"type": "array",
+									"items": {
+										"type": "string",
+										"enum": ["root", "admin", "user", "anon"]
+									}
+								},
+								"owner": {
+									"type": "boolean"
+								}
+							},
+							"required": ["roles", "owner"]
+						},
+
+						"update": {
+							"type": "object",
+							"properties": {
+								"roles": {
+									"type": "array",
+									"items": {
+										"type": "string",
+										"enum": ["root", "admin", "user", "anon"]
+									}
+								},
+								"owner": {
+									"type": "boolean"
+								}
+							},
+							"required": ["roles", "owner"]
+						},
+
+						"delete": {
+							"type": "object",
+							"properties": {
+								"roles": {
+									"type": "array",
+									"items": {
+										"type": "string",
+										"enum": ["root", "admin", "user", "anon"]
+									}
+								},
+								"owner": {
+									"type": "boolean"
+								}
+							},
+							"required": ["roles", "owner"]
+						}
+					},
+					"required": ["create", "read", "update", "delete"]
+				}
+			},
 			"type": "object" ,
-			"required": []
+			"required": ["name", "access", "properties"]
 		}
 	},
 	

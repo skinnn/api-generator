@@ -34,9 +34,12 @@ class EndpointController extends Controller {
 			const exists = await Endpoint.getEndpointByName(endpoint.name)
 			if (exists) {
 				return res.status(400).json({
-					message: `Endpoint already exist. Endpoint: ${endpoint.name}`
+					message: `Endpoint already exist: ${endpoint.name}`
 				})
 			}
+
+			// If creating an endpoint without properties
+			endpoint.properties = endpoint.properties ? endpoint.properties :  {}
 
 			for (const prop in endpoint.properties) {
 				if (endpoint.properties.hasOwnProperty(prop)) {
@@ -51,8 +54,13 @@ class EndpointController extends Controller {
 				}
 			}
 
-			// If creating an endpoint without properties
-			endpoint.properties = endpoint.properties ? endpoint.properties :  {}
+			// Validate with builtin JSON schema model for endpoints
+			const schemaErrors = await Controller.validateToSchema('endpoint', endpoint)
+			const error = Controller.formatSchemaErrors(schemaErrors)
+			if (error) {
+				return res.status(400).json({ message: 'BadRequestError', message: error })
+			}
+
 			const newEndpoint = {
 				name: endpoint.name,
 				_schema: endpoint,

@@ -41,7 +41,7 @@ class Controller {
 		try {
 			// Connect to MongoDB
 			await Controller.connectDB()
-			// Load default schemas in the db
+			// Load default endpoints in the db
 			await Controller.loadStaticEndpoints()
 			// Load dynamic routes created from the GUI/endpoint builder
 			await Controller.loadDynamicEndpoints()
@@ -78,6 +78,7 @@ class Controller {
 				options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
 			}
 
+			// TODO Use official nodejs mongodb driver or implement Feathers (has db adapters)
 			await mongoose.connect(url, options, (err) => {
 				if (err) throw err
 			})
@@ -101,6 +102,7 @@ class Controller {
 						const db = Controller.api.db.connection
 						let rootId = (await db.collection('users').findOne({ roles: ['root'] }))._id.toString()
 						defaultEndpoints[endpointName].__owner = rootId
+						// TODO: Dont save static/built-in endpoints to the db
 						// Save endpoint
 						await Endpoint.createEndpoint(defaultEndpoints[endpointName])
 						console.log(`Created new static endpoint: ${endpointName}`)
@@ -113,49 +115,29 @@ class Controller {
 	}
 
 	static async loadDynamicEndpoints() {
-		var router = require('../../routes/'+Controller.api.version+'/api/index.js')
 		try {
 			var endpoints = await Endpoint.getEndpoints()
+		
+			// TODO: Remove this when proper hooks are implemented in builtin Controllers [create, read, get, update, delete], and they work with 
+			// Remove builtin endpoints from loading
+			var i = endpoints.length
+			while (i-- ) {
+				if (endpoints[i].name === 'endpoint' || endpoints[i].name === 'dashboard' || endpoints[i].name === 'user' || endpoints[i].name === 'login') {
+					endpoints.splice(i, 1)
+				}
+			}
+			// Load models for dynamic endpoints
+			endpoints.forEach((endpoint) => Controller.api.model[endpoint.name] = endpoint._schema)
+
+			// Make hooks for dynamic endpoints
+			this.makeHooks(Controller.api.model, Controller.api.version, Controller.api.hooks)
 		} catch (err) {
 			throw err
 		}
-		const methods = ['get', 'post', 'patch', 'delete']
-
-		endpoints.forEach(endpoint => {
-			const endpointName = endpoint.name[0].toUpperCase() + endpoint.name.slice(1)
-			const url = '/' + endpoint.name + '*'
-			// Load models for dynamic endpoints
-			Controller.api.model[endpoint.name] = endpoint._schema
-			
-			// Check if there is a custom controller defined for this model before assigning the default one
-			var controllerPath = path.resolve(`${__dirname}../../../controllers/${Controller.api.version}/${endpointName}Controller.js`)
-			var ctrl
-			try {
-				ctrl = require(controllerPath)
-				// Instantiate controller for this endpoint
-				Controller.instances[endpoint.name] = new ctrl(Controller.api)
-				
-			} catch (err) {
-				if(err.code === 'MODULE_NOT_FOUND') {
-					controllerPath = path.resolve(`${__dirname}../../../controllers/${Controller.api.version}/Default.js`)
-					const DefaultController = require(controllerPath)
-					// Instantiate default controller with the right model for this endpoint
-					Controller.instances[endpoint.name] = new DefaultController(Controller.api, endpoint._schema)
-				} else {
-					throw err
-				}
-			}
-
-			methods.forEach((method) => {
-				const operation = this.getCRUDFromMethod(method)
-				router[method](url, this.useAPIMiddleware, (req, res, next) => Controller.instances[endpoint.name][operation](req, res, next))
-			})
-			// router.route(url).get(this.useAPIMiddleware, (req, res, next) => Controller.instances[endpoint.name].read(req, res, next))
-		})
 	}
 
 	static async removeDynamicEndpoint(endpointName) {
-		var router = require('../../routes/'+Controller.api.version+'/api/index.js')
+		var router = require('../../routes/api/'+Controller.api.version+'/index.js')
 		// Remove controller instance for this endpoint
 		delete Controller.instances[endpointName]
 		// Remove validators for this endpoint's model
@@ -164,7 +146,6 @@ class Controller {
 		delete Controller.api.model[endpointName]
 		// Remove endpoints from the router [get, post, patch, delete]
 		const url = `/${endpointName}`
-
 		var i = router.stack.length
 		while (i--) {
 			if (router.stack[i].route && router.stack[i].route.path === url) { 
@@ -173,9 +154,9 @@ class Controller {
 		}
 	}
 
-	static useAPIMiddleware (req, res, next) {
+	static APIMiddleware (req, res, next) {
 		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
-		if (req.params) {
+		if (req.params.length) {
 			let par = Object.values(req.params[0].split('/'))
 			par.shift()
 			let obj = { ...par }
@@ -226,8 +207,8 @@ class Controller {
 	 */
 	static validateToSchema(modelName, record) {
 		if(!this.api.validators) this.api.validators = {}
-		let schema = JSON.parse(JSON.stringify(this.api.model[modelName]))
-
+		// let schema = JSON.parse(JSON.stringify(this.api.model[modelName]))
+		let schema = this.api.model[modelName]
 		// If property which is not specified in the schema exist, give an error
 		schema.additionalProperties = false
 
@@ -241,6 +222,21 @@ class Controller {
 		}
 		// valid
 		return false
+	}
+
+	static formatSchemaErrors(errors) {
+		if (errors && errors.length) {
+			let errMsg = `Property ${errors[0].dataPath ? errors[0].dataPath+' ' :''}${errors[0].message}.`
+			if(errors[0].params) {
+				if (errors[0].params.additionalProperty) {
+					errMsg += ` Property .${errors[0].params.additionalProperty} is not allowed.`
+				}
+				if(errors[0].params.allowedValues) {
+					errMsg += ` Allowed values: ${errors[0].params.allowedValues.join(', ')}.`
+				}
+			}
+			return errMsg
+		}
 	}
 
 	// Create root user if it doesnt exist
@@ -285,6 +281,98 @@ class Controller {
 		}
 	}
 
+	static makeHooks(models, apiVersion, apiHooks) {
+		var hooks = apiHooks || {}
+		var router = require('../../routes/api/'+apiVersion+'/index.js')
+
+		for (let modelName in models) {
+			if (models.hasOwnProperty(modelName)) {
+				const controllerName = modelName[0].toUpperCase() + modelName.slice(1) + 'Controller'
+				const url = '/' + modelName
+				
+				// TODO: This should work when proper hooks are implemented in bultin Controllers
+				// Check if there is a custom controller defined for this model before assigning the default one
+				var controllerPath = path.resolve(`${__dirname}../../../controllers/${apiVersion}/${controllerName}.js`)
+				var ctrl
+				try {
+					ctrl = require(controllerPath)
+					// Instantiate controller for this endpoint
+					Controller.instances[modelName] = new ctrl(Controller.api)
+				} catch (err) {
+					if(err.code === 'MODULE_NOT_FOUND') {
+						controllerPath = path.resolve(`${__dirname}../../../controllers/${apiVersion}/Default.js`)
+						const DefaultController = require(controllerPath)
+						// Instantiate default controller with the right model for this endpoint
+						Controller.instances[modelName] = new DefaultController(Controller.api, models[modelName])
+					} else {
+						throw err
+					}
+				}
+
+				// TODO: Get available methods from api config instead of hardcoded
+				const methods = ['get', 'post', 'patch', 'delete']
+				methods.forEach((method) => {
+					if (!hooks[modelName]) hooks[modelName] = []
+					if (method === 'get') {
+						// TODO: Add get() method for each route which handles getting a record by id, while read() handles getting mutiple records
+						router[method](`/${modelName}/:id`, this.APIMiddleware, (req, res, next) => Controller.instances[modelName]['get'](req, res, next))
+						router[method](`/${modelName}`, this.APIMiddleware, (req, res, next) => Controller.instances[modelName]['read'](req, res, next))
+
+						hooks[modelName].push(Controller.instances[modelName]['get'])
+						hooks[modelName].push(Controller.instances[modelName]['read'])
+						console.log(hooks[modelName])
+					} else {
+						const operation = this.getCRUDFromMethod(method)
+						router[method](url, this.APIMiddleware, (req, res, next) => Controller.instances[modelName][operation](req, res, next))
+						hooks[modelName].push(Controller.instances[modelName][operation])
+					}
+				})
+			}
+		}
+		// endpoints.forEach(endpoint => {
+		// 	const controllerName = endpoint.name[0].toUpperCase() + endpoint.name.slice(1) + 'Controller'
+		// 	const url = '/' + endpoint.name
+			
+		// 	// Check if there is a custom controller defined for this model before assigning the default one
+		// 	var controllerPath = path.resolve(`${__dirname}../../../controllers/${apiVersion}/${controllerName}.js`)
+		// 	var ctrl
+		// 	try {
+		// 		ctrl = require(controllerPath)
+		// 		// Instantiate controller for this endpoint
+		// 		Controller.instances[endpoint.name] = new ctrl(Controller.api)
+		// 	} catch (err) {
+		// 		if(err.code === 'MODULE_NOT_FOUND') {
+		// 			controllerPath = path.resolve(`${__dirname}../../../controllers/${apiVersion}/Default.js`)
+		// 			const DefaultController = require(controllerPath)
+		// 			// Instantiate default controller with the right model for this endpoint
+		// 			Controller.instances[endpoint.name] = new DefaultController(Controller.api, endpoint._schema)
+		// 		} else {
+		// 			throw err
+		// 		}
+		// 	}
+
+		// 	// TODO: Get available methods from api config instead of hardcoded
+		// 	const methods = ['get', 'post', 'patch', 'delete']
+		// 	methods.forEach((method) => {
+		// 		if (method === 'get') {
+		// 			// TODO: Add get() method for each route which handles getting a record by id, while read() handles getting mutiple records
+		// 			router[method](`/${endpoint.name}/:id`, this.APIMiddleware, (req, res, next) => Controller.instances[endpoint.name]['get'](req, res, next))
+		// 			router[method](`/${endpoint.name}`, this.APIMiddleware, (req, res, next) => Controller.instances[endpoint.name]['read'](req, res, next))
+
+		// 			let h1 = Controller.instances[endpoint.name]['get']
+		// 			let h2 = Controller.instances[endpoint.name]['read']
+		// 			hooks[endpoint.name] = [h1]
+		// 			hooks[endpoint.name].push(h2)
+		// 			console.log(hooks[endpoint.name])
+		// 		} else {
+		// 			const operation = this.getCRUDFromMethod(method)
+		// 			router[method](url, this.APIMiddleware, (req, res, next) => Controller.instances[endpoint.name][operation](req, res, next))
+		// 			hooks[endpoint.name] = [Controller.instances[endpoint.name][operation]]
+		// 		}
+		// 	})
+		// })
+	}
+
 	static getCRUDFromMethod(method) {
     switch(method.toUpperCase()) {
       case 'GET':
@@ -302,9 +390,13 @@ class Controller {
 	// Get resource name from URL - /api/{resource_name}
 	static getResourceFromRequest(req) {
 		// const resource = req.url.split('/').pop().toLowerCase() || null
-		const resource = req.path.split('/')[1].toLowerCase() || null
+		// TODO: Ignore /api be default (as base API route), and what user specified in the admin panel
+		const ignored = ['api']
+		// console.log(req.)
+		const fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl
+		const resource = req.originalUrl.split('/')[1].toLowerCase() || null
 		// req.resource = resource
-		if (!resource) throw new Error(`Resource for this route is not defined: ${resource}`)
+		if (!resource) throw new Error(`Endpoint for the resource: ${resource}, at URL: ${fullUrl}, is not set.`)
 		else return resource
 	}
 

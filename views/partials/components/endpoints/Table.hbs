@@ -21,30 +21,44 @@
 <script>
 	// Get and display endpoints
 	(async function() {
-		const users = await fetch('/api/endpoint')
+		const endpoints = await fetch('/api/endpoint')
 		.then(res => res.json())
 		.then(res => {
 			// console.log(res[0])
 			return res
 		})
 
-		const mappedEndpoints = users.map(endpoint => {
-				return `
-					<tr>
-						<th>${endpoint._id}</th>
-						<td>${endpoint.name}</td>
-						<td class="schema">${JSON.stringify(endpoint._schema)}</td>
-						<td class="created">${endpoint.created}</td>
-						<td class="updated">${endpoint.updated}</td>
-						<td>${endpoint.__owner}</td>
+		// const filteredEndpoints = endpoints.filter((e) => !e.name.includes('endpoint') && !e.name.includes('dashboard'))
 
-						<td class="operation">
-							<button type="button" class="btn btn-outline-info" data-id="${endpoint._id}" onclick="editEndpoint()">Edit</button>
-							<button type="button" class="btn btn-outline-danger" data-id="${endpoint._id}" onclick="deleteEndpoint()">Delete</button>
-						</td>
-					</tr>
+		const mappedEndpoints = endpoints.map(endpoint => {
+			let tr = document.createElement('tr')
+			let operations
+
+			let body = `
+				<th>${endpoint._id}</th>
+				<td>${endpoint.name}</td>
+				<td class="schema">${JSON.stringify(endpoint._schema)}</td>
+				<td class="created">${endpoint.created}</td>
+				<td class="updated">${endpoint.updated}</td>
+				<td>${endpoint.__owner}</td>
+			`
+			tr.innerHTML = body
+
+			if (endpoint.name !== 'dashboard' && endpoint.name !== 'endpoint') {
+				operations = `
+					<td class="operation">
+						<button type="button" class="btn btn-outline-info" data-id="${endpoint._id}" onclick="editEndpoint()">Edit</button>
+						<button type="button" class="btn btn-outline-danger" data-id="${endpoint._id}" onclick="deleteEndpoint()">Delete</button>
+					</td>
 				`
+			} else {
+				operations = '<td class="operation">N/A</td>'
+			}
+			tr.innerHTML += operations
+
+			return `<tr>${tr.innerHTML}</tr>`
 		}).join('')
+		// TODO: Create click to view schema (modal) instead of showing the whole schema in all tables
 		document.getElementById('endpointsTableBody').innerHTML = mappedEndpoints
 	})()
 
@@ -63,7 +77,7 @@
 			})
 				.then(res => res.json())
 				.then(res => {
-					console.log('deleted red: ', res)
+					console.log('deleted res: ', res)
 				})
 		} catch (err) {
 			console.error(err)

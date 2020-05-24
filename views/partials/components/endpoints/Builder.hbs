@@ -71,6 +71,8 @@
 			</ul>
 			<button onclick="addNewPropField()" type="button" class="btn btn-primary">Add property</button>
 		</div>
+		<div id="error-messages"></div>
+		<div id="success-messages"></div>
 		<button type="submit" class="btn btn-success create-endpoint-btn">
 			<span data-feather="aperture"></span>
 			Create endpoint
@@ -78,15 +80,14 @@
 	</form>
 </div>
 
-<script>
-	// Listen for event when modal is closed
-	document.querySelector('#endpoint-builder').addEventListener('endpoint-modal:close', (e) => {
-		// Reset data
-		endpointInstance.reset()
-	}, false)
-</script>
 
 <script>
+	// Listen for event when modal is closed
+	/*document.querySelector('#endpoint-builder').addEventListener('endpoint-modal:close', (e) => {
+		// Reset data
+		endpointInstance.reset()
+	}, false)*/
+
 	// Initial data for Endpoint
 	class Endpoint {
 		constructor() {
@@ -460,15 +461,23 @@
 		})
 			.then(res => res.json())
 			.then(res => {
+				const errMsgs = document.getElementById('error-messages')
+				const succMsgs = document.getElementById('success-messages')
 				// TODO: Show success message
 				if (res.success) {
+					// TODO: Show success
+					errMsgs.innerHTML = ''
+					succMsgs.innerHTML = `<p class="success-message">Endpoint: <span class="highlighted">/${res.record.name}</span> created successfully.</p>`
+
+					// TODO: Add endpoint to the list
+
 					// Reset Endpoint instance
 					endpointInstance.reset()
 					// Reset DOM
 					resetDOM(endpointInstance)
-
 				} else {
-					console.error(res)
+					// TODO: Show error
+					errMsgs.innerHTML = `<p class="error-message">${res.message}</p>`
 				}
 			})
 	}
