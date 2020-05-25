@@ -12,7 +12,7 @@ router.use('/', express.static(path.join(__dirname, '../public')))
 // REST API & Dashboard built-in routes
 router.use('/api',
 	// Authentication middleware, used for all /api/* endpoints
-	Authentication.ensureAuthenticated,
+	Authentication.use,
 	require('./api/v1/index.js'))
 
 // Index routes

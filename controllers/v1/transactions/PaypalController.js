@@ -1,6 +1,10 @@
 const Controller = require('../Controller.js')
 const paypal = require('../../../config/paypal.js')
 
+/**
+ * Provides CRUD operations for Paypal transactions
+ */
+
 class PaypalController extends Controller {
 
 	createTransaction(req, res) {

@@ -3,8 +3,11 @@ const path = require('path')
 const helpers= require('../../lib/helpers.js')
 const Controller = require('./Controller.js')
 const Endpoint = require('../../models/Endpoint.js')
-const builtInEndpoints = require('../../config/schemas/Endpoints.js')
 
+/**
+ * Provides CRUD operations for endpoints
+ * @extends Controller
+ */
 class EndpointController extends Controller {
 	constructor(api) {
 		super(api)
@@ -162,6 +165,7 @@ class EndpointController extends Controller {
 	// static writeSchemaToFile(resource, schemaToSave) {
 	// 	return new Promise((resolve, reject) => {
 	// 		const schemaFile = path.join(__dirname, '../../config/schemas/Access.js')
+	// const builtInEndpoints = require('../../config/schemas/Endpoints.js')
 	// 		builtInEndpointss[resource] = schemaToSave
 	// 		const data = 'module.exports = ' + JSON.stringify(builtInEndpointss, null, 2)
 	// 		fs.writeFile(schemaFile, data, 'utf-8', (err) => {

@@ -1,4 +1,5 @@
-## REST API Generator <sup><sub>*Inspired by Lederata*</sub></sup>
+## REST API Generator
+<sup><sub>*Inspired by Lederata*</sub></sup>
 
 An open source, customizable, and performant platform built on a modern Node.js technology stack. It gives you the power of designing and creating REST APIs without needing to code everything from the scratch.
 
@@ -25,10 +26,10 @@ Consume the API from any client (Vue, React, Angular, etc.), mobile apps or even
 	+ API URL: http://localhost:8090/api
 	
 
-|*|Notes |
+||Notes |
 |-|-|
 |`Login`| When app starts, if no `root` account is found in the system, one will be created by using `rootUser` section from [config.js](/config/config.js) file.|
-|`Databases`| Current app version *v1* is working only with MongoDB, but database abstraction layer will be implemented|
+|`Databases`| Current app version *v1.0.0* is working only with MongoDB, but database abstraction layer will be implemented|
 
 ### Authorization
 Application is based on tokens, using **JSON Web Token** open standard [RFC 7519](https://tools.ietf.org/html/rfc7519) method for securely transmitting information between parties as a JSON object.

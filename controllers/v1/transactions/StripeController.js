@@ -1,6 +1,9 @@
 const Controller = require('../Controller.js')
 const stripe = require('../../../config/stripe.js')
 
+/**
+ * Provides CRUD operations for Paypal transactions
+ */
 class StripeController extends Controller {
 
 	static async createTransaction(req, res) {

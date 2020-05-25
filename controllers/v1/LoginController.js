@@ -4,6 +4,9 @@ const Token = require('../../lib/Token.js')
 const LoginModel = require('../../models/Login.js')
 const UserModel = require('../../models/User.js')
 
+/**
+ * Provides CRUD operations for login endpoints
+ */
 class LoginController extends Controller {
 	constructor(api) {
 		super(api)

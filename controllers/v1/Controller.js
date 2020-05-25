@@ -1,32 +1,31 @@
 const path = require('path')
 const mongoose = require('mongoose')
-// const config = require('../../config/config.js')
 const Ajv = require('ajv')
 const UserModel = require('../../models/User.js')
 const builtinEndpoints = require('../../config/schemas/Endpoints.js')
 const Endpoint = require('../../models/Endpoint.js')
+const { toBoolean } = require('../../lib/helpers.js')
 
 var _instances = {} 
 
 /**
  * Base controller provides basic logic & helper methods
  */
-
 class Controller {
 	constructor(api) {
 		this.api = api
 		this.ajv = new Ajv()
 	}
 
-	static boot(express, masterConfig) {
+	static boot(app, masterConfig) {
 		Controller.api = masterConfig	
-		Controller.api.app = express
+		Controller.app = app // express instance
 		Controller.ajv = new Ajv()
 
 		Controller.api.model = {}
 		Controller.api.bootModel = builtinEndpoints
 
-		// TODO: Create store and connect here
+		// TODO: Create store and connect
 		return new Promise(async (resolve, reject) => {
 			await Controller.init().then(() => {
 				resolve(true)
@@ -399,16 +398,55 @@ class Controller {
 		if (!resource) throw new Error(`Endpoint for the resource: ${resource}, at URL: ${fullUrl}, is not set.`)
 		else return resource
 	}
+	
+		/**
+		*	Handles query parameters: limit, fields, sort, match, include.
+    * @param 	{Object} 			req 		[The request object]
+    * @returns {Object.<{limit: number, fields: Object, sort: Object, match: Object, include: Object,}>} 	{limit, fields, sort, match, include} 		[Object which keys are parsed querystrings]
+    */
+	static handleQueryStringsFromRequest(req) {
+		var limit = 0, fields = {}, sort = {}, match = {}, include = {};
+		if (req.query.limit) limit = parseInt(req.query.limit)
+		if (req.query.fields) fields = req.query.fields
+		if (req.query.sort) sort = req.query.sort
+			// TODO: Add support for query strings - [match, include]
+		// if (req.query.match) match = req.query.match
+		// if (req.query.include) include = req.query.include
 
-	static copyModel(o){
-    var output, v, key, inst = this;
-    output = Array.isArray(o) ? [] : {};
-    for (key in o) {
-       v = o[key];
-       output[key] = (typeof v === "object") ? inst.copyModel(v) : v;
-    }
-    return output;
-  }
+		// Sort
+		for (let field in sort) {
+			if (sort.hasOwnProperty(field)) {
+				if (sort[field] === 'asc' || sort[field] == '1') sort[field] = 1
+				else if (sort[field] === 'desc' || sort[field] === '-1') sort[field] = -1
+				else delete sort[field]
+			}
+		}
+			
+		// Fields (format JSON object - fields={"_id":true})
+		if (typeof fields === 'string') {
+			try {
+				fields = JSON.parse(fields)
+				// Transform prop 'id' in '_id' (mongodb supported field)
+				if (fields.id === false || fields.id === true) fields._id = fields.id; delete fields.id;
+			} catch (err) {}
+
+		// Fields (format JS object - fields[_id]=true)
+		} else {
+			for (let f in fields) {
+				if (fields.hasOwnProperty(f)) {
+					// Transform prop 'id' in '_id' (mongodb supported field)
+					if (f === 'id') { fields._id = toBoolean(fields[f]); delete fields.id; }
+					else { fields[f] = toBoolean(fields[f]) }
+				}
+			}
+		}
+
+		return { limit, fields, sort, match, include }
+	}
+
+	static logError(error) {
+		console.error(error)
+	}
 
 	static get instances() { return _instances }
 
@@ -420,9 +458,15 @@ class Controller {
 	// 	return session.roles(req, roles)
 	// }
 
-	static logError(error) {
-		console.error(error)
-	}
+	// static copyModel(o) {
+  //   var output, v, key, inst = this;
+  //   output = Array.isArray(o) ? [] : {};
+  //   for (key in o) {
+  //      v = o[key];
+  //      output[key] = (typeof v === "object") ? inst.copyModel(v) : v;
+  //   }
+  //   return output;
+  // }
 
 }
 

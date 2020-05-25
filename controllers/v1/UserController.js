@@ -6,6 +6,9 @@ const UserModel = require('../../models/User.js')
 
 // TODO: Allow altering of user schema & model, use JSON schema instead of mongoose schema
 
+/**
+ * Provides CRUD operations for users
+ */
 class UserController extends Controller {
 	constructor(api) {
 		super(api)

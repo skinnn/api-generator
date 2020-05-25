@@ -2,6 +2,10 @@ const Controller = require('./Controller.js')
 
 var apiData
 
+/**
+ * Manages administration dashboard routes
+ * @extends Controller
+ */
 class DashboardController extends Controller {
 	constructor(api) {
 		super(api)
