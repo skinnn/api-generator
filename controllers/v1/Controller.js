@@ -43,7 +43,7 @@ class Controller {
 		})
 	}
 
-	// App initialization - connect to db, load all endpoints, create root user if needed
+	// App initialization - connect to db, load all endpoints, create root user if one is not found
 	static async init() {
 		Controller.defineResponseErrors()
 		try {
