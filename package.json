@@ -8,9 +8,10 @@
   },
   "scripts": {
     "dev": "nodemon server.js",
-    "dev:debug": "set DEBUG=express:* & nodemon server.js",
+		"dev:debug:express": "set DEBUG=express:* & nodemon server.js",
+		"dev:debug:sync": "node --trace-sync-io server.js",
     "start": "node server.js",
-    "seed": "node db/seed.js"
+    "db:seed": "node db/seed.js"
   },
   "author": "Nikola Jovanovic",
   "license": "ISC",

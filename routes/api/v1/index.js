@@ -10,7 +10,7 @@ const path = require('path')
  * Base: /api
  */
 // Static directory
-router.use('/', express.static(path.join(__dirname, '../../../public')))
+// router.use('/', express.static(path.join(__dirname, '../../../public')))
 
 // Redirect to login page
 router.get('/', (req, res) => res.redirect('/login'))

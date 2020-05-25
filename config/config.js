@@ -3,10 +3,12 @@ const env = process.env
 const config = {
 	name: 'API Generator',
 	version: 'v1',
+	// REST API is exposed on the sub-path defined below, if no sub-path is needed leave empty string
+	subPath: '/api',
+	protocol: env.PROTOCOL || 'http',
+	host: env.HOST || 'localhost',
 	port: env.PORT || '8090',
-	host:'localhost',
 	mode: env.NODE_ENV || 'development',
-	protocol: 'http',
 
 	db: {
 		user: env.DB_USER || 'apigenerator_user',
@@ -19,12 +21,16 @@ const config = {
 	rootUser: {
 		username: env.ROOT_USERNAME || 'admin',
 		password: env.ROOT_PASSWORD || '123123',
-		email: 'admin@example.com'
+		email: env.ROOT_EMAIL || 'admin@example.com'
 	},
 
 	auth: {
 		jwtSecret: env.JWT_SECRET || '321@_+tcretster2@!-;sl-vdmas,fmvm@#3321@_+tcretster2@!-;sl-vdmas,fmvm@#3321@_+tcretster2@!-;sl-vdmas,fmvm@#3'
 	},
+
+	store: null,
+	server: null,
+	hooks: null,
 
 	paymentOptions: {
 		paypal: {

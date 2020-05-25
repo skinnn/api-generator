@@ -14,7 +14,7 @@
 <body>
 	<main class="dashboard-content">
 		<nav class="navbar navbar-dark fixed-top bg-dark navbar-expand-lg flex-md-nowrap p-0 shadow">
-			<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/api/dashboard">{{ api.name }} {{ api.version }}</a>
+			<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/api/dashboard">{{ api.name }}</a>
 			<input class="form-control form-control-dark w-50 mr-auto ml-2" type="text" placeholder="Search" aria-label="Search">
 			<ul class="navbar-nav px-3">
 				<li class="nav-item text-nowrap">
@@ -132,6 +132,9 @@
 								</a>
 							</li>
 						</ul>
+						<footer>
+							<p class="app-version">{{ api.name }} <sup>0.1.0</sup></p>
+						</footer>
 					</div>
 				</nav>
 		

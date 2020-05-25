@@ -67,7 +67,7 @@ class LoginController extends Controller {
 			console.error(err)
 			return res.status(500).json({
 				success: false,
-				message: err
+				message: err.message
 			})
 		}
 	}

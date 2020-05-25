@@ -111,6 +111,14 @@ class DefaultController extends Controller {
 		const doc = await db.collection(this._model.name).findOne({_id: new ObjectId(id)}, options)
 		if (doc) return res.status(200).json(doc)
 	}
+
+	// async update(req, res, next) {
+
+	// }
+
+	// async delete(req, res, next) {
+
+	// }
 }
 
 module.exports = DefaultController

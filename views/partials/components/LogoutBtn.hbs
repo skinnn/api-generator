@@ -30,8 +30,7 @@
 	}
 	
 	function doLogout() {
-		const token = getCookie('token')
-		// const data = { token }
+		const token = getCookie('token') || null
 		eraseCookie('token')
 
 		fetch('/api/login', {
@@ -43,9 +42,10 @@
 			.then(res => res.json())
 			.then(res => {
 				if (res && res.success === true) {
-					return window.location.href = '/login'
+					// Show success message on logout
+					window.location.href = '/login'
 				} else {
-					console.error(err)
+					console.error(res)
 				}
 			})
 	}

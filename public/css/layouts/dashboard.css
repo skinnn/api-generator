@@ -85,6 +85,19 @@ html, body {
   text-transform: uppercase;
 }
 
+.sidebar footer {
+	position: absolute;
+	bottom: 0;
+	padding: 10px 0;
+	width: 100%;
+	text-align: center;
+}
+
+.sidebar footer .app-version {
+	font-size: 9px;
+	margin: 0px;
+}
+
 /*
  * Content
  */
