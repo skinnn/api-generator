@@ -79,12 +79,6 @@ class DefaultController extends Controller {
 			// return res.send(`<pre>${JSON.stringify(this._model, null, 2)}</pre>`)
 		
 		} catch (err) { next(err) }
-			// if (err.name === 'MongoError' && err.errmsg === 'Projection cannot have a mix of inclusion and exclusion.') {
-			// 	return res.status(400).json({ name: 'BadRequestError', message: 'Can not have a mix of both true and false (inclusion and exclusion) of fields.' })
-			// 	throw err
-			// } else {
-			// 	throw err
-			// }
 	}
 
 	// TODO: Add support for query string - [match, include]

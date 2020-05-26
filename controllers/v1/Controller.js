@@ -70,6 +70,7 @@ class Controller {
 	 * @param 	{function} 	next 		The callback to the next program handler 
 	 */
 	static async middleware(req, res, next) {
+		res.setHeader('X-Powered-By', Controller.api.name)
 		await Controller.handleQueryStringsFromRequest(req)
 		req.urlParsed = new URL(Controller.api.protocol + '://' + req.get('host') + req.originalUrl)
 		return next()
