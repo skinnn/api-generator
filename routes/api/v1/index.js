@@ -16,7 +16,6 @@ const path = require('path')
 router.get('/', (req, res) => res.redirect('/login'))
 
 router.use('/endpoint', require('./endpoint.js'))
-router.use('/dashboard', require('./dashboard.js'))
 router.use('/docs', require('./docs.js'))
 router.use('/user', require('./user.js'))
 router.use('/login', require('./login.js'))

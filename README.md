@@ -73,7 +73,7 @@ Example above means:
 
 # API Documentation
 #### Administration dashboard:
-+ /api/dashboard - API Generator GUI
++ /dashboard - API Generator GUI
 
 + #### Built-in REST Endpoints:
 	+ #### **/user**

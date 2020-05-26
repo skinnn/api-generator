@@ -15,7 +15,7 @@ const apiPath = masterConfig.subPath ? masterConfig.subPath : '/'
 router.use(apiPath,
 	// Authentication middleware, used by default for all REST endpoints
 	Authentication.use,
-	require('./api/v1/index.js'))
+	require(`./api/${masterConfig.version}/index.js`))
 
 // Index routes
 router.get('/', (req, res) => res.redirect('/login'))

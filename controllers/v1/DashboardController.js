@@ -3,7 +3,7 @@ const Controller = require('./Controller.js')
 var apiData
 
 /**
- * Manages administration dashboard routes
+ * Manages administration panel.
  * @extends Controller
  */
 class DashboardController extends Controller {

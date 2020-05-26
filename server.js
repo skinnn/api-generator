@@ -1,11 +1,12 @@
 const masterConfig = require('./config/config.js')
-const { routeLogger } = require('./lib/helpers.js')
 const Controller = require('./controllers/v1/Controller.js')
+const Dashboard = require('./lib/Dashboard')
 const http = require('http')
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
 const exphbs = require('express-handlebars')
+const { routeLogger } = require('./lib/helpers.js')
 
 const app = express()
 
@@ -28,12 +29,6 @@ app.use(express.json({ limit: 1024*100, type: 'application/json' })) // Allowed 
 app.use(express.urlencoded({ extended: true }))
 app.use(routeLogger)
 
-// Used to handle req errors (e.g. if body has invalid json)
-// app.use((err, req, res, next) => {
-// 	if(err.status === 400) return res.status(err.status).json({ message: 'Dude, you messed up the JSON' });
-// 	return next(err)
-// })
-
 // Routes
 // app.use('/', require('./routes/index.js'))
 
@@ -48,15 +43,17 @@ app.set('view engine', 'hbs')
 
 // Boot the server with configuration
 Controller.boot(masterConfig, app).then((ctx) => {
-	// Setup all middleware
+	// Setup Application-level middleware
 	ctx.app.use(ctx.middleware)
-	// Load main router
+	// Mount dashboard
+	// ctx.app.use('/dashboard', require('./routes/dashboard.js'))
+
+	ctx.app.use('/dashboard', new Dashboard(ctx.api).router)
+
+	// Mount main router
 	ctx.app.use('/', require('./routes/index.js'))
-	// Error handler (always the last middleware)
-	ctx.app.use((err, req, res, next) => {
-		console.log('Error handler middleware: ', err)
-		return next()
-	})
+	// Default error handler (always the last middleware)
+	ctx.app.use((err, req, res, next) => ctx.handleError(err, req, res, next))
 
 	// Create http/https erver
 	if (ctx.api.protocol === 'https') {

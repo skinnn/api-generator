@@ -39,7 +39,7 @@ class DefaultController extends Controller {
 		record.created = new Date(Date.now()).toISOString()
 		record.updated = null
 		try {
-			// Validate record against JSON Schema defined in this._model._schema
+			// Validate therecord against JSON Schema defined in this._model._schema
 			const schemaErrors = Controller.validateToSchema(this._model.name, record)
 			const error = Controller.formatSchemaErrors(schemaErrors)
 			
@@ -50,9 +50,12 @@ class DefaultController extends Controller {
 				return res.status(201).json(doc)
 
 			} else {
+				let err = new Error()
+				err.name = 'BadRequestError', err.message = error;
+				next(err)
 				// TODO: Create proper error handling/mapping
 				// return Controller.api.error.BadRequest(res, errMsg)
-				return res.status(400).json({ message: 'BadRequestError', message: error })
+				// return res.status(400).json({ message: 'BadRequestError', message: error })
 			}
 		} catch (err) {
 			throw err
@@ -75,18 +78,17 @@ class DefaultController extends Controller {
 			return res.status(200).json(docs)
 			// return res.send(`<pre>${JSON.stringify(this._model, null, 2)}</pre>`)
 		
-		} catch (err) {
-			if (err.name === 'MongoError' && err.errmsg === 'Projection cannot have a mix of inclusion and exclusion.') {
-				return res.status(400).json({ name: 'BadRequestError', message: 'Can not have a mix of both true and false (inclusion and exclusion) of fields.' })
-			} else {
-				throw err
-			}
-		}
+		} catch (err) { next(err) }
+			// if (err.name === 'MongoError' && err.errmsg === 'Projection cannot have a mix of inclusion and exclusion.') {
+			// 	return res.status(400).json({ name: 'BadRequestError', message: 'Can not have a mix of both true and false (inclusion and exclusion) of fields.' })
+			// 	throw err
+			// } else {
+			// 	throw err
+			// }
 	}
 
 		// TODO: Add support for query string - [match]
 	async get(req, res, next) {
-		console.log('HIT GET')
 		const id = req.params.id
 		const db = Controller.api.db.connection
 		let options = {}
@@ -101,8 +103,11 @@ class DefaultController extends Controller {
 			}
 		}
 
-		const doc = await db.collection(this._model.name).findOne({_id: new ObjectId(id)}, options)
-		if (doc) return res.status(200).json(doc)
+		try {
+			const doc = await db.collection(this._model.name).findOne({_id: new ObjectId(id)}, options)
+			if (doc) return res.status(200).json(doc)
+		
+		} catch (err) { next(err) }
 	}
 
 	// async update(req, res, next) {

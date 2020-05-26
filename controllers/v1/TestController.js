@@ -1,6 +1,7 @@
-const Controller = require('./Controller')
+const DefaultController = require('./DefaultController')
 
-class TestController extends Controller {
+// TODO: Overriding DefaultController methods is not working
+class TestController extends DefaultController {
 	constructor(api, model) {
 		super(api)
 		this._model = model

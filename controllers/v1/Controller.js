@@ -6,7 +6,7 @@ const builtinEndpoints = require('../../config/schemas/Endpoints.js')
 const Endpoint = require('../../models/Endpoint.js')
 const { toBoolean, haveCommonElements, isEmptyObject } = require('../../lib/helpers.js')
 
-var _instances = {} 
+var _instances = {}, _api = {};
 
 /**
  * Main controller provides basic logic & helper methods
@@ -14,7 +14,7 @@ var _instances = {}
 class Controller {
 	constructor(api) {
 		this.api = api
-		this.ajv = new Ajv()
+		this.ajv = {} // new Ajv()
 	}
 
 	// TODO: Should create boot instance of fortune store, connect to store load all the endpoints from database
@@ -25,14 +25,15 @@ class Controller {
 	 * @return	 					ctx 					[Returns context of the Controller]
 	 */
 	static boot(masterConfig, app) {
-		Controller.api = masterConfig	
-		Controller.app = app // express instance
+		// Controller.api = masterConfig
+		Controller.modify(Controller.api, masterConfig)
+		Controller.app = app //  express app instance
 		Controller.ajv = new Ajv()
 
 		Controller.api.model = {}
 		Controller.api.bootModel = builtinEndpoints
 
-		// TODO: Create store, boot store instance and connect, init() should load all routes from the db
+		// TODO: Create store, boot store instance and connect
 		return new Promise(async (resolve, reject) => {
 			try {
 				await Controller.init()
@@ -45,11 +46,10 @@ class Controller {
 
 	// App initialization - connect to db, load all endpoints, create root user if one is not found
 	static async init() {
-		Controller.defineResponseErrors()
 		try {
 			// Connect to MongoDB
 			await Controller.connectDB()
-			// Load default endpoints in the db
+			// Save default endpoints in the db
 			await Controller.saveStaticEndpoints()
 			// Load dynamic routes created from the GUI/endpoint builder
 			await Controller.loadDynamicEndpoints()
@@ -63,7 +63,8 @@ class Controller {
 	}
 
 	/**
-	 * Main middleware triggered for each incoming request to the application.
+	 * Application-level middleware, triggered for each incoming request to the application.
+	 * Called before each 
 	 * @param 	{Object} 		req 		The request object
 	 * @param 	{Object} 		res 		The response object
 	 * @param 	{function} 	next 		The callback to the next program handler 
@@ -142,28 +143,32 @@ class Controller {
 			// Remove builtin endpoints from loading
 			var i = endpoints.length
 			while (i-- ) {
-				if (endpoints[i].name === 'endpoint' || endpoints[i].name === 'dashboard' || endpoints[i].name === 'user' || endpoints[i].name === 'login') {
+				if (endpoints[i].name === 'dashboard') {
 					endpoints.splice(i, 1)
 				}
 			}
+			// Create dashboard controller instance
+			const DC = require(`../../controllers/${Controller.api.version}/DashboardController`)
+			new DC(Controller.api.version)
+			
 			// Load models for all endpoints
 			endpoints.forEach((endpoint) => Controller.api.model[endpoint.name] = endpoint._schema)
 
 			const methods = ['get', 'post', 'patch', 'delete']
 			// Make hooks for all models
 			Controller.api.hooks = this.makeHooks(Controller.api.model, Controller.api.version)
-			// console.log(`Hooks for ${modelName}:`, hooks[modelName])
+			// console.log('Hooks: ', Controller.api.hooks)
 			var router = require(`../../routes/api/${Controller.api.version}/index.js`)
 
 			// Load hooks for all models
 			for (let modelName in Controller.api.hooks) {
 				methods.forEach((method) => {
 					if (method === 'get') {
-						router[method](`/${modelName}`, this.APIMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
-						router[method](`/${modelName}/:id`, this.APIMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
+						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
+						router[method](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
 					} else {
 						const operation = this.getCRUDFromMethod(method)
-						router[method](`/${modelName}`, this.APIMiddleware, (req, res, next) => Controller.instances[modelName][operation](req, res, next))
+						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName][operation](req, res, next))
 					}
 				})
 			}
@@ -190,7 +195,13 @@ class Controller {
 		}
 	}
 
-	static APIMiddleware (req, res, next) {
+	/**
+	 * REST API middleware (router-level middelware). 
+	 * @param {Object} 		req 
+	 * @param {Object} 		res 
+	 * @param {Function}	next 
+	 */
+	static RESTMiddleware (req, res, next) {
 		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
 		if (req.params.length) {
 			let par = Object.values(req.params[0].split('/'))
@@ -201,38 +212,6 @@ class Controller {
 			// if(obj[0].match(containsNumber)) console.log('Contains number')
 			next()
 		} else next()
-	}
-
-	// TODO: Create error handler
-	static defineResponseErrors() {
-		Controller.api.errors = {
-			/**
-			 * @param {Object} 		res 			[Response object]
-			 * @param {String} 		[error] 	[Optional error text]
-			 */
-			NotFound(res, error) {
-				if (!error) var error = 'Resource you are looking for is not found'
-				return res.status(404).json({ name: 'NotFoundError',  message: error })
-			},
-			/**
-			 * @param {Object} 		res 			[Response object]
-			 * @param {String} 		[error] 	[Optional error text]
-			 */
-			Forbidden(res, error) {
-				if (!error) var error = 'Access denied'
-				return res.status(404).json({ name: 'ForbiddenError', message: error })
-			},
-			/**
-			 * @param {Object} 																			res 				[Response object]
-			 * @param {Array.<{name: String, message: String}>} 		[errors] 		[Optional array of error objects]
-			 */
-			BadRequest(res, error) {
-				if (!error) var error = 'Bad request error'
-				// else errors.forEach((err) => err.name = 'BadRequestError')
-				// return res.status(400).json(errors)
-				return res.status(400).json({ name: 'BadRequestError', message: error })
-			}
-		}
 	}
 
 	/**
@@ -253,7 +232,7 @@ class Controller {
 		}
 		var valid = this.api.validators[modelName](record)
 		if (!valid) {
-			console.log(`Endpoint: ${modelName}, schema is not valid: `, this.api.validators[modelName].errors)
+			// console.log(`Endpoint: ${modelName}, record doesnt match the schema: `, this.api.validators[modelName].errors)
 			return this.api.validators[modelName].errors
 		}
 		// valid
@@ -315,15 +294,6 @@ class Controller {
 		} catch (err) {
 			throw err
 		}
-	}
-
-	static listener(req, res, next) {
-		req.urlParsed = new URL(Controller.api.protocol + '://' + req.get('host') + req.originalUrl)
-		next()
-	}
-
-	static handleError(req, res, next) {
-		// TODO: Finish
 	}
 
 	/**
@@ -437,7 +407,7 @@ class Controller {
 	static handleQueryStringsFromRequest(req) {
 		return new Promise((resolve, reject) => {
 			req.queryParsed = {}
-			if (isEmptyObject(req.query)) console.log('EMPTY: ', req.query); resolve(true);
+			if (isEmptyObject(req.query)) resolve(true);
 
 			var limit = 0, fields = {}, sort = {}, match = {}, include = {};
 			if (req.query.limit) limit = parseInt(req.query.limit)
@@ -456,7 +426,7 @@ class Controller {
 				}
 			}
 				
-			// Fields (format JSON object - fields={"_id":true})
+			// Fields (handle format JSON object - fields={"id":true})
 			if (typeof fields === 'string') {
 				try {
 					fields = JSON.parse(fields)
@@ -464,7 +434,7 @@ class Controller {
 					if (fields.id === false || fields.id === true) fields._id = fields.id; delete fields.id;
 				} catch (err) {}
 
-			// Fields (format JS object - fields[_id]=true)
+			// Fields (handle format JS object - fields[id]=true)
 			} else {
 				for (let f in fields) {
 					if (fields.hasOwnProperty(f)) {
@@ -480,14 +450,47 @@ class Controller {
 			req.queryParsed.match = match
 			req.queryParsed.include = include
 			resolve(true)
-			// return { limit, fields, sort, match, include }
 		})
 	}
+
+	/**
+	 * Default error handler.
+	 * @param 	{Object} 		req 		The request object
+	 * @param 	{Object} 		res 		The response object
+	 * @param 	{function} 	next 		The callback to the next program handler 
+	 */
+  static handleError(err, req, res, next) {
+		if (res.headersSent) return null;
+		if (err.name === 'MongoError' && err.errmsg === 'Projection cannot have a mix of inclusion and exclusion.') {
+			err.name = 'BadRequestError'
+			err.message = 'Cannot have a mix of inclusion and exclusion of query parameter fields.'
+			// err.data = req.queryParsed
+		}
+		const statusCodeMap = {
+			'ForbiddenError': 403,
+			'BadRequestError': 400,
+			'UnauthorizedError': 401,
+			'NotFoundError': 404,
+			'MethodError': 405,
+			'NotAcceptableError': 406,
+			'ConflictError': 409,
+			'UnsupportedError': 415,
+			'UnprocessableError': 422
+		}
+		res.statusCode = statusCodeMap[err.name] ? statusCodeMap[err.name] : 400
+		let errObj = {}
+		err.name ? errObj.name = err.name : null
+		err.message ? errObj.message = err.message : null
+		err.data ? errObj.data = err.data : null
+		res.json(errObj)
+		// Controller.logError(err)
+  }
 
 	static logError(error) {
 		console.error(error)
 	}
 
+	static get api() { return _api }
 	static get instances() { return _instances }
 
 	// session(context, roles) {
@@ -498,15 +501,26 @@ class Controller {
 	// 	return session.roles(req, roles)
 	// }
 
-	// static copyModel(o) {
-  //   var output, v, key, inst = this;
-  //   output = Array.isArray(o) ? [] : {};
-  //   for (key in o) {
-  //      v = o[key];
-  //      output[key] = (typeof v === "object") ? inst.copyModel(v) : v;
-  //   }
-  //   return output;
-  // }
+	static copyModel(o) {
+    var output, v, key, inst = this;
+    output = Array.isArray(o) ? [] : {};
+    for (key in o) {
+       v = o[key];
+       output[key] = (typeof v === "object") ? inst.copyModel(v) : v;
+    }
+    return output;
+	}
+	
+	static modify(obj, newObj) {
+		// console.log('obj: ', obj)
+		// console.log('newObj; ', newObj)
+    Object.keys(obj).forEach((key) => {
+      delete obj[key]
+    })
+    Object.keys(newObj).forEach((key) => {
+      obj[key] = newObj[key]
+    })
+  }
 
 }
 

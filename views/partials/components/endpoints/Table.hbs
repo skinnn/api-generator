@@ -28,8 +28,6 @@
 			return res
 		})
 
-		// const filteredEndpoints = endpoints.filter((e) => !e.name.includes('endpoint') && !e.name.includes('dashboard'))
-
 		const mappedEndpoints = endpoints.map(endpoint => {
 			let tr = document.createElement('tr')
 			let operations
@@ -44,7 +42,9 @@
 			`
 			tr.innerHTML = body
 
-			if (endpoint.name !== 'dashboard' && endpoint.name !== 'endpoint') {
+			// Dont load operations buttons for builtin endpoints
+			// TODO: But implement functionality so they can be editable
+			if (endpoint.name !== 'dashboard' && endpoint.name !== 'endpoint' && endpoint.name !== 'user' && endpoint.name !== 'login') {
 				operations = `
 					<td class="operation">
 						<button type="button" class="btn btn-outline-info" data-id="${endpoint._id}" onclick="editEndpoint()">Edit</button>

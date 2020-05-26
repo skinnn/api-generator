@@ -14,14 +14,14 @@
 <body>
 	<main class="dashboard-content">
 		<nav class="navbar navbar-dark fixed-top bg-dark navbar-expand-lg flex-md-nowrap p-0 shadow">
-			<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/api/dashboard">{{ api.name }}</a>
+			<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/dashboard">{{ data.name }}</a>
 			<input class="form-control form-control-dark w-50 mr-auto ml-2" type="text" placeholder="Search" aria-label="Search">
 			<ul class="navbar-nav px-3">
 				<li class="nav-item text-nowrap">
 					<a class="nav-link disabled" href="#">{{> components/LoggedInAs }}</a>
 				</li>
 				<li class="nav-item text-nowrap">
-					<a class="nav-link" href="/api/dashboard/docs">API Docs</a>
+					<a class="nav-link" href="/dashboard/docs">API Docs</a>
 				</li>
 				<li class="nav-item text-nowrap">
 					<a class="nav-link">{{> components/LogoutBtn }}</a>
@@ -35,19 +35,19 @@
 					<div id="dashboard-sidebar-menu" class="sidebar-sticky">
 						<ul class="nav flex-column">
 							<li class="nav-item">
-								<a class="nav-link {{#if page.index}}active{{/if}}" href="/api/dashboard">
+								<a class="nav-link {{#if page.index}}active{{/if}}" href="/dashboard">
 									<span data-feather="home"></span>
 									Dashboard
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.docs}}active{{/if}}" href="/api/dashboard/docs">
+								<a class="nav-link {{#if page.docs}}active{{/if}}" href="/dashboard/docs">
 									<span data-feather="file-text"></span>
 									Documentation
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.endpoint}}active{{/if}}" href="/api/dashboard/endpoint">
+								<a class="nav-link {{#if page.endpoint}}active{{/if}}" href="/dashboard/endpoint">
 									<span data-feather="aperture"></span>
 									Endpoints
 								</a>
@@ -63,13 +63,13 @@
 								</a>
 							</h6>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.logins}}active{{/if}}" href="/api/dashboard/logins">
+								<a class="nav-link {{#if page.logins}}active{{/if}}" href="/dashboard/logins">
 									<span data-feather="log-in"></span>
 									Logins
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.users}}active{{/if}}" href="/api/dashboard/users">
+								<a class="nav-link {{#if page.users}}active{{/if}}" href="/dashboard/users">
 									<span data-feather="users"></span>
 									Users
 								</a>
@@ -133,7 +133,7 @@
 							</li>
 						</ul>
 						<footer>
-							<p class="app-version">{{ api.name }} <sup>0.1.0</sup></p>
+							<p class="app-version">{{ data.name }} <sup>0.1.0</sup></p>
 						</footer>
 					</div>
 				</nav>
