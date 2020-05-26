@@ -4,7 +4,7 @@ const Ajv = require('ajv')
 const UserModel = require('../../models/User.js')
 const builtinEndpoints = require('../../config/schemas/Endpoints.js')
 const Endpoint = require('../../models/Endpoint.js')
-const { toBoolean, haveCommonElements } = require('../../lib/helpers.js')
+const { toBoolean, haveCommonElements, isEmptyObject } = require('../../lib/helpers.js')
 
 var _instances = {} 
 
@@ -62,10 +62,16 @@ class Controller {
 		}
 	}
 
-	static middleware(req, res, next) {
-		// Main middleware
+	/**
+	 * Main middleware triggered for each incoming request to the application.
+	 * @param 	{Object} 		req 		The request object
+	 * @param 	{Object} 		res 		The response object
+	 * @param 	{function} 	next 		The callback to the next program handler 
+	 */
+	static async middleware(req, res, next) {
+		await Controller.handleQueryStringsFromRequest(req)
 		req.urlParsed = new URL(Controller.api.protocol + '://' + req.get('host') + req.originalUrl)
-		next()
+		return next()
 	}
 
 	static async connectDB() {
@@ -422,48 +428,60 @@ class Controller {
 	}
 	
 		/**
-		*	Handles query parameters: limit, fields, sort, match, include.
-    * @param 	{Object} 			req 		[The request object]
-    * @return {Object.<{limit: number, fields: Object, sort: Object, match: Object, include: Object}>} 	{limit, fields, sort, match, include} 		[Object which keys are parsed querystrings]
+		*	Parses query parameters: limit, fields, sort, match, include.
+		* Parsed query params are attached to request object - req.queryParsed.
+		*	
+		* limit:number, fields:Object, sort:Object, match:Object, include:Object 
+    * @param 	{Object} 	req 	[The request object]
     */
 	static handleQueryStringsFromRequest(req) {
-		var limit = 0, fields = {}, sort = {}, match = {}, include = {};
-		if (req.query.limit) limit = parseInt(req.query.limit)
-		if (req.query.fields) fields = req.query.fields
-		if (req.query.sort) sort = req.query.sort
-			// TODO: Add support for query strings - [match, include]
-		// if (req.query.match) match = req.query.match
-		// if (req.query.include) include = req.query.include
+		return new Promise((resolve, reject) => {
+			req.queryParsed = {}
+			if (isEmptyObject(req.query)) console.log('EMPTY: ', req.query); resolve(true);
 
-		// Sort
-		for (let field in sort) {
-			if (sort.hasOwnProperty(field)) {
-				if (sort[field] === 'asc' || sort[field] == '1') sort[field] = 1
-				else if (sort[field] === 'desc' || sort[field] === '-1') sort[field] = -1
-				else delete sort[field]
-			}
-		}
-			
-		// Fields (format JSON object - fields={"_id":true})
-		if (typeof fields === 'string') {
-			try {
-				fields = JSON.parse(fields)
-				// Transform prop 'id' in '_id' (mongodb supported field)
-				if (fields.id === false || fields.id === true) fields._id = fields.id; delete fields.id;
-			} catch (err) {}
+			var limit = 0, fields = {}, sort = {}, match = {}, include = {};
+			if (req.query.limit) limit = parseInt(req.query.limit)
+			if (req.query.fields) fields = req.query.fields
+			if (req.query.sort) sort = req.query.sort
+				// TODO: Add support for query strings - [match, include]
+			// if (req.query.match) match = req.query.match
+			// if (req.query.include) include = req.query.include
 
-		// Fields (format JS object - fields[_id]=true)
-		} else {
-			for (let f in fields) {
-				if (fields.hasOwnProperty(f)) {
-					// Transform prop 'id' in '_id' (mongodb supported field)
-					if (f === 'id') { fields._id = toBoolean(fields[f]); delete fields.id; }
-					else { fields[f] = toBoolean(fields[f]) }
+			// Sort
+			for (let field in sort) {
+				if (sort.hasOwnProperty(field)) {
+					if (sort[field] === 'asc' || sort[field] == '1') sort[field] = 1
+					else if (sort[field] === 'desc' || sort[field] === '-1') sort[field] = -1
+					else delete sort[field]
 				}
 			}
-		}
+				
+			// Fields (format JSON object - fields={"_id":true})
+			if (typeof fields === 'string') {
+				try {
+					fields = JSON.parse(fields)
+					// Transform prop 'id' in '_id' (mongodb supported field)
+					if (fields.id === false || fields.id === true) fields._id = fields.id; delete fields.id;
+				} catch (err) {}
 
-		return { limit, fields, sort, match, include }
+			// Fields (format JS object - fields[_id]=true)
+			} else {
+				for (let f in fields) {
+					if (fields.hasOwnProperty(f)) {
+						// Transform prop 'id' in '_id' (mongodb supported field)
+						if (f === 'id') { fields._id = toBoolean(fields[f]); delete fields.id; }
+						else { fields[f] = toBoolean(fields[f]) }
+					}
+				}
+			}
+			req.queryParsed.limit = limit
+			req.queryParsed.fields = fields
+			req.queryParsed.sort = sort
+			req.queryParsed.match = match
+			req.queryParsed.include = include
+			resolve(true)
+			// return { limit, fields, sort, match, include }
+		})
 	}
 
 	static logError(error) {

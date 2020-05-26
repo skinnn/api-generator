@@ -1,7 +1,7 @@
 const Controller = require('./Controller.js')
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
-const { isEmptyObject, toBoolean } = require('../../lib/helpers.js')
+const { isEmptyObject } = require('../../lib/helpers.js')
 // TODO: Default controller hooks for CRUD operations: create, read, get, update, delete
 // TODO: Customizing/extending the Default controller, testing
 
@@ -69,17 +69,10 @@ class DefaultController extends Controller {
     */
 	async read(req, res, next) {
 		const db = Controller.api.db.connection
-		var limit = 0, fields = {}, sort = {}, match = {}, include = {};
-
-		// Handle query strings
-		if (!isEmptyObject(req.query)) {
-			const { limit, fields, sort, match, include } = Controller.handleQueryStringsFromRequest(req)
-		}
-		
+		var limit = req.queryParsed.limit, fields = req.queryParsed.fields, sort = req.queryParsed.sort, match = req.queryParsed.match, include = req.queryParsed.include;
 		try {
 			const docs = await db.collection(this._model.name).find().sort(sort).limit(limit).project(fields).toArray()
 			return res.status(200).json(docs)
-
 			// return res.send(`<pre>${JSON.stringify(this._model, null, 2)}</pre>`)
 		
 		} catch (err) {
