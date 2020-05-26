@@ -87,21 +87,25 @@ class DefaultController extends Controller {
 			// }
 	}
 
-		// TODO: Add support for query string - [match]
+	// TODO: Add support for query string - [match, include]
 	async get(req, res, next) {
+		console.log('GET HIT')
 		const id = req.params.id
 		const db = Controller.api.db.connection
 		let options = {}
-		if (!isEmptyObject(req.query)) {
-			// Query: fields={}
-			if (req.query.fields && req.query.fields.length > 0) {
-				try {
-					var parsed = JSON.parse(req.query.fields)
-					options.fields = parsed
-				} catch (err) {
-				}
-			}
-		}
+
+		console.log('req.queryParsed: ', req.queryParsed)
+
+		// if (!isEmptyObject(req.query)) {
+		// 	// Query: fields={}
+		// 	if (req.query.fields && req.query.fields.length > 0) {
+		// 		try {
+		// 			var parsed = JSON.parse(req.query.fields)
+		// 			options.fields = parsed
+		// 		} catch (err) {
+		// 		}
+		// 	}
+		// }
 
 		try {
 			const doc = await db.collection(this._model.name).findOne({_id: new ObjectId(id)}, options)

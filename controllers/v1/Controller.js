@@ -165,7 +165,7 @@ class Controller {
 				methods.forEach((method) => {
 					if (method === 'get') {
 						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
-						router[method](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
+						router[method](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].get(req, res, next))
 					} else {
 						const operation = this.getCRUDFromMethod(method)
 						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName][operation](req, res, next))

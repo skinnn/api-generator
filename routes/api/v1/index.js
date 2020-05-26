@@ -1,5 +1,5 @@
 /**
- * API router
+ * REST API router
  */
 
 const express = require('express')
