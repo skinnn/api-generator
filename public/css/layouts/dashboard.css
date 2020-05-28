@@ -11,7 +11,29 @@ html {
 html, body {
 	width: 100%;
 	height: 100%;
-	/* font-family: 'Monospace'; */
+}
+
+/* TODO: Add global.css and move global styles there */
+:root {
+	--sidebar-main-bg: rgba(51, 51, 51, 0.97);
+}
+/* Global scrollbar */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}/* Track */
+::-webkit-scrollbar-track {
+	background: #f1f1f1; 
+}
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 51, 51, 0.2); 
+	border-radius: 20px;
+}
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+	/* background: #555; */
+	background: rgba(51, 51, 51, 0.6); 
 }
 
 .dashboard-content {
@@ -23,6 +45,10 @@ html, body {
 .dashboard-content .container-fluid .row {
 	width: 100%;
 	height: 100%;
+}
+
+.dashboard-content nav {
+	background-color: var(--sidebar-main-bg);
 }
 
 .feather {
@@ -41,14 +67,15 @@ html, body {
   bottom: 0;
   left: 0;
   z-index: 100; /* Behind the navbar */
-  padding: 48px 0 0; /* Height of navbar */
+  padding: 3rem 0 0; /* Height of navbar */
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
 }
 
 .sidebar-sticky {
   position: relative;
-  top: 0;
-  height: calc(100vh - 48px);
+	top: 0;
+	
+  height: calc(100vh - 3rem - 2.5rem); /* minus sidebar header, and sidebar footer */
   padding-top: .5rem;
   overflow-x: hidden;
   overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
@@ -82,28 +109,30 @@ html, body {
 
 .sidebar-heading {
   font-size: .75rem;
-  text-transform: uppercase;
+	text-transform: uppercase;
 }
 
 .sidebar footer {
-	position: relative;
-	bottom: 0;
-	left: 0;
-	padding: 10px 0;
-	width: 100%;
-	height: 100px;
-	text-align: center;
-}
-
-.sidebar footer .app-version {
 	position: absolute;
 	bottom: 0;
-	left: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 2.5rem;
+	padding: 10px 0;
+	background-color: var(--sidebar-main-bg);
+}
+
+.sidebar footer .powered-by {
 	width: 100%;
 	margin: 0;
-	padding: 10px;
 	font-size: 9px;
 	text-align: center;
+	color: #fff;
+}
+.sidebar footer .powered-by .version {
+	color: rgba(255, 255, 255, 0.7) !important;
 }
 
 /*
@@ -122,8 +151,8 @@ html, body {
   padding-top: .75rem;
   padding-bottom: .75rem;
   font-size: 1rem;
-  background-color: rgba(0, 0, 0, .25);
-  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
+  background-color: var(--sidebar-main-bg);
+	box-shadow: inset -1px 0 0 rgba(0, 0, 0, .25);
 }
 
 .navbar .form-control {
@@ -144,12 +173,13 @@ html, body {
 }
 
 /* 
- * Table
+ * Tables
  */
 table {
 	display: block;
 	overflow-x: auto;
 	width: 100%;
+	font-family: Monospace;
 
 	border-collapse: unset;
 	border-spacing: 2px 10px;
@@ -174,7 +204,7 @@ table th {
 }
 
 .table-hover tbody tr:hover {
-	cursor: pointer;
+	/* cursor: pointer; */
 	color: #212529;
 	background-color: rgba(0,0,0,.2);
 }
@@ -206,8 +236,13 @@ table tbody .operation {
 	text-align: center;
 }
 
-/* Endpoint builder */
-#endpoint-builder-modal {
+/* Modals */
+.modal-show {
+	visibility: visible !important;
+  opacity: 1 !important;
+}
+/* Endpoint builder modal */
+#modal {
 	visibility: hidden; /* Hidden by default */
   opacity: 0;
   position: fixed;
@@ -224,14 +259,27 @@ table tbody .operation {
 	transition: visibility 0s, opacity 0.2s ease-in-out;
 }
 
-#endpoint-builder-modal.modal-show {
-	visibility: visible;
-  opacity: 1;
-}
-
-#endpoint-builder-modal .modal-content {
+#modal .modal-content {
 	width: 55%;
 	margin: 0 auto;
 	padding: 3% 4%;
 	background-color: rgb(255,255,255);
+}
+
+/* Schema modal */
+#schema-modal {
+	visibility: hidden; /* Hidden by default */
+  opacity: 0;
+  position: fixed;
+  z-index: 9999;
+	left: 0;
+	top: 0;
+  width: 100%;
+	height: 100%;
+	padding: 2% 0;
+  overflow: auto;
+  background-color: rgb(0, 0, 0);
+	background-color: rgba(0, 0, 0, 0.45);
+
+	transition: visibility 0s, opacity 0.2s ease-in-out;
 }

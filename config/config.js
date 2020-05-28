@@ -3,12 +3,17 @@ const env = process.env
 const config = {
 	name: 'API Generator',
 	version: 'v1',
-	// REST API is exposed on the sub-path defined below, if no sub-path is needed leave empty string
-	subPath: '/api',
 	protocol: env.PROTOCOL || 'http',
 	host: env.HOST || 'localhost',
 	port: env.PORT || '8090',
 	mode: env.NODE_ENV || 'development',
+
+	settings: {
+		// REST API is exposed on the sub-path defined below, if sub-path is not needed leave empty string
+		restApi: {
+			path: '/api/v1'
+		}
+	},
 
 	db: {
 		user: env.DB_USER || 'apigenerator_user',

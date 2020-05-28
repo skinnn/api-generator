@@ -1,24 +1,24 @@
-/**
- * REST API router
- */
-
 const express = require('express')
 const router = express.Router()
 const path = require('path')
+const Authentication = require('../../lib/Authentication')
 
 /**
  * Base: /api
  */
+
 // Static directory
-// router.use('/', express.static(path.join(__dirname, '../../../public')))
+router.use('/', express.static(path.join(__dirname, '../../../public')))
+// Authentication middleware, used by all REST endpoints
+router.use(Authentication.use)
 
 // Redirect to login page
-router.get('/', (req, res) => res.redirect('/login'))
-
+router.get('/', (req, res) => res.redirect('/dashboard/login'))
+/**
+ * Built-in REST Endpoints
+ */
 router.use('/endpoint', require('./endpoint.js'))
-router.use('/docs', require('./docs.js'))
 router.use('/user', require('./user.js'))
 router.use('/login', require('./login.js'))
-// router.use('/transaction', require('./transaction.js'))
 
 module.exports = router

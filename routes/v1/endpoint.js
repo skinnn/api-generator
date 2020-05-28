@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const EndpointController = require('../../../controllers/v1/EndpointController.js')
+const EndpointController = require('../../controllers/v1/EndpointController.js')
 
 /**
 	Base: /api/endpoint

@@ -15,7 +15,6 @@
 <div id="message" class="message"></div>
 
 <script>
-
 	function createCookie(name, value, days) {
 		if (days) {
 				var date = new Date()
@@ -50,8 +49,9 @@
 		const u = document.getElementById('u').value
 		const p = document.getElementById('p').value
 		const data = { username: u, password: p }
+		var API_PATH = {{{json apiPath}}}
 
-		fetch('/api/login', {
+		fetch(`${API_PATH}/login`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -61,7 +61,12 @@
 			.then(res => res.json())
 			.then(res => {
 				console.log(res)
+				// TODO: Set apiPath in localStorage instead of
+				// hardcoded /api throughout the whole dashboard
 				if (res && res.token) {
+					// Save api path in localStorage (sent while rendering the login page tempalte)
+					localStorage.setItem('api_path', API_PATH)
+
 					createCookie('token', res.token, 365)
 					localStorage.setItem('user', res.userId)
 					rememberMeHandle(u)

@@ -3,12 +3,12 @@
 <script>
 	const id = localStorage.getItem('user') || null
 	if (id) {
-		fetch(`/api/user/${id}`)
+		fetch(`${API_PATH}/user/${id}`)
 			.then(res => res.json())
 			.then(res => {
 				document.getElementById('loggedInAs').innerText = res.username
 			})
 	} else {
-		console.error(`User ID not found in localStorage. URL: ${this.window.location.href}`)
+		console.error(`User ID not found in localStorage. URL: ${location.href}`)
 	}
 </script>

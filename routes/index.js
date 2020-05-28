@@ -1,7 +1,6 @@
 const express = require('express')
 const router = express.Router()
 const path = require('path')
-const Authentication = require('../lib/Authentication')
 const masterConfig = require('../config/config')
 
 router.use('/', express.static(path.join(__dirname, '../public')))
@@ -10,16 +9,12 @@ router.use('/', express.static(path.join(__dirname, '../public')))
 	Base: /
 */
 
-const apiPath = masterConfig.subPath ? masterConfig.subPath : '/'
-// REST API & Dashboard built-in endpoints
-router.use(apiPath,
-	// Authentication middleware, used by default for all REST endpoints
-	Authentication.use,
-	require(`./api/${masterConfig.version}/index.js`))
+const apiPath = masterConfig.settings.restApi.path || '/api'
+// REST API router
+router.use(`${apiPath}`, require(`./v1/index.js`))
 
 // Index routes
-router.get('/', (req, res) => res.redirect('/login'))
-router.get('/login', (req, res) => res.render('login', { title: 'Login page' }))
+router.get('/', (req, res) => res.redirect(`/dashboard/login`))
 
 // Catch all route
 router.use('*', (req, res) => {

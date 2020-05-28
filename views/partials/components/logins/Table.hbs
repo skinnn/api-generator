@@ -24,7 +24,7 @@
 
 <script>
 	async function getLoginRecords() {
-		const loginRecords = await fetch('/api/login')
+		const loginRecords = await fetch(`${API_PATH}/login`)
 		.then(res => res.json())
 		.then(res => {
 			console.log(res)

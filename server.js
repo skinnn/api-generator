@@ -1,21 +1,23 @@
-const masterConfig = require('./config/config.js')
-const Controller = require('./controllers/v1/Controller.js')
-const Dashboard = require('./lib/Dashboard')
 const http = require('http')
+const path = require('path')
 const express = require('express')
 const cors = require('cors')
 const helmet = require('helmet')
+const morgan = require('morgan')
 const exphbs = require('express-handlebars')
+const masterConfig = require('./config/config.js')
+const Controller = require('./controllers/v1/Controller.js')
+const Dashboard = require('./lib/Dashboard')
 const { routeLogger } = require('./lib/helpers.js')
 
 const app = express()
 
+// View engine setup
+app.engine('hbs', exphbs({ extname: '.hbs', defaultLayout: 'main', helpers: require('./lib/helpers.js').hbs, layoutsDir: __dirname + '/views/layouts/', partialsDir: __dirname + '/views/partials/' }))
+app.set('views', path.join(__dirname, 'views'))
+app.set('view engine', 'hbs')
 // Cors
-app.use(cors({
-	origin: '*',
-	allowedHeaders: ['Content-Type', 'Authorization', 'Location', 'X-Total-Count'],
-	methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE']
-}))
+app.use(cors({ origin: '*', allowedHeaders: ['Content-Type', 'Authorization', 'Location', 'X-Total-Count'], methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'] }))
 // Some headers for security
 app.use(helmet(), helmet.contentSecurityPolicy({
   directives: {
@@ -26,29 +28,18 @@ app.use(helmet(), helmet.contentSecurityPolicy({
 }))
 app.use(express.json({ limit: 1024*100, type: 'application/json' })) // Allowed JSON body size 100kb and media type
 app.use(express.urlencoded({ extended: true }))
-app.use(routeLogger)
+// app.use(routeLogger)
+app.use(morgan('tiny'))
+app.use('/', express.static(path.join(__dirname, './public')))
 
-// Routes
-// app.use('/', require('./routes/index.js'))
-
-// Template & view engine
-app.engine('hbs', exphbs({
-	extname: '.hbs',
-	defaultLayout: 'main',
-	layoutsDir: __dirname + '/views/layouts/',
-  partialsDir: __dirname + '/views/partials/'
-}))
-app.set('view engine', 'hbs')
 
 // Boot the server with configuration
 Controller.boot(masterConfig, app).then((ctx) => {
 	// Setup Application-level middleware
 	ctx.app.use(ctx.middleware)
-	// Mount dashboard
-	// ctx.app.use('/dashboard', require('./routes/dashboard.js'))
 
+	// Mount dashboard router
 	ctx.app.use('/dashboard', new Dashboard(ctx.api).router)
-
 	// Mount main router
 	ctx.app.use('/', require('./routes/index.js'))
 	// Default error handler (always the last middleware)

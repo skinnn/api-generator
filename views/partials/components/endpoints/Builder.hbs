@@ -460,7 +460,7 @@
 
 		// TODO: Validation
 		
-		fetch('/api/endpoint', {
+		fetch(`${API_PATH}/endpoint`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(data)

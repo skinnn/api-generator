@@ -24,7 +24,7 @@
 
 <script>
 	async function getUsers() {
-		const users = await fetch('/api/user')
+		const users = await fetch(`${API_PATH}/user`)
 		.then(res => res.json())
 		.then(res => {
 			console.log(res)

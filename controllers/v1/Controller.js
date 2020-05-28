@@ -9,7 +9,7 @@ const { toBoolean, haveCommonElements, isEmptyObject } = require('../../lib/help
 var _instances = {}, _api = {};
 
 /**
- * Main controller provides basic logic & helper methods
+ * Main controller provides basic logic & helpers
  */
 class Controller {
 	constructor(api) {
@@ -20,12 +20,13 @@ class Controller {
 	// TODO: Should create boot instance of fortune store, connect to store load all the endpoints from database
 	/**
 	 * Creates boot instance of api, built-in models, then conntects to
-	 * @param 	{Object} 	masterConfig 
-	 * @param 	{*} 			app 
-	 * @return	 					ctx 					[Returns context of the Controller]
+	 * @param 	{Object} 	masterConfig  [Master configuration file]
+	 * @param 	{*} 			app 					[Express instance]
+	 * @return	 					ctx 					[Context of the Controller]
 	 */
 	static boot(masterConfig, app) {
 		// Controller.api = masterConfig
+		// const conf = Controller.setupDefaults(Controller.api, masterConfig)
 		Controller.modify(Controller.api, masterConfig)
 		Controller.app = app //  express app instance
 		Controller.ajv = new Ajv()
@@ -71,8 +72,9 @@ class Controller {
 	 */
 	static async middleware(req, res, next) {
 		res.setHeader('X-Powered-By', Controller.api.name)
-		await Controller.handleQueryStringsFromRequest(req)
 		req.urlParsed = new URL(Controller.api.protocol + '://' + req.get('host') + req.originalUrl)
+
+		await Controller.handleQueryStringsFromRequest(req)
 		return next()
 	}
 
@@ -148,9 +150,6 @@ class Controller {
 					endpoints.splice(i, 1)
 				}
 			}
-			// Create dashboard controller instance
-			const DC = require(`../../controllers/${Controller.api.version}/DashboardController`)
-			new DC(Controller.api.version)
 			
 			// Load models for all endpoints
 			endpoints.forEach((endpoint) => Controller.api.model[endpoint.name] = endpoint._schema)
@@ -159,7 +158,7 @@ class Controller {
 			// Make hooks for all models
 			Controller.api.hooks = this.makeHooks(Controller.api.model, Controller.api.version)
 			// console.log('Hooks: ', Controller.api.hooks)
-			var router = require(`../../routes/api/${Controller.api.version}/index.js`)
+			var router = require(`../../routes/${Controller.api.version}/index.js`)
 
 			// Load hooks for all models
 			for (let modelName in Controller.api.hooks) {
@@ -179,7 +178,7 @@ class Controller {
 	}
 
 	static async removeDynamicEndpoint(endpointName) {
-		var router = require('../../routes/api/'+Controller.api.version+'/index.js')
+		var router = require(`../../routes/${Controller.api.version}/index.js`)
 		// Remove controller instance for this endpoint
 		delete Controller.instances[endpointName]
 		// Remove validators for this endpoint's model
@@ -203,6 +202,9 @@ class Controller {
 	 * @param {Function}	next 
 	 */
 	static RESTMiddleware (req, res, next) {
+		// console.log('RESTMiddleware: ', req.url)
+		// Controller.getAPIResourceFromRequest(req)
+
 		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
 		if (req.params.length) {
 			let par = Object.values(req.params[0].split('/'))
@@ -371,31 +373,12 @@ class Controller {
     }
 	}
 
-	// Get resource name from URL - /api/{resource_name}
+	// Get resource name from URL - /api-path/{resource_name}
 	static getAPIResourceFromRequest(req) {
-		// Ignore API subPath if present
-		// TODO: Move url parsing to "always executing middleware" - req.urlParsed
-		const subPath = Controller.api.subPath || []
-		const ignoredArr = subPath.split('/')
-		ignoredArr.shift()
-		let urlArr = req.urlParsed.pathname.split('/')
-		urlArr.shift() // remove first item (empty string)
+		let apiUrlParsed = new URL(req.url, [Controller.api.protocol, '://', req.headers.host].join(''))
+		req.resource = apiUrlParsed.pathname.split('/')[1].toLowerCase()
 
-		if (haveCommonElements(urlArr, ignoredArr)) {
-			for (let i = 0; i < urlArr.length; i++) {
-				for (let j = 0; j < ignoredArr.length; j++) {
-					if (urlArr[i] === ignoredArr[j]) urlArr.splice(i, 1)
-				}
-			}
-		}
-
-		// Defined resource or root /
-		const resource = urlArr[0].toLowerCase() || '/'
- 		// req.resource = resource
-		if (!resource) {
-			throw new Error(`Endpoint for the resource: ${resource}, at URL: ${req.urlParsed.href}, is not set.`)
-		}
-		else return resource
+		return req.resource
 	}
 	
 		/**
@@ -483,8 +466,9 @@ class Controller {
 		err.name ? errObj.name = err.name : null
 		err.message ? errObj.message = err.message : null
 		err.data ? errObj.data = err.data : null
+		errObj.stack = process.env.NODE_ENV !== 'production' ? err.stack : null
 		res.json(errObj)
-		// Controller.logError(err)
+		Controller.logError(err)
   }
 
 	static logError(error) {
@@ -506,18 +490,17 @@ class Controller {
     var output, v, key, inst = this;
     output = Array.isArray(o) ? [] : {};
     for (key in o) {
-       v = o[key];
-       output[key] = (typeof v === "object") ? inst.copyModel(v) : v;
+			v = o[key];
+			output[key] = (typeof v === "object") ? inst.copyModel(v) : v;
     }
     return output;
 	}
 	
 	static modify(obj, newObj) {
-		// console.log('obj: ', obj)
-		// console.log('newObj; ', newObj)
     Object.keys(obj).forEach((key) => {
-      delete obj[key]
-    })
+			console.log(typeof obj[key])
+			delete obj[key]
+		})
     Object.keys(newObj).forEach((key) => {
       obj[key] = newObj[key]
     })

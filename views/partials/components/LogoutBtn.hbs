@@ -33,7 +33,7 @@
 		const token = getCookie('token') || null
 		eraseCookie('token')
 
-		fetch('/api/login', {
+		fetch(`${API_PATH}/login`, {
 			method: 'DELETE',
 			headers: {
 				'Authorization': `Bearer ${token}`
@@ -42,8 +42,10 @@
 			.then(res => res.json())
 			.then(res => {
 				if (res && res.success === true) {
+					localStorage.setItem('api_path', null)
+					localStorage.setItem('user', null)
 					// Show success message on logout
-					window.location.href = '/login'
+					window.location.href = '/dashboard/login'
 				} else {
 					console.error(res)
 				}
