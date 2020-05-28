@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>{{ title }}</title>
+	{{!-- Bootstrap CSS --}}
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	{{!-- Global CSS --}}
+	<link rel="stylesheet" href="css/global.css">
+	{{!-- Layout CSS --}}
+	<link rel="stylesheet" href="css/layouts/dashboard.css">
+	{{!-- Page CSS --}}
+	<link rel="stylesheet" href="css/endpoint.css">
+</head>
+
+<body>
+	<script>var API_PATH = localStorage.getItem('api_path')</script>
+	<main class="dashboard-content">
+		<nav class="navbar navbar-dark fixed-top navbar-expand-lg flex-md-nowrap p-0 shadow">
+			<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/dashboard">{{ data.name }}</a>
+			<input class="form-control form-control-dark w-50 mr-auto ml-2" type="text" placeholder="Search" aria-label="Search">
+			<ul class="navbar-nav px-3">
+				<li class="nav-item text-nowrap">
+					<a class="nav-link disabled" href="#">{{> components/LoggedInAs }}</a>
+				</li>
+				<li class="nav-item text-nowrap">
+					<a class="nav-link" href="/dashboard/docs">API Docs</a>
+				</li>
+				<li class="nav-item text-nowrap">
+					<a class="nav-link">{{> components/LogoutBtn }}</a>
+				</li>
+			</ul>
+		</nav>
+		
+		<div class="container-fluid">
+			<div class="row">
+				<nav class="col-md-2 d-none d-md-block bg-light sidebar">
+					<div id="dashboard-sidebar-menu" class="sidebar-sticky">
+						<ul class="nav flex-column">
+							<li class="nav-item">
+								<a class="nav-link {{#if page.index}}active{{/if}}" href="/dashboard">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#home"/></svg>
+									Dashboard
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {{#if page.settings}}active{{/if}}" href="/dashboard/settings">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#settings"/></svg>
+									Settings
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {{#if page.endpoint}}active{{/if}}" href="/dashboard/endpoint">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#aperture"/></svg>
+									Endpoints
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {{#if page.docs}}active{{/if}}" href="/dashboard/docs">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#file-text"/></svg>
+									Documentation
+								</a>
+							</li>
+
+							{{!--
+								TODO: List endpoints from the db
+							--}}
+							<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+								<span>Endpoints</span>
+								<a class="d-flex align-items-center text-muted" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#plus-circle"/></svg>
+								</a>
+							</h6>
+							<li class="nav-item">
+								<a class="nav-link {{#if page.logins}}active{{/if}}" href="/dashboard/logins">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#log-in"/></svg>
+									Logins
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link {{#if page.users}}active{{/if}}" href="/dashboard/users">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#users"/></svg>
+									Users
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#shopping-cart"/></svg>
+									Products
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#file"/></svg>
+									Orders
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#bar-chart-2"/></svg>
+									Reports
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#layers"/></svg>
+									Integrations
+								</a>
+							</li>
+						</ul>
+		
+						<h6 class="sidebar-heading d-flex justify-content-between align-items-center px-3 mt-4 mb-1 text-muted">
+							<span>Saved reports</span>
+							<a class="d-flex align-items-center text-muted" href="#">
+								<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#plus-circle"/></svg>
+							</a>
+						</h6>
+						<ul class="nav flex-column mb-2">
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#file-text"/></svg>
+									Current month
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#file-text"/></svg>
+									Last quarter
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#file-text"/></svg>
+									Social engagement
+								</a>
+							</li>
+							<li class="nav-item">
+								<a class="nav-link text-danger" href="#">
+									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#file-text"/></svg>
+									Year-end sale
+								</a>
+							</li>
+						</ul>
+
+					</div>
+					<footer>
+						<p class="powered-by">{{ data.name }} <sup class="version">{{data.version}}.0.0</sup></p>
+					</footer>
+				</nav>
+		
+				<main role="main" class="col-md-9 ml-auto col-lg-10 pl-4">
+					<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+						<h1 class="h2">{{ title }}</h1>
+						<div class="btn-toolbar mb-2 mb-md-0">
+							<div class="btn-group mr-2">
+								{{#if page.docs}}
+									<button class="btn btn-sm btn-primary ml-2" title="Documentation will be publicly available at /api/docs">
+										Make public
+									</button>
+									<button class="btn btn-sm btn-outline-secondary ml-2">Share</button>
+									<button class="btn btn-sm btn-outline-secondary">Export</button>
+								{{/if}}
+							</div>
+							{{#if page.endpoint}}
+							<button type="button" onclick="createEndpointModalOpen()" class="btn btn-sm btn-secondary ml-2">
+								<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#aperture"/></svg>
+								Create endpoint
+							</button>
+							{{/if}}
+							{{!-- <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+								<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#calendar"/></svg>
+								This week
+							</button> --}}
+						</div>
+					</div>
+					{{{ body }}}
+				</main>
+			</div>
+		</div>
+	</main>
+
+	{{!-- Bootstrap JS, Popper and jQuery --}}
+	<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+	<script>
+		function createEndpointModalOpen() {
+			event.preventDefault()
+			event.stopPropagation()
+			const modal = document.querySelector('#modal')
+			const endpointBuilder = document.querySelector('#endpoint-builder')
+			modal.classList.add('modal-show')
+
+			// Add close event listener
+			document.addEventListener('click', (e) => {
+				if (e.target.id === 'modal') {
+					// Close modal
+					modal.classList.remove('modal-show')
+					// Dispatch event to reset modal/endpoint data
+					var event = new CustomEvent('endpoint-modal:close', { detail: 'some data..' })
+					endpointBuilder.dispatchEvent(event)
+				}
+			})
+
+			// Add title close to outside of the endpoint builder
+			modal.addEventListener('mousemove', (e) => {
+				if (e.target.id === 'modal') modal.title = 'Click to close the endpoint builder'
+				else modal.title = ''
+			})
+		}
+	</script>
+</body>
+</html>
