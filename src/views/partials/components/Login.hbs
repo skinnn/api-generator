@@ -70,7 +70,7 @@
 					createCookie('token', res.token, 365)
 					localStorage.setItem('user', res.userId)
 					rememberMeHandle(u)
-        	window.location.href = '/dashboard'
+        	window.location.href = `${API_PATH}/dashboard`
 					
 				} else {
 					document.getElementById('message').textContent = res.message

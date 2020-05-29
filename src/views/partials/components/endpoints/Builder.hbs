@@ -87,12 +87,6 @@
 
 
 <script>
-	// Listen for event when modal is closed
-	/*document.querySelector('#endpoint-builder').addEventListener('endpoint-modal:close', (e) => {
-		// Reset data
-		endpointInstance.reset()
-	}, false)*/
-
 	// Initial data for Endpoint
 	class Endpoint {
 		constructor() {
@@ -471,11 +465,16 @@
 				const succMsgs = document.getElementById('success-messages')
 
 				if (res.success && res.record) {
+					console.log('res.record: ', res.record)
 					// TODO: Show success
 					errMsgs.innerHTML = ''
 					succMsgs.innerHTML = `<p class="success-message">Endpoint: <span class="highlighted">/${res.record.name}</span> created successfully.</p>`
 
-					// TODO: Add endpoint to the table
+					// Dispatch created endpoint event
+					var event = new CustomEvent('endpoint-builder:created', {
+						detail: { endpoint: res.record, description: 'New endpoint created.' }
+					})
+					document.dispatchEvent(event)
 
 					// Reset Endpoint instance
 					endpointInstance.reset()

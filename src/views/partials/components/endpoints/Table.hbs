@@ -18,15 +18,22 @@
 	</div>
 </div>
 
-<div id="modal">
+<div id="modal-schema" class="modal modal-hide">
 	<div class="modal-content" name="modal-content">	
 
 	</div>
 </div>
 
 <script>
-	var endpoints
-	// Get and display endpoints
+	var endpoints = [];
+	const endpointsTableBody = document.getElementById('endpointsTableBody')
+
+	// Listen for event when new endpoint is created
+	document.addEventListener('endpoint-builder:created', (e) => {
+		addEndpointToTable(e.detail.endpoint)
+	}, false);
+
+	// Get endpoints
 	(async function() {
 		endpoints = await fetch(`${API_PATH}/endpoint`)
 		.then(res => res.json())
@@ -35,42 +42,9 @@
 			return res
 		})
 
-		const mappedEndpoints = endpoints.map(endpoint => {
-			let tr = document.createElement('tr')
-			let operations
-
-			let body = `
-				<th>${endpoint._id}</th>
-				<td>${endpoint.name}</td>
-				<!-- <td class="schema">${JSON.stringify(endpoint._schema)}</td> -->
-				<td class="schema" style="text-align: center;">
-					<button onclick="viewSchema()" class="btn btn-outline-info">View</button>
-				</td>
-				<td class="created">${endpoint.created}</td>
-				<td class="updated">${endpoint.updated ? endpoint.updated : 'Never'}</td>
-				<td>${endpoint.__owner}</td>
-			`
-			tr.innerHTML = body
-
-			// Dont load operations buttons for builtin endpoints
-			// TODO: But implement functionality so they can be editable
-			if (endpoint.name !== 'dashboard' && endpoint.name !== 'endpoint' && endpoint.name !== 'user' && endpoint.name !== 'login') {
-				operations = `
-					<td class="operation">
-						<button type="button" class="btn btn-outline-info" data-id="${endpoint._id}" onclick="editEndpoint()">Edit</button>
-						<button type="button" class="btn btn-outline-danger" data-id="${endpoint._id}" onclick="deleteEndpoint()">Delete</button>
-					</td>
-				`
-			} else {
-				operations = '<td class="operation">N/A</td>'
-			}
-			tr.innerHTML += operations
-
-			return `<tr data-id="${endpoint._id}">${tr.innerHTML}</tr>`
-		}).join('')
-		// TODO: Create click to view schema (modal) instead of showing the whole schema in all tables
-		document.getElementById('endpointsTableBody').innerHTML = mappedEndpoints
-	})()
+		// Display endpoints
+		endpoints.forEach((endpoint) => addEndpointToTable(endpoint))
+	})();
 
 	function viewSchema() {
 		event.preventDefault()
@@ -78,7 +52,7 @@
 		const endpointId = event.target.parentNode.parentNode.getAttribute('data-id')
 		const endpoint = endpoints.find((el) => el._id === endpointId)
 		const schema = endpoint._schema
-		const modal = document.getElementById('modal')
+		const modal = document.getElementById('modal-schema')
 		modal.classList.add('modal-show')
 		modal.children[0].innerHTML = `
 			<h4 style="text-align: center;">/${endpoint.name}</h4>
@@ -87,7 +61,7 @@
 
 		// Add close event listener
 		document.addEventListener('click', (e) => {
-			if (e.target.id === 'modal') {
+			if (e.target.id === modal.id) {
 				// Close modal
 				modal.classList.remove('modal-show')
 			}
@@ -95,25 +69,64 @@
 	}
 
 	function editEndpoint() {
+		// TODO: Update or re-create updated endpoint in the table
 		const id = event.target.parentNode.parentNode.getAttribute('data-id')
 		console.log('edit id: ', id)
 	}
 
 	async function deleteEndpoint() {
-		const id = event.target.parentNode.parentNode.getAttribute('data-id')
-		console.log('delete id: ', id)
-		
+		const id = event.target.getAttribute('data-id')
+		const endpoint = endpoints.find((el) => el._id === id)
+		if (!confirm(`Are you sure you want to delete an endpoint named: ${endpoint.name}`)) return;
+
 		try {
 			fetch(`${API_PATH}/endpoint/${id}`, {
 				method: 'DELETE'
 			})
 				.then(res => res.json())
 				.then(res => {
-					console.log('deleted res: ', res)
+					for (let el of endpointsTableBody.children) {
+						if (el.getAttribute('data-id') === id) el.remove()
+					}
+					// console.log('deleted res: ', res)
 				})
 		} catch (err) {
 			console.error(err)
 		}
+	}
+
+	function addEndpointToTable(endpoint) {
+		let tr = document.createElement('tr')
+		let operations
+
+		let body = `
+			<th class="id">${endpoint._id}</th>
+			<td>${endpoint.name}</td>
+			<td class="schema" style="text-align: center;">
+				<button onclick="viewSchema()" class="btn">View</button>
+			</td>
+			<td class="created">${endpoint.created}</td>
+			<td class="updated">${endpoint.updated ? endpoint.updated : 'Never'}</td>
+			<td>${endpoint.__owner}</td>
+		`
+		tr.innerHTML = body
+
+		// TODO: Implement functionality so they can be editable
+		// Dont load operations buttons for builtin endpoints
+		if (endpoint.name !== 'dashboard' && endpoint.name !== 'endpoint' && endpoint.name !== 'user' && endpoint.name !== 'login') {
+			operations = `
+				<td class="operation">
+					<button type="button" class="btn btn-outline-info" data-id="${endpoint._id}" onclick="editEndpoint()">Edit</button>
+					<button type="button" class="btn btn-outline-danger" data-id="${endpoint._id}" onclick="deleteEndpoint()">Delete</button>
+				</td>
+			`
+		} else {
+			operations = '<td class="operation">N/A</td>'
+		}
+		tr.innerHTML += operations
+
+		let endpointEl = `<tr data-id="${endpoint._id}">${tr.innerHTML}</tr>`
+		endpointsTableBody.innerHTML += endpointEl
 	}
 
 </script>

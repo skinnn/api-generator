@@ -72,8 +72,10 @@ class Controller {
 	 */
 	static async middleware(req, res, next) {
 		res.setHeader('X-Powered-By', Controller.api.name)
-		req.urlParsed = new URL(Controller.api.protocol + '://' + req.get('host') + req.originalUrl)
+		// req.urlParsed = new URL(Controller.api.protocol + '://' + req.get('host') + req.originalUrl)
 
+		req.urlParsed = new URL(req.url, [Controller.api.protocol, '://', req.headers.host].join(''))
+		req.resource = req.urlParsed.pathname.split('/')[1].toLowerCase()
 		await Controller.handleQueryStringsFromRequest(req)
 		return next()
 	}
@@ -204,6 +206,7 @@ class Controller {
 	static RESTMiddleware (req, res, next) {
 		// console.log('RESTMiddleware: ', req.url)
 		// Controller.getAPIResourceFromRequest(req)
+
 
 		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
 		if (req.params.length) {
@@ -375,10 +378,13 @@ class Controller {
 
 	// Get resource name from URL - /api-path/{resource_name}
 	static getAPIResourceFromRequest(req) {
-		let apiUrlParsed = new URL(req.url, [Controller.api.protocol, '://', req.headers.host].join(''))
+		// let apiUrlParsed = new URL(req.url, [Controller.api.protocol, '://', req.headers.host].join(''))
+		// console.log('apiUrlParsed: ', apiUrlParsed)
+		// console.log('urlParsed: ', req.urlParsed)
+
 		req.resource = apiUrlParsed.pathname.split('/')[1].toLowerCase()
 
-		return req.resource
+		// return req.resource
 	}
 	
 		/**

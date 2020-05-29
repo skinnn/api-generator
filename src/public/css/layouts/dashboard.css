@@ -231,20 +231,37 @@ table tbody .schema {
 	max-width: fit-content;
 	white-space: nowrap;
 }
+table tbody .schema button {
+	color: #17a2b8;
+	border: none;
+}
+table tbody .schema button:hover {
+	background-color: transparent;
+	text-decoration: underline;
+	color: #17a2b8;
+	filter: contrast(130%)
+}
 
 table tbody .operation {
 	text-align: center;
 }
 
+table tbody .id {
+	cursor: pointer;
+}
+
 /* Modals */
 .modal-show {
+	/* display: block; */
 	visibility: visible !important;
   opacity: 1 !important;
 }
-/* Endpoint builder modal */
-#modal {
-	visibility: hidden; /* Hidden by default */
-  opacity: 0;
+/* Modal */
+.modal {
+	visibility: hidden;
+	opacity: 0;
+	display: block;
+	
   position: fixed;
   z-index: 9999;
 	left: 0;
@@ -252,34 +269,16 @@ table tbody .operation {
   width: 100%;
 	height: 100%;
 	padding: 2% 0;
-  overflow: auto;
+  overflow-y: auto;
   background-color: rgb(0, 0, 0);
 	background-color: rgba(0, 0, 0, 0.45);
 
-	transition: visibility 0s, opacity 0.2s ease-in-out;
+	transition: visibility 0s, opacity 0.3s ease-in-out;
 }
 
-#modal .modal-content {
+.modal .modal-content {
 	width: 55%;
 	margin: 0 auto;
 	padding: 3% 4%;
 	background-color: rgb(255,255,255);
-}
-
-/* Schema modal */
-#schema-modal {
-	visibility: hidden; /* Hidden by default */
-  opacity: 0;
-  position: fixed;
-  z-index: 9999;
-	left: 0;
-	top: 0;
-  width: 100%;
-	height: 100%;
-	padding: 2% 0;
-  overflow: auto;
-  background-color: rgb(0, 0, 0);
-	background-color: rgba(0, 0, 0, 0.45);
-
-	transition: visibility 0s, opacity 0.2s ease-in-out;
 }

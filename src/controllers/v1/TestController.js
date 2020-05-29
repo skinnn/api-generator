@@ -1,6 +1,6 @@
 const DefaultController = require('./DefaultController')
 
-// TODO: Overriding DefaultController methods is not working
+// TODO: Overriding DefaultController methods not working, extending a Controller works
 class TestController extends DefaultController {
 	constructor(api, model) {
 		super(api)

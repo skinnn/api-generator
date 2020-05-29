@@ -15,7 +15,10 @@
 </head>
 
 <body>
-	<script>var API_PATH = localStorage.getItem('api_path')</script>
+	<script>
+		var API_PATH = localStorage.getItem('api_path')
+	</script>
+	
 	<main class="dashboard-content">
 		<nav class="navbar navbar-dark fixed-top navbar-expand-lg flex-md-nowrap p-0 shadow">
 			<a class="navbar-brand col-sm-3 col-md-2 mr-0" href="/dashboard">{{ data.name }}</a>
@@ -25,7 +28,7 @@
 					<a class="nav-link disabled" href="#">{{> components/LoggedInAs }}</a>
 				</li>
 				<li class="nav-item text-nowrap">
-					<a class="nav-link" href="/dashboard/docs">API Docs</a>
+					<a class="nav-link" href="docs">API Docs</a>
 				</li>
 				<li class="nav-item text-nowrap">
 					<a class="nav-link">{{> components/LogoutBtn }}</a>
@@ -39,25 +42,25 @@
 					<div id="dashboard-sidebar-menu" class="sidebar-sticky">
 						<ul class="nav flex-column">
 							<li class="nav-item">
-								<a class="nav-link {{#if page.index}}active{{/if}}" href="/dashboard">
+								<a class="nav-link {{#if page.index}}active{{/if}}" href="home">
 									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#home"/></svg>
 									Dashboard
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.settings}}active{{/if}}" href="/dashboard/settings">
+								<a class="nav-link {{#if page.settings}}active{{/if}}" href="settings">
 									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#settings"/></svg>
 									Settings
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.endpoint}}active{{/if}}" href="/dashboard/endpoint">
+								<a class="nav-link {{#if page.endpoint}}active{{/if}}" href="endpoint">
 									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#aperture"/></svg>
 									Endpoints
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.docs}}active{{/if}}" href="/dashboard/docs">
+								<a class="nav-link {{#if page.docs}}active{{/if}}" href="docs">
 									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#file-text"/></svg>
 									Documentation
 								</a>
@@ -73,13 +76,13 @@
 								</a>
 							</h6>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.logins}}active{{/if}}" href="/dashboard/logins">
+								<a class="nav-link {{#if page.logins}}active{{/if}}" href="logins">
 									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#log-in"/></svg>
 									Logins
 								</a>
 							</li>
 							<li class="nav-item">
-								<a class="nav-link {{#if page.users}}active{{/if}}" href="/dashboard/users">
+								<a class="nav-link {{#if page.users}}active{{/if}}" href="users">
 									<svg class="feather"><use xlink:href="icons/feather/feather-sprite.svg#users"/></svg>
 									Users
 								</a>
@@ -189,18 +192,15 @@
 		function createEndpointModalOpen() {
 			event.preventDefault()
 			event.stopPropagation()
-			const modal = document.querySelector('#modal')
+			const modal = document.querySelector('#modal-endpoint-builder')
 			const endpointBuilder = document.querySelector('#endpoint-builder')
 			modal.classList.add('modal-show')
 
 			// Add close event listener
 			document.addEventListener('click', (e) => {
-				if (e.target.id === 'modal') {
+				if (e.target.id === modal.id) {
 					// Close modal
 					modal.classList.remove('modal-show')
-					// Dispatch event to reset modal/endpoint data
-					var event = new CustomEvent('endpoint-modal:close', { detail: 'some data..' })
-					endpointBuilder.dispatchEvent(event)
 				}
 			})
 

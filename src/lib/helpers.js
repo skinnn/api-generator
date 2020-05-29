@@ -12,6 +12,13 @@ const routeLogger = (req, res, next) => {
 	next()
 }
 
+const logFilter = (req, res) => {
+  var url = req.url;
+  if(url.indexOf('?')>0) url = url.substr(0,url.indexOf('?'));
+  if(url.match(/(js|jpg|png|ico|css|woff|woff2|eot|svg)$/ig)) return true
+  return false;
+}
+
 /**
  * Checks if an object is empty (if obj has any properties)
  * @param 	{Object} 	obj	 [Object to be evaluated]
@@ -87,6 +94,7 @@ const json = (content) => {
 
 module.exports = {
 	routeLogger: routeLogger,
+	logFilter: logFilter,
 	isEmptyObject: isEmptyObject,
 	haveCommonElements: haveCommonElements,
 	strigifyProps: strigifyProps,

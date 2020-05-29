@@ -45,7 +45,7 @@
 					localStorage.setItem('api_path', null)
 					localStorage.setItem('user', null)
 					// Show success message on logout
-					window.location.href = '/dashboard/login'
+					window.location.href = `${API_PATH}/dashboard/login`
 				} else {
 					console.error(res)
 				}

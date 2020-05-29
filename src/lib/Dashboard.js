@@ -37,6 +37,7 @@ class Dashboard extends Controller {
 		// })
 
 		router.get('/', this.getIndexPage)
+		router.get('/home', this.getIndexPage)
 		router.get('/settings', this.getSettingsPage)
 		router.get('/docs', this.getDocsPage)
 		router.get('/endpoint', this.getEndpointPage)

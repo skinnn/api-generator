@@ -11,7 +11,7 @@ const config = {
 	settings: {
 		// REST API is exposed on the sub-path defined below, if sub-path is not needed leave empty string
 		restApi: {
-			path: '/api/v1'
+			path: '/api'
 		}
 	},
 

@@ -27,8 +27,8 @@ class Authentication extends Controller {
 	 */
 	static ensureAuthenticated = async (req, res, next) => {
 		try {
-			const resource = Controller.getAPIResourceFromRequest(req)
-			console.log('RESOURCE: ', req.resource)
+			// const resource = Controller.getAPIResourceFromRequest(req)
+			const resource = req.resource
 			const endpoint = await Endpoint.getEndpointByName(resource)
 			const operation = Controller.getCRUDFromMethod(req.method)
 			if (endpoint) {
@@ -104,6 +104,10 @@ class Authentication extends Controller {
 
 		} else authorized = false
 		return authorized
+	}
+
+	static dashboardAuth(req, res, next) {
+		next()
 	}
 
 	// TODO: Finish
