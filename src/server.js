@@ -8,7 +8,7 @@ const exphbs = require('express-handlebars')
 const masterConfig = require('./config/config.js')
 const Controller = require('./controllers/v1/Controller.js')
 const Dashboard = require('./lib/Dashboard')
-const { routeLogger, logFilter } = require('./lib/helpers.js')
+const { logFilter } = require('./lib/helpers.js')
 
 const app = express()
 

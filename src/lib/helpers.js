@@ -1,15 +1,11 @@
 const moment = require('moment')
 
-const routeLogger = (req, res, next) => {
-	const time = moment().format('hh:mm:ss')
-	const log = [
-		`${req.protocol} `,
-		`${req.method} `,
-		`${req.path} `,
-		`- Time: ${time}`
-	]
-	console.log(log.join(''))
-	next()
+/**
+ * Returns formatted time
+ * @param {String} format [Moment lib time format]
+ */
+const formatTime = (format) => {
+	return moment().format(format)
 }
 
 const logFilter = (req, res) => {
@@ -93,7 +89,7 @@ const json = (content) => {
 
 
 module.exports = {
-	routeLogger: routeLogger,
+	formatTime: formatTime,
 	logFilter: logFilter,
 	isEmptyObject: isEmptyObject,
 	haveCommonElements: haveCommonElements,
