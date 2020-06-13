@@ -46,8 +46,9 @@ Controller.boot(masterConfig, app).then((ctx) => {
 	// Default error handler (always the last middleware)
 	ctx.app.use((err, req, res, next) => ctx.handleError(err, req, res, next))
 
-	// Create http/https erver
+	// Create http/https server
 	if (ctx.api.protocol === 'https') {
+		TODO: Finish
 		// const https = require('https')
 		// ctx.api.server = https.createServer(ctx.getSSLOptions(), app)
 	} else {

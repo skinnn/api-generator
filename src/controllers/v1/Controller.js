@@ -104,7 +104,7 @@ class Controller {
 				options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
 			}
 
-			// TODO Use official nodejs mongodb driver or implement Feathers (has db adapters)
+			// TODO Use official nodejs mongodb driver or implement fortunejs
 			await mongoose.connect(url, options, (err) => {
 				if (err) throw err
 			})
@@ -387,19 +387,19 @@ class Controller {
 		// return req.resource
 	}
 	
-		/**
-		*	Parses query parameters: limit, fields, sort, match, include.
-		* Parsed query params are attached to request object - req.queryParsed.
-		*	
-		* limit:number, fields:Object, sort:Object, match:Object, include:Object 
-    * @param 	{Object} 	req 	[The request object]
-    */
+	/**
+	 *	Parses query parameters: limit, fields, sort, match, include.
+	 * Parsed query params are attached to request object - req.queryParsed.
+	 *	
+	 * limit:number, fields:Object, sort:Object, match:Object, include:Object 
+	 * @param 	{Object} 	req 	[The request object]
+	 */
 	static handleQueryStringsFromRequest(req) {
 		return new Promise((resolve, reject) => {
 			req.queryParsed = {}
-			if (isEmptyObject(req.query)) resolve(true);
+			if (isEmptyObject(req.query)) resolve(true)
 
-			var limit = 0, fields = {}, sort = {}, match = {}, include = {};
+			var limit = 0, fields = {}, sort = {}, match = {}, include = {}
 			if (req.query.limit) limit = parseInt(req.query.limit)
 			if (req.query.fields) fields = req.query.fields
 			if (req.query.sort) sort = req.query.sort
@@ -421,7 +421,7 @@ class Controller {
 				try {
 					fields = JSON.parse(fields)
 					// Transform prop 'id' in '_id' (mongodb supported field)
-					if (fields.id === false || fields.id === true) fields._id = fields.id; delete fields.id;
+					if (fields.id !== undefined) fields._id = fields.id; delete fields.id;
 				} catch (err) {}
 
 			// Fields (handle format JS object - fields[id]=true)
