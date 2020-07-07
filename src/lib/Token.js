@@ -11,7 +11,12 @@ class Token {
 		const ONE_HOUR = 60 * 60 * 24
 		// const	algorithm = 'RS256'
 		// Data to be encoded in the token
-		const userData = { id: user._id, username: user.username }
+		const userData = {
+			id: user._id,
+			username: user.username,
+			// TODO: Use roles from here
+			roles: user.roles
+		}
 		return jwt.sign(userData, secret, {
 			// expiresIn: ONE_HOUR
 		})

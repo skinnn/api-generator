@@ -6,7 +6,7 @@ const Endpoint = require('../models/Endpoint.js')
 const { haveCommonElements } = require('../lib/helpers.js')
 
 /**
- * REST API Authentication middleware
+ * REST API Authentication
  * 
  * 1. First get endpoint & CRUD operation user is trying to access
  * 2. If endpoint doesnt require authentication then proceed
@@ -43,7 +43,7 @@ class Authentication extends Controller {
 					// TODO: Handle errors in catch, add Controller.errors.forbidden (error handling)
 					if(!token) {
 						return res.status(401).json({
-							message: 'Token not provided'
+							message: 'Access denied'
 						})
 					}
 					
@@ -54,7 +54,7 @@ class Authentication extends Controller {
 					const loginRecord = await Login.getLoginByToken(validToken)
 					if (!loginRecord) {
 						return res.status(401).json({
-							message: 'Access denied.'
+							message: 'Access denied'
 						})
 					}
 
@@ -62,7 +62,7 @@ class Authentication extends Controller {
 					const user = await User.getUserById(loginRecord.userId)
 					if (!user) {
 						return res.status(401).json({
-							message: 'Access denied.'
+							message: 'Access denied'
 						})
 					}
 
@@ -71,7 +71,7 @@ class Authentication extends Controller {
 					req.user = user
 
 					// Check permissions
-					const authorized = await this.checkPermissions(resource, operation, endpoint, user.roles)
+					const authorized = await this.checkPermissions(resource, operation, endpoint, req.user)
 					if (authorized) return next()
 					else return res.status(403).json({ message: 'Invalid permission' })
 				}
@@ -88,11 +88,11 @@ class Authentication extends Controller {
 	}
 
 	// Check privileges/permissions of user sending the request
-	static async checkPermissions(resource, operation, endpoint, userRoles) {
+	static async checkPermissions(resource, operation, endpoint, user) {
 		var authorized = false
-		if (Array.isArray(userRoles) && userRoles.length <= 0) userRoles = ['anon']
+		if (Array.isArray(user.roles) && user.roles.length <= 0) user.roles = ['anon']
 		console.log(`Requested operation ${operation.toUpperCase()} on protected endpoint: ${resource} `)
-		const hasRole = haveCommonElements(endpoint._schema.access[operation].roles, userRoles)
+		const hasRole = haveCommonElements(endpoint._schema.access[operation].roles, user.roles)
 		if (hasRole) {
 			authorized = true
 			// TODO: If its not root, authorize the request only
