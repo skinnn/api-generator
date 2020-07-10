@@ -33,7 +33,7 @@ Consume the API from any client (Vue, React, Angular, etc.), mobile apps or even
 
 ### Authorization
 Application is based on tokens, using **JSON Web Token** open standard [RFC 7519](https://tools.ietf.org/html/rfc7519) method for securely transmitting information between parties as a JSON object.
-All endpoints going through `/api/*` route (e.g. http://localhost:8090/api/test) are going through authentication middleware.
+All endpoints going through `/api/*` path (e.g. http://localhost:8090/api/test) are going through authentication middleware.
 
 ### Roles
 During first app initialization, `root` account will be created by using `rootUser` credentials from [config.js](/config/config.js) file.

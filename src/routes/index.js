@@ -14,7 +14,7 @@ const apiPath = masterConfig.settings.restApi.path || '/api'
 router.use(`${apiPath}`, require(`./v1/index.js`))
 
 // Index routes
-router.get('/', (req, res) => res.redirect(`/dashboard/login`))
+router.get('/', (req, res) => res.redirect(`${apiPath}/dashboard/login`))
 
 // Catch all route
 router.use('*', (req, res) => {

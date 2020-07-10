@@ -126,9 +126,9 @@ class Controller {
 					if (!endpoint) {
 						// Assign root as static/default endpoints owner
 						const db = Controller.api.db.connection
-						let rootId = (await db.collection('users').findOne({ roles: ['root'] }))._id.toString()
+						let root = await db.collection('users').findOne({ roles: ['root'] })
+						let rootId = root._id.toString()
 						builtinModels[modelName].__owner = rootId
-						// TODO: Dont save static/built-in endpoints to the db
 						// Save endpoint
 						await Endpoint.createEndpoint(builtinModels[modelName])
 						console.log(`Created new static endpoint: ${modelName}`)

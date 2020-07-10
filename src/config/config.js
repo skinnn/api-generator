@@ -1,3 +1,4 @@
+require('dotenv').config()
 const env = process.env
 
 const config = {
@@ -30,7 +31,7 @@ const config = {
 	},
 
 	auth: {
-		jwtSecret: env.JWT_SECRET || '321@_+tcretster2@!-;sl-vdmas,fmvm@#3321@_+tcretster2@!-;sl-vdmas,fmvm@#3321@_+tcretster2@!-;sl-vdmas,fmvm@#3'
+		jwtSecret: env.JWT_SECRET || 'secret'
 	},
 
 	store: null,
@@ -39,13 +40,13 @@ const config = {
 
 	paymentOptions: {
 		paypal: {
-			mode: env.PAYPAL_MODE || 'sandbox', // sandbox or live
-			clientId: env.PAYPAL_CLIENT_ID || 'ATSlK1umuLkZclrhH6QEkel5ihjk1QH7Pb00TjSiuyQsLrwLqS2XF-w1wZbB22qfkdxq56zQswOBZytE',
-  		clientSecret: env.PAYPAL_CLIENT_SECRET || 'EK-FKoisNXvYlRku6ksnsRrRuKPklqljSHj-8CF-2rvGwRIwscuwkVVkvg5cnSwciIDZnbpKc-B21d1f'
+			mode: env.PAYPAL_MODE,
+			clientId: env.PAYPAL_CLIENT_ID,
+  		clientSecret: env.PAYPAL_CLIENT_SECRET
 		},
 		stripe: {
-			public: env.STRIPE_PUBLIC || 'pk_test_eNF0TvZ5OOZKjJVWUcR4fQXV',
-			secret: env.STRIPE_SECRET || 'sk_test_aEP9vc4ZURi33L0YHnjtR5TT'
+			public: env.STRIPE_PUBLIC,
+			secret: env.STRIPE_SECRET
 		}
 	}
 }
