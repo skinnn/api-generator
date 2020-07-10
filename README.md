@@ -11,7 +11,6 @@ Consume the API from any client (Vue, React, Angular, etc.), mobile apps or even
 
 + **Technologies**: [Node](https://nodejs.org/), [Express](https://expressjs.com/)
 + **Database**: [MongoDB](https://www.mongodb.com/)
-+ [REST API Documentation](#api-documentation)
 + **Token based authorization** with [JSON Web Token](https://jwt.io/)
 + **Roles & permissions**
 
