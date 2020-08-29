@@ -50,12 +50,12 @@ class Controller {
 		try {
 			// Connect to MongoDB
 			await Controller.connectDB()
+			// Create root user from the config
+			await Controller.createRootUser()
 			// Save default endpoints in the db
 			await Controller.saveStaticEndpoints()
 			// Load dynamic routes created from the GUI/endpoint builder
 			await Controller.loadDynamicEndpoints()
-			// Create root user from the config
-			await Controller.createRootUser()
 			
 			console.log('Init complete')
 		} catch (err) {
@@ -80,21 +80,21 @@ class Controller {
 		return next()
 	}
 
-	static async connectDB() {
-		mongoose.connection.once('open', () => {
-			console.log('MongoDB connected')
+	static connectDB() {
+		return new Promise((resolve, reject) => {
+			mongoose.connection.once('open', () => {
+				console.log('MongoDB connected')
 
-			mongoose.connection.on('disconnected', () => {
-				console.log('MongoDB event disconnected')
+				mongoose.connection.on('disconnected', () => {
+					console.log('MongoDB event disconnected')
+				})
+				mongoose.connection.on('reconnected', () => {
+					console.log('MongoDB event reconnected')
+				})
+				mongoose.connection.on('error', (err) => {
+					Controller.logError(err)
+				})
 			})
-			mongoose.connection.on('reconnected', () => {
-				console.log('MongoDB event reconnected')
-			})
-			mongoose.connection.on('error', (err) => {
-				Controller.logError(err)
-			})
-		})
-		try {
 			const db = Controller.api.db
 			var url = `mongodb://${db.host}:${db.port}/${db.name}`
 			var options = { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
@@ -105,14 +105,12 @@ class Controller {
 			}
 
 			// TODO Use official nodejs mongodb driver or implement fortunejs
-			await mongoose.connect(url, options, (err) => {
+			mongoose.connect(url, options, (err, a) => {
 				if (err) throw err
+				Controller.api.db.connection = mongoose.connection.db
+				resolve(true)
 			})
-
-			Controller.api.db.connection = mongoose.connection.db
-		} catch (err) {
-			throw err
-		}
+		})
 	}
 
 	static async saveStaticEndpoints() {

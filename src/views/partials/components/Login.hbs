@@ -9,7 +9,7 @@
 			<input type="checkbox" id="remember">
 			<label for="remember">Remember me</label>
 		</div>
-		<button onclick="doLogin()">Login</button><br>
+		<button type="button" onclick="doLogin()">Login</button><br>
 	</main>
 </div>
 <div id="message" class="message"></div>
@@ -46,6 +46,8 @@
 	}
 
 	function doLogin() {
+		event.preventDefault();
+		console.log('ad')
 		const u = document.getElementById('u').value
 		const p = document.getElementById('p').value
 		const data = { username: u, password: p }
@@ -64,6 +66,7 @@
 				// TODO: Set apiPath in localStorage instead of
 				// hardcoded /api throughout the whole dashboard
 				if (res && res.token) {
+					console.log(res)
 					// Save api path in localStorage (sent while rendering the login page tempalte)
 					localStorage.setItem('api_path', API_PATH)
 
