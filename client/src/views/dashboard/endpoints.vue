@@ -1,13 +1,20 @@
 <template>
-	<div class="endpoints-page"></div>
+	<div class="endpoints-page">
+		<BaseModal :show="tfalseue">
+			<EndpointBuilder />
+		</BaseModal>
+	</div>
 </template>
 
 <script>
-export default {
+// Components
+import BaseModal from '@/components/base/BaseModal';
+import EndpointBuilder from '@/components/custom/EndpointBuilder.vue';
 
+export default {
+	components: { EndpointBuilder, BaseModal }
 };
 </script>
 
-<style>
-
+<style scoped lang="scss">
 </style>

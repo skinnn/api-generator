@@ -25,7 +25,7 @@ export default {
 		padding: 0px 0px;
 		margin-left: $sidebar-width;
 		top: $top-bar-height;
-    min-height: calc(100vh - $top-bar-height);
+		min-height: calc(90vh - #{$top-bar-height});
 		transition: all 200ms;
 		.fade-enter-active,.fade-leave-active {
 			transition: opacity 200ms;
