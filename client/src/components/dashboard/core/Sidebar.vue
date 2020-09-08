@@ -1,17 +1,22 @@
 <template>
-	<div class="sidebar-cont">
+	<div class="sidebar-container">
 		<div class="sidebar">
-					<!-- Dashboard -->
-			<router-link :to="{ name: 'admin-home' }">
-				<div class="sidebar__button">
-				<!-- <div class="sidebar__ico"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
-				<div class="sidebar__title">Dashboard</div>
+			<router-link :to="{ name: 'home' }">
+				<div class="sidebar-button">
+				<!-- <div class="sidebar-icon"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
+				<div class="sidebar-title">Dashboard</div>
 			</div>
 			</router-link>
-			<router-link :to="{ name: 'admin-create-campaign' }">
-				<div class="sidebar__button">
-				<!-- <div class="sidebar__ico"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
-				<div class="sidebar__title">Create campaign</div>
+			<router-link :to="{ name: 'endpoints' }">
+				<div class="sidebar-button">
+				<!-- <div class="sidebar-icon"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
+				<div class="sidebar-title">Endpoints</div>
+			</div>
+			</router-link>
+			<router-link :to="{ name: 'api-docs' }">
+				<div class="sidebar-button">
+				<!-- <div class="sidebar-icon"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
+				<div class="sidebar-title">API Documentation</div>
 			</div>
 			</router-link>
 		</div>
@@ -29,19 +34,17 @@ export default {
 };
 </script>
 
-<style lang="scss">
-
-/*SIDEBAR////////////////////////////////////////////////////////////////*/
-.sidebar-cont{
+<style scoped lang="scss">
+.sidebar-container{
 	display: flex;
 	z-index: 11;
 }
 .sidebar {
   position: fixed;
-	top:75px;
+	top: $top-bar-height;
   background-color: $sections-bg-color;
   min-height: 100%;
-  width: 300px;
+	width: $sidebar-width;
   font-size: 0.8em;
   padding-top: 25px;
 	transition: all 0.2s;
@@ -49,37 +52,36 @@ export default {
 	left: 0px;
 }
 
-.sidebar--hidden{
+.sidebar--hidden {
   left: -300px;
 }
 
-.sidebar__button {
+.sidebar-button {
   width: 100%;
   padding: 15px 10px;
   cursor: pointer;
   border-right: 4px solid $sections-bg-color;
 }
-.sidebar__ico,
-.sidebar__title {
+.sidebar-icon,
+.sidebar-title {
   display: inline-block;
   vertical-align: middle;
   margin: 5px;
 }
-a{
+a {
 	color: $dark-grey;
 }
-.router-link-exact-active  {
-	color: $active-blue;
+.router-link-exact-active {
+	color: #fff;
 	font-weight: 600;
-	.sidebar__button{
+	.sidebar-button {
 		background-color: $light-blue;
-		border-right: 4px solid $active-blue!important;
+		border-right: 4px solid $active-blue !important;
 		transition: all 0.2s;
 	}
-	.sidebar__ico {
+	.sidebar-icon {
 		background-color: $active-blue;
-}
-
+	}
 }
 
 @media screen and (max-width: 768px) {
@@ -87,5 +89,4 @@ a{
 		box-shadow: 0px 5px 10px rgb(145, 145, 145);
 	}
 }
-/*SIDEBAR////////////////////////////////////////////////////////////////*/
 </style>

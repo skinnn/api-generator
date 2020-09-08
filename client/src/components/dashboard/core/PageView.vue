@@ -23,7 +23,7 @@ export default {
 		flex-direction: column;
 		width: 100%;
 		padding: 0px 0px;
-		padding-left: 300px;
+		margin-left: $sidebar-width;
 		top: $top-bar-height;
     min-height: calc(100vh - $top-bar-height);
 		transition: all 200ms;
@@ -39,7 +39,7 @@ export default {
 	}
 	@media screen and (max-width: 768px) {
 	.pageView {
-			padding-left: 0px;
+		padding-left: 0px;
   }
 }
 </style>

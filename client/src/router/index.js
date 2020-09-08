@@ -5,6 +5,12 @@ Vue.use(VueRouter);
 
 const routes = [
 	{
+		path: '/',
+		name: 'index',
+		redirect: '/login',
+		meta: { title: 'Index' }
+	},
+	{
 		path: '/login',
 		name: 'login',
 		component: () => import(/* webpackChunkName: "login" */ '../views/login.vue'),
@@ -13,7 +19,7 @@ const routes = [
 	{
 		path: '/dashboard',
 		// redirect: '/login',
-		// this generates a separate chunk (admin-dashboard.[hash].js) for this route
+		// this generates a separate chunk (dashboard.[hash].js) for this route
 		// which is lazy-loaded when the route is visited.
 		component: () => import(/* webpackChunkName: "dashboard" */ '@/components/dashboard/DashboardLayout.vue'),
 		meta: { },
@@ -24,6 +30,18 @@ const routes = [
 				name: 'home',
 				component: () => import(/* webpackChunkName: "home" */ '@/views/dashboard/home.vue'),
 				meta: { title: 'Home' }
+			},
+			{
+				path: 'api-docs',
+				name: 'api-docs',
+				component: () => import(/* webpackChunkName: "api-docs" */ '@/views/dashboard/api-docs.vue'),
+				meta: { title: 'API Documentation' }
+			},
+			{
+				path: 'endpoints',
+				name: 'endpoints',
+				component: () => import(/* webpackChunkName: "endpoints" */ '@/views/dashboard/endpoints.vue'),
+				meta: { title: 'Endpoints' }
 			}
 		]
 	}

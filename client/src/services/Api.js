@@ -11,6 +11,13 @@ export default () => {
 		crossDomain: true
 	};
 
+	const token = localStorage.getItem('token');
+	if (token) {
+		options.headers = {
+			Authorization: `Bearer ${token}`
+		};
+	}
+
 	const instance = axios.create(options);
 
 	return instance;

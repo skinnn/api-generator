@@ -1,9 +1,9 @@
 <template>
 	<footer>
 		<div id="footer_subcont">
-			<div class="copyright">&#169;2020 Vidoomy Media S.L</div>
-			<div class="terms">Terms of service...</div>
-			<div class="terms">Privacy policy...</div>
+			<p class="copyright">Copyright &#169; 2020 Nikola Jovanovic</p>
+			<p class="terms">Terms of service</p>
+			<p class="terms">Privacy policy</p>
 		</div>
 	</footer>
 </template>
@@ -15,11 +15,6 @@ export default {
 </script>
 
 <style scoped lang="scss">
-/**
- * Footer
- * ==================================================
- */
-
 footer {
 	display: flex;
   width: 100%;
@@ -35,12 +30,8 @@ footer {
 	height: auto;
 	align-self: stretch;
 }
-#footer_subcont div {
+#footer_subcont p {
   color: $medium-grey;
   font-size: 0.8em;
 }
-/**
- * Footer end
- * ==================================================
- */
 </style>

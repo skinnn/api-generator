@@ -1,31 +1,44 @@
+import { decodeJWT } from '@/lib/helpers.js';
+
 const state = {
-	user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null,
-	token: localStorage.getItem('token') ? JSON.parse(localStorage.getItem('token')) : null
+	// user: localStorage.getItem('user') ? localStorage.getItem('user') : null,
+	token: localStorage.getItem('token') ? localStorage.getItem('token') : null
 };
 
 const mutations = {
-	SET_USER(state, user) {
-		state.user = user;
-	},
+	// SET_USER(state, user) {
+	// 	localStorage.setItem('user', user);
+	// 	state.user = user;
+	// },
 	SET_TOKEN(state, token) {
+		localStorage.setItem('token', token);
 		state.token = token;
 	}
 };
 
 const actions = {
-	loginUser({ commit }, { userId, token }) {
-		localStorage.setItem('user', JSON.stringify(userId));
-		commit('SET_USER', userId);
-		// dispatch('setToken', token);
+	login({ commit }, { token }) {
+		// commit('SET_USER', userId);
+		commit('SET_TOKEN', token);
+	},
+	logout({ commit }) {
+		// commit('SET_USER', '');
+		commit('SET_TOKEN', '');
 	},
 	setToken({ commit }, token) {
-		console.log('SET TOKEN');
 		localStorage.setItem('token', JSON.stringify(token));
 		commit('SET_TOKEN', token);
 	}
 };
 
 const getters = {
+	getDecodedToken(state) {
+		if (state.token) {
+			return decodeJWT(state.token);
+		} else {
+			return state.token;
+		}
+	}
 };
 
 export default {
