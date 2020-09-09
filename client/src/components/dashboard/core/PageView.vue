@@ -27,6 +27,7 @@ export default {
 		top: $top-bar-height;
 		min-height: calc(90vh - #{$top-bar-height});
 		transition: all 200ms;
+		overflow-y: auto;
 		.fade-enter-active,.fade-leave-active {
 			transition: opacity 200ms;
 		}

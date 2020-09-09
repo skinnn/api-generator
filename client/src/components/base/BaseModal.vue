@@ -1,6 +1,10 @@
 <template>
 	<transition name="fade" mode="out-in">
-		<div v-show="show" :class="['modal-container', {'modal-show': show}]">
+		<div
+			v-show="show"
+			ref="modalContainer"
+			:class="['modal-container', {'modal-show': show}]"
+		>
 			<div class="modal">
 				<slot></slot>
 			</div>
@@ -16,11 +20,7 @@ export default {
 			type: Boolean,
 			default: false
 		}
-	},
-
-	data() {
-		return {};
-	},
+	}
 };
 </script>
 
@@ -40,7 +40,7 @@ export default {
 	background-color: rgb(0, 0, 0);
 	background-color: rgba(0, 0, 0, 0.45);
 	transition: visibility 0s, opacity 0.3s ease-in-out;
-	z-index: 99999;
+	z-index: 999;
 	.modal {
 		width: 55%;
 		height: fit-content;

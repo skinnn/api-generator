@@ -1,16 +1,26 @@
 <template>
 <div id="endpoint-builder" class="endpoint-builder">
 	<h3>Endpoint builder</h3>
-	<form onsubmit="onSubmit()" class="endpoint-form">
+	<form @submit="handleSubmit()" class="endpoint-form">
 		<div class="form-group">
-			<label for="name">Name</label>
+			<label for="name">
+				Name
+				<BaseHelper>
+					<small class="text-muted">Name of your endpoint, used in URL-s, e.g. <strong>posts</strong></small>
+				</BaseHelper>
+			</label>
 			<input type="text" class="form-control" id="endpoint-name">
-			<small class="form-text text-muted">Name of your endpoint, used in URL-s, e.g. <strong>posts</strong></small>
+			<!-- <small class="form-text text-muted">Name of your endpoint, used in URL-s, e.g. <strong>posts</strong></small> -->
 		</div>
 		<div class="form-group">
-			<label for="title">Title</label>
+			<label for="title">
+				Title
+				<BaseHelper>
+					<small class="text-muted">Descriptive title for the endpoint, e.g. <strong>Post endpoint</strong> <strong>Post endpoint</strong> <strong>Post endpoint</strong> <strong>Post endpoint</strong> <strong>Post endpoint</strong></small>
+				</BaseHelper>
+			</label>
 			<input type="text" class="form-control" id="endpoint-title">
-			<small class="form-text text-muted">Descriptive title for the endpoint, e.g. <strong>Post endpoint</strong></small>
+			<!-- <small class="form-text text-muted">Descriptive title for the endpoint, e.g. <strong>Post endpoint</strong></small> -->
 		</div>
 		<div class="form-group">
 			<label for="description">Description</label>
@@ -18,8 +28,12 @@
 		</div>
 		<div class="form-group access-group">
 			<fieldset>
-				<h4>Access <span class="required">*</span></h4>
-				<small class="form-text text-muted">Define access to CRUD for user roles and record owner. Role <strong>root</strong> has access to all operations by default.</small>
+				<h4>
+					Access <span class="required">*</span>
+					<BaseHelper>
+						<small class="text-muted">Define access to CRUD for user roles and record owner. Role <strong>root</strong> has access to all operations by default.</small>
+					</BaseHelper>
+				</h4>
 
 				<div class="form-group">
 					<label for="endpoint-access-create"><strong>Create:</strong></label>
@@ -66,7 +80,7 @@
 			<ul id="properties">
 
 			</ul>
-			<button onclick="addNewPropField()" type="button" class="btn btn-primary">Add property</button>
+			<button @click="addNewPropField()" type="button" class="btn btn-primary">Add property</button>
 		</div>
 		<div class="form-group">
 			<div id="error-messages"></div>
@@ -84,8 +98,21 @@
 </template>
 
 <script>
+import BaseHelper from '@/components/base/BaseHelper.vue';
+
 export default {
-	name: 'EndpointBuilder'
+	name: 'EndpointBuilder',
+	components: { BaseHelper },
+
+	data() {
+		return {};
+	},
+
+	methods: {
+		addNewPropField() {},
+
+		handleSubmit() {},
+	}
 };
 </script>
 
@@ -135,6 +162,10 @@ form.endpoint-form .create-endpoint-btn .feather {
 	position: relative;
 	bottom: 2px;
 	margin-right: 5px;
+}
+
+.form-group label {
+	display: block;
 }
 
 #error-messages .error-message {

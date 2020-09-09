@@ -1,18 +1,33 @@
 <template>
 	<div class="endpoints-page">
-		<BaseModal :show="tfalseue">
+		<button @click="showEndpointBuilderModal = !showEndpointBuilderModal">
+			Endpoint builder
+		</button>
+		<EndpointBuilderModal :show="showEndpointBuilderModal" @closeModal="handleCloseModal">
 			<EndpointBuilder />
-		</BaseModal>
+		</EndpointBuilderModal>
 	</div>
 </template>
 
 <script>
 // Components
-import BaseModal from '@/components/base/BaseModal';
+import EndpointBuilderModal from '@/components/modals/EndpointBuilderModal';
 import EndpointBuilder from '@/components/custom/EndpointBuilder.vue';
 
 export default {
-	components: { EndpointBuilder, BaseModal }
+	components: { EndpointBuilder, EndpointBuilderModal },
+
+	data() {
+		return {
+			showEndpointBuilderModal: false
+		};
+	},
+
+	methods: {
+		handleCloseModal() {
+			this.showEndpointBuilderModal = false;
+		}
+	}
 };
 </script>
 

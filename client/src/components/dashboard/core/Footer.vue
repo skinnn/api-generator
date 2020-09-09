@@ -1,9 +1,7 @@
 <template>
 	<footer>
-		<div id="footer_subcont">
+		<div id="footer-container">
 			<p class="copyright">Copyright &#169; 2020 Nikola Jovanovic</p>
-			<p class="terms">Terms of service</p>
-			<p class="terms">Privacy policy</p>
 		</div>
 	</footer>
 </template>
@@ -25,12 +23,12 @@ footer {
 	justify-content: flex-end;
 }
 
-#footer_subcont {
+#footer-container {
 	display: flex;
 	height: auto;
 	align-self: stretch;
 }
-#footer_subcont p {
+#footer-container p {
   color: $medium-grey;
   font-size: 0.8em;
 }
