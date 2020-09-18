@@ -22,33 +22,49 @@
 export default {
 	name: 'BaseHelper',
 	props: {
-		heading: {
-			type: [String, Number],
-			default: null
-		},
-		text: {
-			type: [String, Number],
-			default: null
-		},
-		title: {
-			type: String,
-			default: ''
-		},
-		transition: {
-			type: String,
-			default: 'slide-fade'
-		}
+		onHover: { type: Boolean, default: true },
+		heading: { type: [String, Number], default: null },
+		text: { type: [String, Number], default: null },
+		title: { type: String, default: '' },
+		transition: { type: String, default: 'slide-fade' }
 	},
 
 	data() {
 		return {
-			showHelp: false
+			showHelp: false,
+			isHovering: false
 		};
+	},
+
+	mounted() {
+		if (this.onHover) {
+			this.$el.addEventListener('mouseenter', this.handleHoverEnter);
+			this.$el.addEventListener('mouseleave', this.handleHoverLeave);
+		}
+	},
+
+	destroyed() {
+		this.$el.removeEventListener('mouseenter', this.handleHoverEnter);
+		this.$el.removeEventListener('mouseleave', this.handleHoverLeave);
 	},
 
 	methods: {
 		handleClick() {
 			this.showHelp = !this.showHelp;
+		},
+
+		handleHoverEnter() {
+			this.showHelp = true;
+			this.isHovering = true;
+		},
+
+		handleHoverLeave() {
+			this.isHovering = false;
+			setTimeout(() => {
+				if (!this.isHovering) {
+					this.showHelp = false;
+				}
+			}, 500);
 		}
 	}
 };
@@ -110,7 +126,7 @@ export default {
 		main.popover-body {
 			// display: block;
 			padding: 0.4rem 0.7rem;
-			font-size: 14px;
+			font-size: 15px;
 			user-select: none;
 			min-width: 300px;
 			max-width: 340px;
