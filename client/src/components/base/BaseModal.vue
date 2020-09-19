@@ -24,7 +24,7 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 
 .modal-container{
 	visibility: hidden;
@@ -40,7 +40,8 @@ export default {
 	background-color: rgb(0, 0, 0);
 	background-color: rgba(0, 0, 0, 0.45);
 	transition: visibility 0s, opacity 0.3s ease-in-out;
-	z-index: 999;
+	scroll-behavior: smooth;
+	z-index: 100;
 	.modal {
 		width: 55%;
 		height: fit-content;

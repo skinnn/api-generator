@@ -1,10 +1,13 @@
 <template>
 <div class="helper-tooltip">
-	<div @click="handleClick" class="helper-question-mark" :title="title">?</div>
+	<div @click="handleClick" class="helper-question-mark" :title="title">
+		<span v-if="text" v-html="text"></span>
+		<span v-else>?</span>
+	</div>
 
 	<div @click="handleClick" class="help-box">
 		<transition :name="transition">
-			<div v-if="showHelp" :class="['help-popover', {'popover-no-heading': !heading}]">
+			<div v-if="showHelp" :class="['help-popover', position, {'popover-no-heading': !heading}]">
 				<div :class="['arrow', {'no-heading': !heading}]" />
 				<header v-if="heading" class="popover-header">
 					{{ heading }}
@@ -23,6 +26,7 @@ export default {
 	name: 'BaseHelper',
 	props: {
 		onHover: { type: Boolean, default: true },
+		position: { type: String, default: '' },
 		heading: { type: [String, Number], default: null },
 		text: { type: [String, Number], default: null },
 		title: { type: String, default: '' },
@@ -70,7 +74,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .helper-tooltip {
 	display: inline-block;
 }
@@ -79,11 +83,14 @@ export default {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	width: 18px;
-	height: 18px;
+	width: fit-content;
+	// width: 18px;
+	// height: 18px;
+	padding: 4px 4px;
+	margin-left: 5px;
 	justify-content: center;
 	align-items: center;
-	border-radius: 50%;
+	// border-radius: 50%;
 	user-select: none;
 	font-size: 14px;
 	background-color: lightgray;
@@ -112,6 +119,19 @@ export default {
 		background-color: #fff;
 		cursor: pointer;
 
+		&.top {
+			top: -115px !important;
+			left: -240px !important;
+		}
+		&.bottom {
+			top: 15px !important;
+			left: -260px !important;
+
+			div.arrow {
+				transform: translateX(290px) rotate(90deg) translateX(-29px);
+			}
+		}
+
 		&.popover-no-heading {
 			top: -33px;
 		}
@@ -126,10 +146,13 @@ export default {
 		main.popover-body {
 			// display: block;
 			padding: 0.4rem 0.7rem;
-			font-size: 15px;
+			min-width: 330px;
+			// max-width: 340px;
+			color: grey;
+			font-size: 13px;
+			font-weight: 400;
 			user-select: none;
-			min-width: 300px;
-			max-width: 340px;
+			text-align: left;
 		}
 
 		div.arrow {
