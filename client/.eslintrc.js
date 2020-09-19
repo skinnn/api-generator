@@ -18,7 +18,8 @@ module.exports = {
 		'space-before-function-paren': 0,
 		'semi': [2, 'always'],
 		'eol-last': 0,
-		'comma-dangle': 0
+		'comma-dangle': 0,
+		'no-useless-return': 0
   },
   overrides: [
     {

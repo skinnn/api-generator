@@ -48,4 +48,12 @@ export default {
 </script>
 
 <style scoped lang="scss">
+/deep/ .modal {
+	width: 70%;
+	padding: 30px 40px;
+
+	.endpoint-builder {
+		width: 50%;
+	}
+}
 </style>
