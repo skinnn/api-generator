@@ -19,7 +19,7 @@
 					required
 				>
 				<div class="remember-wrapper">
-					<input type="checkbox" id="remember">
+					<input type="checkbox" id="remember" v-model="remember">
 					<label for="remember">Remember me</label>
 				</div>
 				<button type="submit">Login</button>
@@ -37,12 +37,20 @@
 export default {
 	name: 'LoginForm',
 
+	created() {
+		if (localStorage.getItem('remember')) {
+			this.fields.username = localStorage.getItem('remember');
+			this.remember = true;
+		}
+	},
+
 	data() {
 		return {
 			fields: {
 				username: '',
 				password: ''
 			},
+			remember: false,
 			error: null
 		};
 	},
@@ -55,6 +63,13 @@ export default {
 					username: this.fields.username,
 					password: this.fields.password
 				};
+				// Remember me
+				if (this.remember) {
+					localStorage.setItem('remember', this.fields.username);
+				} else {
+					localStorage.removeItem('remember');
+				}
+				// Login
 				const res = await this.$http.authentication.login(credentials);
 				const { data } = res;
 				const { token } = data;
