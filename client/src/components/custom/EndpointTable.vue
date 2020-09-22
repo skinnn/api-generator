@@ -11,14 +11,14 @@
 						<th scope="col" class="created">Created</th>
 						<th scope="col" class="updated">Updated</th>
 						<th scope="col">Owner</th>
-						<th scope="col" class="operation">Operation</th>
+						<th scope="col" class="operations">Operations</th>
 					</tr>
 				</thead>
 				<tbody>
 					<tr v-for="endpoint in endpoints" :key="endpoint.id">
-						<th class="id">{{ endpoint._id }}</th>
+						<th class="endpoint-id">{{ endpoint._id }}</th>
 						<td>{{endpoint.name}}</td>
-						<td class="schema" style="text-align: center;">
+						<td class="schema">
 							<button @click="viewSchema(endpoint)" class="btn">View</button>
 						</td>
 						<td class="created">{{endpoint.created}}</td>
@@ -27,17 +27,21 @@
 
 						<!-- TODO: Implement edit functionality -->
 						<!-- Dont load operations buttons for builtin endpoints -->
-						<td v-if="notBuiltinEndpoint(endpoint.name)" class="operation">
-							<button type="button" class="btn btn-outline-info" :data-id="endpoint._id" @click="editEndpoint()">Edit</button>
-							<button type="button" class="btn btn-outline-danger" :data-id="endpoint._id" @click="deleteEndpoint()">Delete</button>
+						<td class="operations">
+							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-info" :data-id="endpoint._id" @click="editEndpoint()">
+								Edit
+							</button>
+							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-danger" :data-id="endpoint._id" @click="deleteEndpoint()">
+								Delete
+							</button>
 						</td>
 					</tr>
 				</tbody>
 			</table>
 		</div>
 
-		<div id="modal-schema" class="modal modal-hide">
-			<div class="modal-content" name="modal-content">	</div>
+		<div ref="schemaModal" class="modal modal-hide">
+			<div class="modal-content" name="modal-content"></div>
 		</div>
 	</div>
 </template>
@@ -87,18 +91,17 @@ export default {
 		viewSchema(endpoint) {
 			event.preventDefault();
 			event.stopPropagation();
-			console.log(endpoint);
-			const schema = endpoint._schema;
-			const modal = document.getElementById('modal-schema');
+			const modal = this.$refs.schemaModal;
 			modal.classList.add('modal-show');
 			modal.children[0].innerHTML = `
-				<h4 style="text-align: center;">/${endpoint.name}</h4>;
-				<pre>${JSON.stringify(schema, null, 4)}</pre>;
+				<h4 style="text-align: center;">${endpoint.name}</h4>;
+				<pre>${JSON.stringify(endpoint._schema, null, 4)}</pre>;
 			`;
 
 			// Add close event listener
 			document.addEventListener('click', (e) => {
 				if (e.target.id === modal.id) {
+					modal.children[0].innerHTML = '';
 					// Close modal
 					modal.classList.remove('modal-show');
 				}
@@ -182,12 +185,15 @@ table tbody .schema button:hover {
 	filter: contrast(130%)
 }
 
-table tbody .operation {
+table tbody .operations {
 	text-align: center;
 }
 
-table tbody .id {
+table tbody .endpoint-id {
 	cursor: pointer;
+	&:hover {
+		text-decoration: underline;
+	}
 }
 
 /* Modals */
