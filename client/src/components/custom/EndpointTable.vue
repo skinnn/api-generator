@@ -1,5 +1,5 @@
 <template>
-	<div class="users">
+	<div class="endpoint-table-component">
 		<div class="table-sm table-hover table-striped">
 			<table class="table">
 				<thead class="thead-dark">
@@ -19,7 +19,7 @@
 						<th class="id">{{ endpoint._id }}</th>
 						<td>{{endpoint.name}}</td>
 						<td class="schema" style="text-align: center;">
-							<button onclick="viewSchema()" class="btn">View</button>
+							<button @click="viewSchema(endpoint)" class="btn">View</button>
 						</td>
 						<td class="created">{{endpoint.created}}</td>
 						<td class="updated">{{endpoint.updated ? endpoint.updated : 'Never'}}</td>
@@ -34,6 +34,10 @@
 					</tr>
 				</tbody>
 			</table>
+		</div>
+
+		<div id="modal-schema" class="modal modal-hide">
+			<div class="modal-content" name="modal-content">	</div>
 		</div>
 	</div>
 </template>
@@ -78,6 +82,27 @@ export default {
 
 		deleteEndpoint() {
 			console.log('delete');
+		},
+
+		viewSchema(endpoint) {
+			event.preventDefault();
+			event.stopPropagation();
+			console.log(endpoint);
+			const schema = endpoint._schema;
+			const modal = document.getElementById('modal-schema');
+			modal.classList.add('modal-show');
+			modal.children[0].innerHTML = `
+				<h4 style="text-align: center;">/${endpoint.name}</h4>;
+				<pre>${JSON.stringify(schema, null, 4)}</pre>;
+			`;
+
+			// Add close event listener
+			document.addEventListener('click', (e) => {
+				if (e.target.id === modal.id) {
+					// Close modal
+					modal.classList.remove('modal-show');
+				}
+			});
 		},
 
 		notBuiltinEndpoint(endpointName) {
@@ -163,5 +188,37 @@ table tbody .operation {
 
 table tbody .id {
 	cursor: pointer;
+}
+
+/* Modals */
+.modal-show {
+	/* display: block; */
+	visibility: visible !important;
+  opacity: 1 !important;
+}
+/* Modal */
+.modal {
+	visibility: hidden;
+	opacity: 0;
+	display: block;
+  position: fixed;
+  z-index: 9999;
+	left: 0;
+	top: 0;
+  width: 100%;
+	height: 100%;
+	padding: 2% 0;
+  overflow-y: auto;
+  background-color: rgb(0, 0, 0);
+	background-color: rgba(0, 0, 0, 0.45);
+
+	transition: visibility 0s, opacity 0.3s ease-in-out;
+}
+
+.modal .modal-content {
+	width: 55%;
+	margin: 0 auto;
+	padding: 3% 4%;
+	background-color: rgb(255,255,255);
 }
 </style>
