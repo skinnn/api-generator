@@ -33,8 +33,6 @@
 </template>
 
 <script>
-// Services
-import AuthService from '@/services/Authentication.js';
 
 export default {
 	name: 'LoginForm',
@@ -57,7 +55,7 @@ export default {
 					username: this.fields.username,
 					password: this.fields.password
 				};
-				const res = await AuthService.login(credentials);
+				const res = await this.$http.authentication.login(credentials);
 				const { data } = res;
 				const { token } = data;
 				// Save user data to the store

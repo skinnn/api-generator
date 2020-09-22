@@ -24,6 +24,7 @@ const actions = {
 	logout({ commit }) {
 		// commit('SET_USER', '');
 		commit('SET_TOKEN', '');
+		localStorage.removeItem('token');
 	},
 	setToken({ commit }, token) {
 		localStorage.setItem('token', JSON.stringify(token));

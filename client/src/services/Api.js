@@ -2,8 +2,8 @@ import axios from 'axios';
 import config from '@/config/master.js';
 
 /**
-	* Axios instance used for sending all requests to the API
-  */
+ * Axios instance used for sending all requests to the API
+ */
 
 export default () => {
 	const options = {

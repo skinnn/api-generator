@@ -3,6 +3,9 @@
 		<button @click="showEndpointBuilderModal = !showEndpointBuilderModal">
 			Endpoint builder
 		</button>
+
+		<EndpointTable />
+
 		<EndpointBuilderModal :show="showEndpointBuilderModal" @closeModal="handleCloseModal">
 			<EndpointBuilder />
 		</EndpointBuilderModal>
@@ -13,9 +16,10 @@
 // Components
 import EndpointBuilderModal from '@/components/modals/EndpointBuilderModal';
 import EndpointBuilder from '@/components/custom/EndpointBuilder.vue';
+import EndpointTable from '@/components/custom/EndpointTable.vue';
 
 export default {
-	components: { EndpointBuilder, EndpointBuilderModal },
+	components: { EndpointBuilder, EndpointBuilderModal, EndpointTable },
 
 	data() {
 		return {
