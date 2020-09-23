@@ -91,7 +91,7 @@ export default {
 			if (!confirm(`Are you sure you want to delete the endpoint named: ${endpoint.name}`)) return;
 
 			try {
-				const res = await this.$http.endpoint.delete(endpoint._id);
+				await this.$http.endpoint.delete(endpoint._id);
 				this.mutateRemoveEndpoint(endpoint._id);
 			} catch (err) {
 				console.error(err);
@@ -103,8 +103,11 @@ export default {
 			event.stopPropagation();
 			const modal = this.$refs.schemaModal;
 			modal.classList.add('modal-show');
+			// TODO: Refactor adding innerHTML, create EndpointSchema component
+			const href = `${this.$config.api.base_url}/${endpoint.name}?token=${this.$store.state.user.token}`;
 			modal.children[0].innerHTML = `
 				<h4 style="text-align: center;">${endpoint.name}</h4>
+				<a style="text-align: center;" href="${href}" target="_blank">${this.$config.api.base_url}/${endpoint.name}</a>
 				<pre>${JSON.stringify(endpoint._schema, null, 4)}</pre>
 			`;
 
