@@ -3,16 +3,13 @@
 </template>
 
 <script>
-// Services
-import AuthService from '@/services/Authentication.js';
-
 export default {
 	name: 'LogoutButton',
 
 	methods: {
 		async handleLogout() {
 			try {
-				await AuthService.logout();
+				await this.$http.authentication.logout();
 				// Remove user data
 				this.$store.dispatch('user/logout');
 				// Redirect

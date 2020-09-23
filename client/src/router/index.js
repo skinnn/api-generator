@@ -42,6 +42,12 @@ const routes = [
 				name: 'endpoints',
 				component: () => import(/* webpackChunkName: "endpoints" */ '@/views/dashboard/endpoints.vue'),
 				meta: { title: 'Endpoints' }
+			},
+			{
+				path: 'endpoint/:id',
+				name: 'view-endpoint',
+				component: () => import(/* webpackChunkName: "view-endpoint" */ '@/views/dashboard/view-endpoint.vue'),
+				meta: { title: 'Endpoint' }
 			}
 		]
 	}
