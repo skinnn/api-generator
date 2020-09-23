@@ -9,6 +9,7 @@
 				</div>
 				<div class="menu-separator"></div>
 				<div class="menu-title">Home</div>
+				<BackButton />
 			</div>
 			<ul class="menu-right">
 				<!-- <div class="tools_button"><img src="@/assets/img/icons/ico_tools.svg"></div> -->
@@ -28,11 +29,12 @@
 import { mapGetters } from 'vuex';
 // Components
 import LogoutButton from '@/components/buttons/LogoutButton.vue';
+import BackButton from '@/components/buttons/BackButton.vue';
 
 export default {
 	name: 'DashboardTopBar',
 	props: ['payload'],
-	components: { LogoutButton },
+	components: { LogoutButton, BackButton },
 
 	computed: {
 		...mapGetters('user', {

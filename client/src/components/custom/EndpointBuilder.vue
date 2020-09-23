@@ -103,7 +103,7 @@
 		<div class="form-group">
 		<!-- Error messages -->
 			<div class="error-messages">
-				<div v-for="(err, index) in errors" :key="index" class="error-message">
+				<div v-for="(err, index) in messages.errors" :key="index" class="error-message">
 					<div class="message-left">
 						{{ err.message }}
 					</div>
@@ -121,7 +121,7 @@
 				</div>
 			</div>
 			<div class="success-messages">
-
+				<p v-if="messages.success" class="success-message" v-html="messages.success"></p>
 			</div>
 		</div>
 
@@ -177,7 +177,10 @@ export default {
 					deleteRoles: [],
 				}
 			},
-			errors: []
+			messages: {
+				errors: [],
+				success: '',
+			}
 		};
 	},
 
@@ -203,18 +206,18 @@ export default {
 			// TODO: Validation on submit
 			const errors = this.validate();
 			if (errors > 0) {
-				return console.error('errors: ', this.errors);
+				return console.error('errors: ', this.messages.errors);
 			}
 
 			const { propertiesObject, requiredProperties, propError } = this.createObjectFromPropsArray(this.endpoint.properties);
 			if (propError) {
-				this.errors.push(propError);
+				this.messages.errors.push(propError);
 				return console.error('propError: ', propError);
 			}
-			console.log('propertiesObject', propertiesObject);
-			console.log('requiredProperties', requiredProperties);
-			console.log('propError', propError);
-			console.log('this.errors', this.errors);
+			// console.log('propertiesObject', propertiesObject);
+			// console.log('requiredProperties', requiredProperties);
+			// console.log('propError', propError);
+			// console.log('this.messages.errors', this.messages.errors);
 
 			const data = {
 				name: this.endpoint.name,
@@ -231,9 +234,11 @@ export default {
 				const res = await this.$http.endpoint.createEndpoint(data);
 				const createdEndpoint = res.data.record;
 				this.mutateAddEndpoint(createdEndpoint);
-				console.log('create endpoint res:', res);
+				this.messages.success = `<span class="success-message">Endpoint <span class="highlighted">/${res.data.record.name}</span> created successfully.</span>`;
 			} catch (err) {
 				console.error(err);
+				this.messages.success = '';
+				this.messages.errors.push({ name: 'APIError', message: err.response.data.message });
 			}
 
 			// // TODO: Validation
@@ -317,14 +322,14 @@ export default {
 			this.endpoint.properties.forEach((prop, index) => {
 				if (prop.name === '') {
 					const error = { name: 'EmptyPropertyName', message: `Property with index ${index + 1} has no name`, property: prop };
-					const errAlreadyExist = this.errors.some((err) => err.message === error.message);
+					const errAlreadyExist = this.messages.errors.some((err) => err.message === error.message);
 					if (!errAlreadyExist) {
 						prop.error = error;
-						this.errors.push(error);
+						this.messages.errors.push(error);
 					}
 				}
 			});
-			return this.errors;
+			return this.messages.errors;
 		},
 
 		handleDeleteProperty(property) {
@@ -343,13 +348,13 @@ export default {
 					// if (!errAlreadyExist) {
 					// Show an error, add some styles
 					const error = { name: 'DuplicatePropertyName', message: `Property with this name already exist: ${prop.name}`, property: currentlyEditingProp };
-					this.errors.push(error);
+					this.messages.errors.push(error);
 					currentlyEditingProp.error = error;
 					// }
 				} else {
-					this.errors.forEach((err, index) => {
+					this.messages.errors.forEach((err, index) => {
 						if (err.name === 'DuplicatePropertyName' && err.property.id === currentlyEditingProp.id) {
-							this.errors.splice(index, 1);
+							this.messages.errors.splice(index, 1);
 							currentlyEditingProp.error = null;
 						}
 					});

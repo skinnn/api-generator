@@ -1,5 +1,6 @@
 import Vue from 'vue';
 import VueRouter from 'vue-router';
+import store from '@/store';
 
 Vue.use(VueRouter);
 
@@ -57,6 +58,20 @@ const router = new VueRouter({
 	mode: 'history',
 	base: process.env.BASE_URL,
 	routes
+});
+
+// If user is navigating to login page and is already logged in, stop navigation
+router.beforeEach((to, from, next) => {
+	if (to.name === 'login' || to.path === '/login') {
+		const isLoggedIn = store.getters['user/isLoggedIn'];
+		if (isLoggedIn) {
+			return next(false);
+		} else {
+			return next(true);
+		}
+	} else {
+		return next(true);
+	}
 });
 
 export default router;

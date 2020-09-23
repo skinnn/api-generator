@@ -33,6 +33,9 @@ const actions = {
 };
 
 const getters = {
+	isLoggedIn(state) {
+		return state.token !== null;
+	},
 	getDecodedToken(state) {
 		if (state.token) {
 			return decodeJWT(state.token);
