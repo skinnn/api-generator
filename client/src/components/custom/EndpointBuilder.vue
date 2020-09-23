@@ -214,10 +214,10 @@ export default {
 				this.messages.errors.push(propError);
 				return console.error('propError: ', propError);
 			}
-			console.log('propertiesObject', propertiesObject);
-			console.log('requiredProperties', requiredProperties);
-			console.log('propError', propError);
-			console.log('this.messages.errors', this.messages.errors);
+			// console.log('propertiesObject', propertiesObject);
+			// console.log('requiredProperties', requiredProperties);
+			// console.log('propError', propError);
+			// console.log('this.messages.errors', this.messages.errors);
 
 			const data = {
 				name: this.endpoint.name,
@@ -234,7 +234,6 @@ export default {
 				const res = await this.$http.endpoint.createEndpoint(data);
 				const createdEndpoint = res.data.record;
 				this.mutateAddEndpoint(createdEndpoint);
-				console.log('create endpoint res:', res);
 				this.messages.success = `<span class="success-message">Endpoint <span class="highlighted">/${res.data.record.name}</span> created successfully.</span>`;
 			} catch (err) {
 				console.error(err);
