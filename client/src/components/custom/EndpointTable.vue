@@ -16,7 +16,7 @@
 				</thead>
 				<tbody>
 					<tr v-for="endpoint in endpoints" :key="endpoint.id">
-						<th class="endpoint-id">{{ endpoint._id }}</th>
+						<th class="endpoint-id" @click="viewEndpoint(endpoint)">{{ endpoint._id }}</th>
 						<td>{{endpoint.name}}</td>
 						<td class="schema">
 							<button @click="viewSchema(endpoint)" class="btn">View</button>
@@ -118,6 +118,13 @@ export default {
 					// Close modal
 					modal.classList.remove('modal-show');
 				}
+			});
+		},
+
+		viewEndpoint(endpoint) {
+			this.$router.push({
+				name: 'view-endpoint',
+				params: { id: endpoint._id }
 			});
 		},
 
