@@ -39,12 +39,17 @@ class Authentication extends Controller {
 					return next()
 				} else {
 					// Get token and run permission validation
-					const token = Token.getTokenFromHeaders(req.headers)
+					let token = Token.getTokenFromHeaders(req.headers)
 					// TODO: Handle errors in catch, add Controller.errors.forbidden (error handling)
 					if(!token) {
-						return res.status(401).json({
-							message: 'Access denied'
-						})
+						// Also check for a token sent as the query parameter
+						if (req.urlParsed.searchParams.get('token')) {
+							token = req.urlParsed.searchParams.get('token');
+						} else {
+							return res.status(401).json({
+								message: 'Access denied'
+							})
+						}
 					}
 					
 					// Validate JWT

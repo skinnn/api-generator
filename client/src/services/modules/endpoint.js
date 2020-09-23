@@ -7,5 +7,9 @@ export default {
 	},
 	getEndpoints() {
 		return Api().get('/endpoint');
+	},
+	delete(id) {
+		console.log('ID:', id);
+		return Api().delete(`/endpoint/${id}`);
 	}
 };

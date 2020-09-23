@@ -28,10 +28,10 @@
 						<!-- TODO: Implement edit functionality -->
 						<!-- Dont load operations buttons for builtin endpoints -->
 						<td class="operations">
-							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-info" :data-id="endpoint._id" @click="editEndpoint()">
+							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-info" @click="editEndpoint(endpoint)">
 								Edit
 							</button>
-							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-danger" :data-id="endpoint._id" @click="deleteEndpoint()">
+							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-danger" @click="deleteEndpoint(endpoint)">
 								Delete
 							</button>
 						</td>
@@ -65,7 +65,8 @@ export default {
 
 	methods: {
 		...mapMutations('endpoints', {
-			mutateEndpoints: 'SET_ENDPOINTS'
+			mutateEndpoints: 'SET_ENDPOINTS',
+			mutateRemoveEndpoint: 'REMOVE_ENDPOINT'
 		}),
 
 		async getEndpoints() {
@@ -80,12 +81,21 @@ export default {
 			}
 		},
 
-		editEndpoint() {
-			console.log('edit');
+		editEndpoint(endpoint) {
+			event.stopPropagation();
+			console.log('edit', endpoint);
 		},
 
-		deleteEndpoint() {
-			console.log('delete');
+		async deleteEndpoint(endpoint) {
+			event.stopPropagation();
+			if (!confirm(`Are you sure you want to delete the endpoint named: ${endpoint.name}`)) return;
+
+			try {
+				const res = await this.$http.endpoint.delete(endpoint._id);
+				this.mutateRemoveEndpoint(endpoint._id);
+			} catch (err) {
+				console.error(err);
+			}
 		},
 
 		viewSchema(endpoint) {
@@ -94,8 +104,8 @@ export default {
 			const modal = this.$refs.schemaModal;
 			modal.classList.add('modal-show');
 			modal.children[0].innerHTML = `
-				<h4 style="text-align: center;">${endpoint.name}</h4>;
-				<pre>${JSON.stringify(endpoint._schema, null, 4)}</pre>;
+				<h4 style="text-align: center;">${endpoint.name}</h4>
+				<pre>${JSON.stringify(endpoint._schema, null, 4)}</pre>
 			`;
 
 			// Add close event listener

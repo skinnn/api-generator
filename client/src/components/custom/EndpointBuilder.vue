@@ -137,6 +137,8 @@
 </template>
 
 <script>
+// Helpers
+import { mapMutations } from 'vuex';
 import { v4 as uuidv4 } from 'uuid';
 // Components
 import EndpointBuilderProperty from './EndpointBuilderProperty.vue';
@@ -146,11 +148,11 @@ export default {
 	name: 'EndpointBuilder',
 	components: { EndpointBuilderProperty, BaseHelper },
 
-	// computed: {
-	// 	endpointProperties() {
-	// 		return this.endpoint.properties;
-	// 	}
-	// },
+	computed: {
+		// endpointProperties() {
+		// 	return this.endpoint.properties;
+		// }
+	},
 
 	data() {
 		return {
@@ -184,7 +186,11 @@ export default {
 	},
 
 	methods: {
-		handleSubmit(e) {
+		...mapMutations('endpoints', {
+			mutateAddEndpoint: 'ADD_ENDPOINT'
+		}),
+
+		async handleSubmit(e) {
 			e.preventDefault();
 			console.log('endpoint on submit:', this.endpoint);
 
@@ -220,7 +226,15 @@ export default {
 				type: 'object'
 			};
 
-			console.log('data:', data);
+			// console.log('data:', data);
+			try {
+				const res = await this.$http.endpoint.createEndpoint(data);
+				const createdEndpoint = res.data.record;
+				this.mutateAddEndpoint(createdEndpoint);
+				console.log('create endpoint res:', res);
+			} catch (err) {
+				console.error(err);
+			}
 
 			// // TODO: Validation
 			// fetch(`${API_PATH}/endpoint`, {

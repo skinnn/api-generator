@@ -30,7 +30,7 @@ class EndpointController extends Controller {
 	}
 
 	static async createEndpoint(req, res) {
-		// TODO: Create support for adding nested parameters, e.g. /posts/category/:id
+		// TODO: Create support for adding nested parameters, e.g. /posts/category, /posts/category/:id
 		res.set('Accept', 'application/json')
 		var endpoint = req.body
 		try {
@@ -43,6 +43,15 @@ class EndpointController extends Controller {
 
 			// If creating an endpoint without properties
 			endpoint.properties = endpoint.properties ? endpoint.properties :  {}
+			// Add root by default
+			const createRoles = endpoint.access.create.roles;
+			const readRoles = endpoint.access.read.roles;
+			const updateRoles = endpoint.access.update.roles;
+			const deleteRoles = endpoint.access.delete.roles;
+			if (!createRoles.includes('root')) createRoles.push('root');
+			if (!readRoles.includes('root')) readRoles.push('root');
+			if (!updateRoles.includes('root')) updateRoles.push('root');
+			if (!deleteRoles.includes('root')) deleteRoles.push('root');
 
 			for (const prop in endpoint.properties) {
 				if (endpoint.properties.hasOwnProperty(prop)) {
@@ -133,6 +142,7 @@ class EndpointController extends Controller {
 	}
 
 	static async deleteEndpointById(req, res) {
+		console.log('PARAMS:', req.params);
 		// TODO: Delete default controller instance for deleted dynamic endpoint
 		// TODO: Get schema for dynamic endpoint, e.g posts
 		try {
