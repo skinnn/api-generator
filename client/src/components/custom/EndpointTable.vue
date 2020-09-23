@@ -184,8 +184,8 @@ table tbody .btn:nth-child(1) {
 
 /* Table rows */
 table tbody .created,
-table tbody .updated,
-table tbody .token {
+table tbody .updated {
+	font-style: italic;
 	font-size: 12px;
 }
 

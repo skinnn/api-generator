@@ -5,6 +5,7 @@
 </template>
 
 <script>
+// TODO: View endpoitns
 export default {
 
 };
