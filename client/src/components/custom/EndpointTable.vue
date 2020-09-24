@@ -11,6 +11,7 @@
 						<th scope="col" class="created">Created</th>
 						<th scope="col" class="updated">Updated</th>
 						<th scope="col">Owner</th>
+						<th scope="col roles">Roles</th>
 						<th scope="col" class="operations">Operations</th>
 					</tr>
 				</thead>
@@ -21,9 +22,10 @@
 						<td class="schema">
 							<button @click="viewSchema(endpoint)" class="btn">View</button>
 						</td>
-						<td class="created">{{endpoint.created}}</td>
-						<td class="updated">{{endpoint.updated ? endpoint.updated : 'Never'}}</td>
-						<td>{{endpoint.__owner}}</td>
+						<td class="created">{{ endpoint.created}}</td>
+						<td class="updated">{{ endpoint.updated ? endpoint.updated : 'Never' }}</td>
+						<td>{{ endpoint.__owner }}</td>
+						<td class="roles"><EndpointRoles :endpoint="endpoint" /></td>
 
 						<!-- TODO: Implement edit functionality -->
 						<!-- Dont load operations buttons for builtin endpoints -->
@@ -49,9 +51,12 @@
 <script>
 // Helpers
 import { mapState, mapMutations } from 'vuex';
+// Components
+import EndpointRoles from '@/components/custom/EndpointRoles.vue';
 
 export default {
 	name: 'EndpointTable',
+	components: { EndpointRoles },
 
 	computed: {
 		...mapState('endpoints', {
@@ -151,18 +156,20 @@ table {
 
 table thead .updated,
 table thead .created {
-	min-width: 180px;
+	// min-width: 180px;
+	min-width: 100px;
 }
 
 table td,
 table th {
 	font-size: 14px;
-	vertical-align: middle !important;
+	vertical-align: middle;
+	padding: 5px 10px;
 }
 
 .table th,
 .table td {
-	min-width: 150px;
+	min-width: 50px;
 	border-top: none;
 }
 
@@ -195,6 +202,7 @@ table tbody .schema {
 	white-space: nowrap;
 }
 table tbody .schema button {
+	background-color: transparent;
 	color: #17a2b8;
 	border: none;
 }
@@ -203,6 +211,13 @@ table tbody .schema button:hover {
 	text-decoration: underline;
 	color: #17a2b8;
 	filter: contrast(130%)
+}
+
+table thead .schema,
+table tbody .schema,
+table thead .roles,
+table tbody .roles {
+	min-width: 50px;
 }
 
 table tbody .operations {
