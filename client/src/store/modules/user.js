@@ -1,4 +1,5 @@
 import { decodeJWT } from '@/lib/helpers.js';
+import userConstants from '@/constants/user.js';
 
 const state = {
 	// user: localStorage.getItem('user') ? localStorage.getItem('user') : null,
@@ -23,7 +24,7 @@ const actions = {
 	},
 	logout({ commit }) {
 		// commit('SET_USER', '');
-		commit('SET_TOKEN', '');
+		commit('SET_TOKEN', null);
 		localStorage.removeItem('token');
 	},
 	setToken({ commit }, token) {
@@ -34,13 +35,22 @@ const actions = {
 
 const getters = {
 	isLoggedIn(state) {
-		return state.token !== null;
+		return typeof state.token === 'string' && state.token.length > 10;
 	},
 	getDecodedToken(state) {
 		if (state.token) {
 			return decodeJWT(state.token);
 		} else {
 			return state.token;
+		}
+	},
+	isAdmin(state) {
+		const loggedInUser = decodeJWT(state.token);
+		if (state.token && loggedInUser) {
+			const roles = loggedInUser.roles || null;
+			return roles.some((role) => userConstants.admin.roles.includes(role));
+		} else {
+			return false;
 		}
 	}
 };
