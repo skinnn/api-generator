@@ -68,6 +68,10 @@ export default {
 		this.getEndpoints();
 	},
 
+	destroyed() {
+		document.removeEventListener(this.closeSchemaModal);
+	},
+
 	methods: {
 		...mapMutations('endpoints', {
 			mutateEndpoints: 'SET_ENDPOINTS',
@@ -117,13 +121,16 @@ export default {
 			`;
 
 			// Add close event listener
-			document.addEventListener('click', (e) => {
-				if (e.target.id === modal.id) {
-					modal.children[0].innerHTML = '';
-					// Close modal
-					modal.classList.remove('modal-show');
-				}
-			});
+			document.addEventListener('click', this.closeSchemaModal);
+		},
+
+		closeSchemaModal(event) {
+			const modal = this.$refs.schemaModal;
+			if (event.target.classList.contains('modal')) {
+				modal.children[0].innerHTML = '';
+				// Close modal
+				modal.classList.remove('modal-show');
+			}
 		},
 
 		viewEndpoint(endpoint) {
