@@ -19,6 +19,12 @@ const routes = [
 		meta: { title: 'Login', roles: ['root'], loginPage: true }
 	},
 	{
+		path: '/api/docs',
+		name: 'api-docs-public',
+		component: () => import(/* webpackChunkName: "api-docs-public" */ '../views/dashboard/api-docs.vue'),
+		meta: { title: 'API Documentation', roles: [] }
+	},
+	{
 		path: '/dashboard',
 		// redirect: '/login',
 		// this generates a separate chunk (dashboard.[hash].js) for this route
