@@ -81,9 +81,8 @@ const handleLoginPageAccess = (to, from, next) => {
 		if (isAllowedToAccess) {
 			return next({ name: 'home' });
 		} else {
-			console.log('ELSE');
 			// TODO: Send logged in users with incorrect permissions to a 404 page (so they don't know that this route exists)?
-			return next(false); // { name: 'login' }
+			return next({ name: 'login' });
 		}
 	} else {
 		return next(true);
@@ -105,15 +104,14 @@ router.beforeEach((to, from, next) => {
 		const decodedToken = store.getters['user/getDecodedToken'];
 		const loggedInUserRoles = decodedToken.roles;
 
-		console.log('loggedInUserRoles:', loggedInUserRoles);
 		// Check that the user has a correct role/permissions for this route
 		const hasAllowedRole = to.matched.some((record) => {
 			if (record.meta.roles && record.meta.roles.length > 0) {
 				return record.meta.roles.some((role) => loggedInUserRoles.includes(role));
+				// return userConstants.admin.roles.some((role) => loggedInUserRoles.includes(role));
 			} else {
 				return true;
 			}
-			// return userConstants.admin.roles.some((role) => loggedInUserRoles.includes(role));
 		});
 
 		// Authorization success

@@ -36,7 +36,8 @@ class Token {
 
 	static getTokenFromHeaders(headers) {
 		// Express headers are auto converted to lowercase
-		let token = headers['authorization'] || headers['cookie'] || headers['x-access-token'] || ''
+		// let token = headers['authorization'] || headers['cookie'] || headers['x-access-token'] || ''
+		let token = headers['authorization'] || headers['x-access-token'] || null
 		if (!token) return null
 		if (token.startsWith('Bearer')) {
 			// Remove Bearer from string
