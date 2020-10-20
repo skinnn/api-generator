@@ -6,7 +6,7 @@ const config = {
 	version: 'v1',
 	protocol: env.PROTOCOL || 'http',
 	host: env.HOST || 'localhost',
-	port: env.PORT || '8090',
+	port: env.PORT || 8090,
 	mode: env.NODE_ENV || 'development',
 
 	settings: {

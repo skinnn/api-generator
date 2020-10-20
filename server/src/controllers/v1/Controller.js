@@ -99,10 +99,10 @@ class Controller {
 			var url = `mongodb://${db.host}:${db.port}/${db.name}`
 			var options = { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
 			
-			if (process.env.NODE_ENV === 'production' ) {
-				url = `mongodb://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}`
-				options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
-			}
+			// if (process.env.NODE_ENV === 'production' ) {
+			// 	url = `mongodb://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}`
+			// 	options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
+			// }
 
 			// TODO Use official nodejs mongodb driver or implement fortunejs
 			mongoose.connect(url, options, (err, a) => {

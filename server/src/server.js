@@ -56,7 +56,7 @@ Controller.boot(masterConfig, app).then((ctx) => {
 	}
 
 	// Spin up the server
-	ctx.api.server.listen(ctx.api.port, ctx.api.host, (err) => {
+	ctx.api.server.listen(ctx.api.port, (err) => {
 		console.log(`Server running in ${ctx.api.mode} mode - ${ctx.api.protocol}://${ctx.api.host}:${ctx.api.port}`)
 		// TODO: Will contain hooks for all models when built-in Controllers get refactored
 		// (currently contains only hooks for dynamic models added throuh GUI)
