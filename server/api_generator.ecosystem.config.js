@@ -1,7 +1,7 @@
 module.exports = {
   apps : [
 		{
-			name: 'API_Gnerator_server',
+			name: 'API_Generator',
 			script: 'npm',
 			args : 'start',
 			watch: true,
