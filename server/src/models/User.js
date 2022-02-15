@@ -18,7 +18,8 @@ const UserSchema = new MongooseSchema({
 	},
 	password: {
 		type: String,
-		required: true
+		required: true,
+		select: false
 	},
 	email: {
 		type: String,
@@ -127,15 +128,6 @@ module.exports.getUsers = () => {
 module.exports.getUserById = (id) => {
 	return new Promise((resolve, reject) => {
 		User.findById({ _id: id }, (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
-}
-
-module.exports.getUserByUsername = (username) => {
-	return new Promise((resolve, reject) => {
-		User.findOne({ username: username }, (err, doc) => {
 			if (err) reject(err)
 			resolve(doc)
 		})

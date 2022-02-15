@@ -1,7 +1,7 @@
 const path = require('path')
 const mongoose = require('mongoose')
 const Ajv = require('ajv')
-const UserModel = require('../../models/User.js')
+const User = require('../../models/User.js')
 const builtinEndpoints = require('../../config/schemas/Endpoints.js')
 const Endpoint = require('../../models/Endpoint.js')
 const { toBoolean, haveCommonElements, isEmptyObject } = require('../../lib/helpers.js')
@@ -19,10 +19,10 @@ class Controller {
 
 	// TODO: Should create boot instance of fortune store, connect to store load all the endpoints from database
 	/**
-	 * Creates boot instance of api, built-in models, then conntects to
+	 * Creates boot instance of api, built-in models, then calls initialization
 	 * @param 	{Object} 	masterConfig  [Master configuration file]
-	 * @param 	{*} 			app 					[Express instance]
-	 * @return	 					ctx 					[Context of the Controller]
+	 * @param 	{Object}	app 					[Express app instance]
+	 * @returns	{Object} 					 			[Context of the Controller]
 	 */
 	static boot(masterConfig, app) {
 		// Controller.api = masterConfig
@@ -49,7 +49,7 @@ class Controller {
 	static async init() {
 		try {
 			// Connect to MongoDB
-			await Controller.connectDB()
+			Controller.api.db.connection = await Controller.connectDB()
 			// Create root user from the config
 			await Controller.createRootUser()
 			// Save default endpoints in the db
@@ -59,7 +59,8 @@ class Controller {
 			
 			console.log('Init complete')
 		} catch (err) {
-			Controller.logError(err)
+			// Controller.logError(err)
+			throw err
 		}
 	}
 
@@ -106,9 +107,8 @@ class Controller {
 
 			// TODO Use official nodejs mongodb driver or implement fortunejs
 			mongoose.connect(url, options, (err, a) => {
-				if (err) throw err
-				Controller.api.db.connection = mongoose.connection.db
-				resolve(true)
+				if (err) reject(err)
+				resolve(mongoose.connection.db)
 			})
 		})
 	}
@@ -262,12 +262,12 @@ class Controller {
 	static async createRootUser() {
 		const user = Controller.api.rootUser
 		try {
-			const rootExist = await UserModel.getUserByUsername(user.username)
+			const rootExist = await User.findOne({ username: user.username })
 			
 			if (!rootExist) {
 				// If root's username changes in config.js,
 				// delete the previous root user
-				await UserModel.deleteOne({ roles: 'root' })
+				await User.deleteOne({ roles: 'root' })
 
 				// Create Stripe customer for this root user
 				// TODO: Move to Strpe/other controller
@@ -280,19 +280,16 @@ class Controller {
 				// })
 				// user.stripeCustomer = customer.id
 
-				const hashedPassword = await UserModel.hashPassword(user.password) 
+				const plainPassword = user.password
+				const hashedPassword = await User.hashPassword(user.password) 
 				user.roles = ['root']
 				user.password = hashedPassword
 
-				// Save root user
-				const root = await new Promise((resolve, reject) => {
-					UserModel.create(user, (err, doc) => {
-						if (err) reject(err)
-						resolve(doc)
-					})
-				})
-
-				console.log(`Root user created: ${root.username}`)
+				// Create root user
+				const root = await User.create(user)
+				if (Controller.api.mode === 'development') {
+					console.log(`Root user created: ${root.username}, ${plainPassword}`)
+				}
 				// console.log(`Customer for root created: ${customer}`)
 			}
 		} catch (err) {

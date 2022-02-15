@@ -2,7 +2,7 @@ const Controller = require('../v1/Controller.js')
 const stripe = require('../../config/stripe.js')
 const helpers = require ('../../lib/helpers.js')
 // Models
-const UserModel = require('../../models/User.js')
+const User = require('../../models/User.js')
 
 // TODO: Allow altering of user schema & model, use JSON schema instead of mongoose schema
 
@@ -17,7 +17,7 @@ class UserController extends Controller {
 	static async createUser(req, res) {
 		res.set('Accept', 'application/json')
 		try {
-			const userExist = await UserModel.getUserByUsername(req.body.username)
+			const userExist = await User.find({ username: req.body.username })
 			if (userExist) {
 				return res.status(400).json({
 					success: false,
@@ -45,10 +45,10 @@ class UserController extends Controller {
 			let user = b
 			user.stripeCustomer = customer.id
 			// Hash password
-			const hashedPassword = await UserModel.hashPassword(b.password)
+			const hashedPassword = await User.hashPassword(b.password)
 			user.password = hashedPassword
 			// Save user in the db
-			const savedUser = await UserModel.createUser(user)
+			const savedUser = await User.createUser(user)
 
 			return res.status(201).json(savedUser)
 		} catch (err) {
@@ -59,7 +59,7 @@ class UserController extends Controller {
 	static async getUsers(req, res) {
 		try {
 			// TODO: Only return all users if admin/root is making a request
-			const users = await UserModel.getUsers()
+			const users = await User.getUsers()
 
 			return res.status(200).json(users)
 		} catch (err) {
@@ -69,7 +69,7 @@ class UserController extends Controller {
 
 	static async getUserById(req, res) {
 		try {
-			const user = await UserModel.getUserById(req.params.id)
+			const user = await User.getUserById(req.params.id)
 
 			return res.status(200).json(user)
 		} catch (err) {
@@ -79,7 +79,7 @@ class UserController extends Controller {
 
 	static async deleteUserById(req, res) {
 		try {
-			const user = await UserModel.deleteUserById(req.params.id)
+			const user = await User.deleteUserById(req.params.id)
 
 			return res.status(200).json(user)
 		} catch (err) {
@@ -108,7 +108,7 @@ class UserController extends Controller {
 			delete fields.roles
 		}
 		try {
-			const user = await UserModel.updateUserById(req.params.id, fields)
+			const user = await User.updateUserById(req.params.id, fields)
 
 			return res.status(200).json(user)
 		} catch (err) {

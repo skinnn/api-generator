@@ -1,8 +1,8 @@
 const Controller = require('./Controller.js')
 const Token = require('../../lib/Token.js')
 // Models
-const LoginModel = require('../../models/Login.js')
-const UserModel = require('../../models/User.js')
+const Login = require('../../models/Login.js')
+const User = require('../../models/User.js')
 
 /**
  * Provides CRUD operations for login endpoints
@@ -15,7 +15,7 @@ class LoginController extends Controller {
 	static async createLogin(req, res) {
 		try {
 			res.set('Accept', 'application/json')
-			const user = await UserModel.getUserByUsername(req.body.username)
+			const user = await User.findOne({ username: req.body.username }).select('+password')
 			if (!user) {
 				return res.status(400).json({
 					success: false,
@@ -23,7 +23,7 @@ class LoginController extends Controller {
 				})
 			}
 
-			const passwordsMatch = await UserModel.comparePassword(req.body.password, user.password)
+			const passwordsMatch = await User.comparePassword(req.body.password, user.password)
 			if (!passwordsMatch) {
 				return res.status(404).json({
 					success: false,
@@ -37,9 +37,13 @@ class LoginController extends Controller {
 				token: await Token.jwtSignUser(user)
 			}
 			// Save login record in the db
-			const newLogin = await LoginModel.createLogin(data)
+			const newSession = await Login.createLogin(data)
 
-			return res.status(200).json(newLogin)
+			// TODO: Create and send refreshToken
+			return res.status(200).json({
+				token: newSession.token,
+				userId: newSession.userId
+			})
 		} catch (err) {
 			throw err
 		}
@@ -50,7 +54,7 @@ class LoginController extends Controller {
 		try {
 			let token = req.user.token
 			// if (token.startsWith('Bearer')) token = token.split(' ')[1]
-			const removedLogin = await LoginModel.deleteLoginByToken(token)
+			const removedLogin = await Login.deleteLoginByToken(token)
 			
 			if (!removedLogin) {
 				return res.status(500).json({
@@ -73,7 +77,7 @@ class LoginController extends Controller {
 	}
 
 	static async getLogins(req, res) {
-		const logins = await LoginModel.getLogins()
+		const logins = await Login.getLogins()
 
 		return res.status(200).json(logins)
 	}

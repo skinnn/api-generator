@@ -31,7 +31,7 @@ const config = {
 	},
 
 	auth: {
-		jwtSecret: env.JWT_SECRET || 'secret'
+		jwtSecret: env.JWT_SECRET || '41df25d1-f58c-4712-80a8-fe0250cd5297'
 	},
 
 	store: null,

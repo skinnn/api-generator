@@ -48,7 +48,7 @@ Controller.boot(masterConfig, app).then((ctx) => {
 
 	// Create http/https server
 	if (ctx.api.protocol === 'https') {
-		TODO: Finish
+		// TODO: Finish
 		// const https = require('https')
 		// ctx.api.server = https.createServer(ctx.getSSLOptions(), app)
 	} else {
