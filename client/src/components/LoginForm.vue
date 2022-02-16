@@ -5,7 +5,7 @@
 			<h2>API</h2>
 		</header>
 		<main>
-			<form @submit="handleLogin()">
+			<form @submit="handleLogin($event)">
 				<input type="text"
 					v-model="fields.username"
 					:class="['form-control', {'is-invalid': error}]"
@@ -56,8 +56,8 @@ export default {
 	},
 
 	methods: {
-		async handleLogin() {
-			event.preventDefault();
+		async handleLogin(e) {
+			e.preventDefault();
 			try {
 				const credentials = {
 					username: this.fields.username,

@@ -44,7 +44,7 @@ Controller.boot(masterConfig, app).then((ctx) => {
 	// Mount main router
 	ctx.app.use('/', require('./routes/index.js'))
 	// Default error handler (always the last middleware)
-	ctx.app.use((err, req, res, next) => ctx.handleError(err, req, res, next))
+	ctx.app.use((err, req, res, next) => ctx.errorHandler(err, req, res, next))
 
 	// Create http/https server
 	if (ctx.api.protocol === 'https') {

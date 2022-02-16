@@ -1,7 +1,6 @@
-const fs = require('fs')
-const path = require('path')
-const helpers= require('../../lib/helpers.js')
+const { isEmptyObject } = require('../../lib/helpers.js')
 const Controller = require('./Controller.js')
+const { BadRequestError } = Controller.errors
 const Endpoint = require('../../models/Endpoint.js')
 
 /**
@@ -13,26 +12,30 @@ class EndpointController extends Controller {
 		super(api)
 	}
 
-	static async getEndpointByName(req, res) {
+	static async getEndpointByName(req, res, next) {
 		try {
 			let schema = await Endpoint.getEndpointByName(req.params.name)
 			if (schema) return res.status(200).json(schema)
-			else res.status(404).json({ success: false, message: 'Schema with specified name is not found.' })
+			else throw new BadRequestError(`Schema with the name "${req.params.name}" is not found`)
 		
 		} catch (err) {
-			throw err
+			return next(err)
 		}
 	}
 
-	static async getEndpoints(req, res) {
-		let endpoints = await Endpoint.getEndpoints()
-		return res.status(200).json(endpoints)
+	static async getEndpoints(req, res, next) {
+		try {
+			let endpoints = await Endpoint.getEndpoints()
+			return res.status(200).json(endpoints)
+		} catch (err) {
+			return next(err)
+		}
 	}
 
 	static async createEndpoint(req, res) {
 		// TODO: Create support for adding nested parameters, e.g. /posts/category, /posts/category/:id
 		res.set('Accept', 'application/json')
-		var endpoint = req.body
+		const endpoint = req.body
 		try {
 			const exists = await Endpoint.getEndpointByName(endpoint.name)
 			if (exists) {
@@ -90,63 +93,62 @@ class EndpointController extends Controller {
 
 			return res.status(201).json({ success: true, record: savedEndpoint })
 		} catch (err) {
-			console.error(err)
-			return res.status(400).json({ message: err })
+			return next(err)
 		}
 	}
 
-	static async updateEndpointById(req, res) {
+	static async updateEndpointById(req, res, next) {
 		res.set('Accept', 'application/json')
 		const fields = req.body.replace
-
-		if (!fields) {
-			return res.status(400).json({
-				success: false,
-				message: 'Fields property not specified.'
-			})
-		}
-		const fieldsEmpty = helpers.isEmptyObject(fields)
-		if (fieldsEmpty) {
-			return res.status(400).json({
-				success: false,
-				message: 'Fields are not specified.'
-			})
-		}
-
-		// // Initial fields
-		// var fieldsToUpdate = {
-		// 	resource: fields.resource
-		// }
-		// // Handle access fields update
-		// if (fields.access) {
-		// 	for (const f in fields.access) {
-		// 		// Roles field
-		// 		let rolesProp = `access.${f}.roles`
-		// 		let rolesVal = fields.access[f].roles
-		// 		rolesVal ? fieldsToUpdate[rolesProp] = rolesVal : null
-		// 		// Owner field
-		// 		let ownerProp = `access.${f}.owner`
-		// 		let ownerVal = fields.access[f].owner
-		// 		if (ownerVal === true || ownerVal === false) {
-		// 			fieldsToUpdate[ownerProp] = ownerVal
-		// 		}
-		// 	}
-		// }
 		try {
+
+			if (!fields) {
+				return res.status(400).json({
+					success: false,
+					message: 'Fields property not specified.'
+				})
+			}
+			const fieldsEmpty = isEmptyObject(fields)
+			if (fieldsEmpty) {
+				return res.status(400).json({
+					success: false,
+					message: 'Fields are not specified.'
+				})
+			}
+
+			// // Initial fields
+			// var fieldsToUpdate = {
+			// 	resource: fields.resource
+			// }
+			// // Handle access fields update
+			// if (fields.access) {
+			// 	for (const f in fields.access) {
+			// 		// Roles field
+			// 		let rolesProp = `access.${f}.roles`
+			// 		let rolesVal = fields.access[f].roles
+			// 		rolesVal ? fieldsToUpdate[rolesProp] = rolesVal : null
+			// 		// Owner field
+			// 		let ownerProp = `access.${f}.owner`
+			// 		let ownerVal = fields.access[f].owner
+			// 		if (ownerVal === true || ownerVal === false) {
+			// 			fieldsToUpdate[ownerProp] = ownerVal
+			// 		}
+			// 	}
+			// }
 			const schema = await Endpoints.updateEndpointById(req.params.id, fields)
 
 			return res.status(200).json(schema)
 		} catch (err) {
-			throw err
+			return next(err)
 		}
 	}
 
-	static async deleteEndpointById(req, res) {
+	static async deleteEndpointById(req, res, next) {
 		console.log('PARAMS:', req.params);
 		// TODO: Delete default controller instance for deleted dynamic endpoint
 		// TODO: Get schema for dynamic endpoint, e.g posts
 		try {
-			var deletedEndpoint = await Endpoint.deleteEndpointById(req.params.id)
+			const deletedEndpoint = await Endpoint.deleteEndpointById(req.params.id)
 			if (deletedEndpoint) {
 				// Remove deleted endpoint from the app
 				await Controller.removeDynamicEndpoint(deletedEndpoint.name)
@@ -157,7 +159,7 @@ class EndpointController extends Controller {
 				} catch (err) {
 					if (err.name === 'MongoError') {
 						if (err.message === 'ns not found' || err.errmsg === 'ns not found' || err.codeName === 'NamespaceNotFound') {
-							console.log(`Collection: ${deletedEndpoint.name}, not deleted because it doesnt exist`)
+							console.log(`Collection "${deletedEndpoint.name}" does not exit`)
 						}
 					} else {
 						throw err
@@ -167,7 +169,7 @@ class EndpointController extends Controller {
 			
 			return res.status(200).json(deletedEndpoint)
 		} catch (err) {
-			throw err
+			return next(err)
 		}
 	}
 

@@ -19,7 +19,8 @@ module.exports = {
 		'semi': [2, 'always'],
 		'eol-last': 0,
 		'comma-dangle': 0,
-		'no-useless-return': 0
+		'no-useless-return': 0,
+		'no-unused-vars': 0
   },
   overrides: [
     {

@@ -4,7 +4,7 @@ const Ajv = require('ajv')
 const User = require('../../models/User.js')
 const builtinEndpoints = require('../../config/schemas/Endpoints.js')
 const Endpoint = require('../../models/Endpoint.js')
-const { toBoolean, haveCommonElements, isEmptyObject } = require('../../lib/helpers.js')
+const { toBoolean, isEmptyObject } = require('../../lib/helpers.js')
 
 var _instances = {}, _api = {};
 
@@ -25,14 +25,12 @@ class Controller {
 	 * @returns	{Object} 					 			[Context of the Controller]
 	 */
 	static boot(masterConfig, app) {
-		// Controller.api = masterConfig
-		// const conf = Controller.setupDefaults(Controller.api, masterConfig)
 		Controller.modify(Controller.api, masterConfig)
 		Controller.app = app //  express app instance
 		Controller.ajv = new Ajv()
-
 		Controller.api.model = {}
 		Controller.api.bootModel = builtinEndpoints
+		Controller.errors = Controller.createErrors()
 
 		// TODO: Create store, boot store instance and connect
 		return new Promise(async (resolve, reject) => {
@@ -77,7 +75,7 @@ class Controller {
 
 		req.urlParsed = new URL(req.url, [Controller.api.protocol, '://', req.headers.host].join(''))
 		req.resource = req.urlParsed.pathname.split('/')[1].toLowerCase()
-		await Controller.handleQueryStringsFromRequest(req)
+		await Controller.parseQueryStringsFromRequest(req)
 		return next()
 	}
 
@@ -166,6 +164,8 @@ class Controller {
 					if (method === 'get') {
 						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
 						router[method](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].get(req, res, next))
+					} else if (method === 'delete') {
+						router[method](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].delete(req, res, next))
 					} else {
 						const operation = this.getCRUDFromMethod(method)
 						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName][operation](req, res, next))
@@ -202,16 +202,15 @@ class Controller {
 	 * @param {Function}	next 
 	 */
 	static RESTMiddleware (req, res, next) {
-		// console.log('RESTMiddleware: ', req.url)
+		console.log('RESTMiddleware: ', req.url)
 		// Controller.getAPIResourceFromRequest(req)
 
 
 		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
-		if (req.params.length) {
+		if (req.params && req.params.length && req.params.length > 0) {
 			let par = Object.values(req.params[0].split('/'))
 			par.shift()
-			let obj = { ...par }
-			req.params = obj
+			req.params = { ...par }
 			// var containsNumber = /\d+/;
 			// if(obj[0].match(containsNumber)) console.log('Contains number')
 			next()
@@ -269,17 +268,6 @@ class Controller {
 				// delete the previous root user
 				await User.deleteOne({ roles: 'root' })
 
-				// Create Stripe customer for this root user
-				// TODO: Move to Strpe/other controller
-				// const customer = await stripe.customers.create({
-				// 	name: user.name || null,
-				// 	email: user.email || null,
-				// 	address: user.address || null,
-				// 	phone: user.phone || null,
-				// 	description: 'Root user. Customer created while creating a root user account.'
-				// })
-				// user.stripeCustomer = customer.id
-
 				const plainPassword = user.password
 				const hashedPassword = await User.hashPassword(user.password) 
 				user.roles = ['root']
@@ -290,7 +278,6 @@ class Controller {
 				if (Controller.api.mode === 'development') {
 					console.log(`Root user created: ${root.username}, ${plainPassword}`)
 				}
-				// console.log(`Customer for root created: ${customer}`)
 			}
 		} catch (err) {
 			throw err
@@ -383,13 +370,13 @@ class Controller {
 	}
 	
 	/**
-	 *	Parses query parameters: limit, fields, sort, match, include.
+	 *Parses query parameters: `limit`, `fields`, `sort`, `match` and `include`.
 	 * Parsed query params are attached to request object - req.queryParsed.
 	 *	
 	 * limit:number, fields:Object, sort:Object, match:Object, include:Object 
 	 * @param 	{Object} 	req 	[The request object]
 	 */
-	static handleQueryStringsFromRequest(req) {
+	static parseQueryStringsFromRequest(req) {
 		return new Promise((resolve, reject) => {
 			req.queryParsed = {}
 			if (isEmptyObject(req.query)) resolve(true)
@@ -444,13 +431,7 @@ class Controller {
 	 * @param 	{Object} 		res 		The response object
 	 * @param 	{function} 	next 		The callback to the next program handler 
 	 */
-  static handleError(err, req, res, next) {
-		if (res.headersSent) return null;
-		if (err.name === 'MongoError' && err.errmsg === 'Projection cannot have a mix of inclusion and exclusion.') {
-			err.name = 'BadRequestError'
-			err.message = 'Cannot have a mix of inclusion and exclusion of query parameter fields.'
-			// err.data = req.queryParsed
-		}
+  static async errorHandler(err, req, res, next) {
 		const statusCodeMap = {
 			'ForbiddenError': 403,
 			'BadRequestError': 400,
@@ -460,17 +441,57 @@ class Controller {
 			'NotAcceptableError': 406,
 			'ConflictError': 409,
 			'UnsupportedError': 415,
-			'UnprocessableError': 422
+			'UnprocessableError': 422,
+			'InternalServerError': 500
 		}
-		res.statusCode = statusCodeMap[err.name] ? statusCodeMap[err.name] : 400
-		let errObj = {}
-		err.name ? errObj.name = err.name : null
-		err.message ? errObj.message = err.message : null
-		err.data ? errObj.data = err.data : null
-		errObj.stack = process.env.NODE_ENV !== 'production' ? err.stack : null
-		res.json(errObj)
-		Controller.logError(err)
+		const defaultErrorMessageMap = {
+			'ForbiddenError': 'Forbidden',
+			'UnauthorizedError': 'Access denied',
+			'BadRequestError': 'There is a problem with the request',
+			'UnsupportedError': 'Unsupported media type',
+			'InternalServerError': 'Server error'
+		};
+		const code = statusCodeMap[err.name] || 500;
+		const errObj = {
+			name: err.name || 'InternalServerError',
+			message: err.message || defaultErrorMessageMap[err.name] || 'Message not specified',
+			data: { ...err.data || {} },
+			stack: err.details || err.stack
+		};
+
+		// console.log(`[${req.body.campaignId}]`, err);
+
+		if (!res.headersSent) await res.status(code).json(errObj);
+		
+		return Controller.logError(err)
   }
+
+	static createErrors() {
+		const createError = (name = '', message, data = null, ctx) => {
+			var instance = new Error(message);
+			instance.name = name;
+			instance.data = data;
+			instance.datetime = new Date().toISOString();
+			Object.setPrototypeOf(instance, Object.getPrototypeOf(ctx));
+			if (Error.captureStackTrace) {
+				Error.captureStackTrace(instance, Controller.errors[name]);
+			}
+			
+			return instance;
+		}
+		return {
+			'ForbiddenError': function() { return createError('ForbiddenError', arguments[0], arguments[1], this) },
+			'BadRequestError': function() { return createError('BadRequestError', arguments[0], arguments[1], this) },
+			'UnauthorizedError': function() { return createError('UnauthorizedError', arguments[0], arguments[1], this) },
+			'NotFoundError': function() { return createError('NotFoundError', arguments[0], arguments[1], this) },
+			'MethodError': function() { return createError('MethodError', arguments[0], arguments[1], this) },
+			'NotAcceptableError': function() { return createError('NotAcceptableError', arguments[0], arguments[1], this) },
+			'ConflictError': function() { return createError('ConflictError', arguments[0], arguments[1], this) },
+			'UnsupportedError': function() { return createError('UnsupportedError', arguments[0], arguments[1], this) },
+			'UnprocessableError': function() { return createError('UnprocessableError', arguments[0], arguments[1], this) },
+			'InternalServerError': function() { return createError('InternalServerError', arguments[0], arguments[1], this) }
+		};
+	}
 
 	static logError(error) {
 		console.error(error)
@@ -478,28 +499,9 @@ class Controller {
 
 	static get api() { return _api }
 	static get instances() { return _instances }
-
-	// session(context, roles) {
-	// 	return this.api.session(context, roles)
-	// }
-
-	// roles(req, roles) {
-	// 	return session.roles(req, roles)
-	// }
-
-	static copyModel(o) {
-    var output, v, key, inst = this;
-    output = Array.isArray(o) ? [] : {};
-    for (key in o) {
-			v = o[key];
-			output[key] = (typeof v === "object") ? inst.copyModel(v) : v;
-    }
-    return output;
-	}
 	
 	static modify(obj, newObj) {
     Object.keys(obj).forEach((key) => {
-			console.log(typeof obj[key])
 			delete obj[key]
 		})
     Object.keys(newObj).forEach((key) => {

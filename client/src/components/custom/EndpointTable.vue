@@ -69,7 +69,7 @@ export default {
 	},
 
 	destroyed() {
-		document.removeEventListener(this.closeSchemaModal);
+		document.removeEventListener('click', this.closeSchemaModal);
 	},
 
 	methods: {

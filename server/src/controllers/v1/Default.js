@@ -1,4 +1,5 @@
 const Controller = require('./Controller.js')
+const { BadRequestError } = Controller.errors
 const mongoose = require('mongoose')
 const ObjectId = mongoose.Types.ObjectId
 const { isEmptyObject } = require('../../lib/helpers.js')
@@ -42,23 +43,16 @@ class DefaultController extends Controller {
 			// Validate therecord against JSON Schema defined in this._model._schema
 			const schemaErrors = Controller.validateToSchema(this._model.name, record)
 			const error = Controller.formatSchemaErrors(schemaErrors)
-			
-			if (!error) {
-				const db = Controller.api.db.connection
-				const response = await db.collection(this._model.name).insertOne(req.body)
-				const doc = response.ops[0]
-				return res.status(201).json(doc)
+			if (error) throw new BadRequestError('Schema validation error', { schemaErrors: errors })
 
-			} else {
-				let err = new Error()
-				err.name = 'BadRequestError', err.message = error;
-				next(err)
-				// TODO: Create proper error handling/mapping
-				// return Controller.api.error.BadRequest(res, errMsg)
-				// return res.status(400).json({ message: 'BadRequestError', message: error })
-			}
+			const db = Controller.api.db.connection
+			const response = await db.collection(this._model.name).insertOne(req.body)
+			if (!response.insertedId) throw new Controller.errors.InternalServerError()
+
+			const doc =  await db.collection(this._model.name).findOne({ _id: new ObjectId(response.insertedId) })
+			return res.status(201).json(doc)
 		} catch (err) {
-			throw err
+			return next(err)
 		}
 	}
 
@@ -72,13 +66,15 @@ class DefaultController extends Controller {
     */
 	async read(req, res, next) {
 		const db = Controller.api.db.connection
-		var limit = req.queryParsed.limit, fields = req.queryParsed.fields, sort = req.queryParsed.sort, match = req.queryParsed.match, include = req.queryParsed.include;
+		const limit = req.queryParsed.limit, fields = req.queryParsed.fields, sort = req.queryParsed.sort, match = req.queryParsed.match, include = req.queryParsed.include;
 		try {
 			const docs = await db.collection(this._model.name).find().sort(sort).limit(limit).project(fields).toArray()
 			return res.status(200).json(docs)
 			// return res.send(`<pre>${JSON.stringify(this._model, null, 2)}</pre>`)
 		
-		} catch (err) { next(err) }
+		} catch (err) {
+			return next(err)
+		}
 	}
 
 	// TODO: Add support for query string - [match, include]
@@ -86,24 +82,36 @@ class DefaultController extends Controller {
 		const id = req.params.id
 		const db = Controller.api.db.connection
 
-		var fields = req.queryParsed.fields
-		var options = {
-			fields: fields
+		const options = {
+			fields: req.queryParsed.fields
 		}
 		try {
 			const doc = await db.collection(this._model.name).findOne({_id: new ObjectId(id)}, options)
 			if (doc) return res.status(200).json(doc)
 		
-		} catch (err) { next(err) }
+		} catch (err) {
+			return next(err)
+		}
 	}
 
 	// async update(req, res, next) {
 
 	// }
 
-	// async delete(req, res, next) {
+	async delete(req, res, next) {
+		try {
+			const id = req.params.id
+			console.log('id: ', id)
+			const db = Controller.api.db.connection
+			const response = await db.collection(this._model.name).deleteOne({ _id: new ObjectId(id) })
 
-	// }
+			if (response.deletedCount === 0) throw new Controller.errors.NotFoundError('Record not found')
+
+			return res.status(200).json(response)
+		} catch (err) {
+			return next(err)
+		}
+	}
 }
 
 module.exports = DefaultController

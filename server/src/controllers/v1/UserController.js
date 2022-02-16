@@ -70,7 +70,6 @@ class UserController extends Controller {
 	static async getUsers(req, res) {
 		try {
 			// TODO: Only return all users if admin/root is making a request
-			console.log('req.user: ', req.user)
 			if (req.user.roles.includes('root')) {
 				const users = await User.find({})
 				return res.status(200).json(users)
