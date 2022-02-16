@@ -101,7 +101,6 @@ class DefaultController extends Controller {
 	async delete(req, res, next) {
 		try {
 			const id = req.params.id
-			console.log('id: ', id)
 			const db = Controller.api.db.connection
 			const response = await db.collection(this._model.name).deleteOne({ _id: new ObjectId(id) })
 
