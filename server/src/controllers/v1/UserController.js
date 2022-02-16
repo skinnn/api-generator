@@ -16,8 +16,16 @@ class UserController extends Controller {
 
 	static async createUser(req, res) {
 		res.set('Accept', 'application/json')
+
+		if (req.body.roles && req.body.roles.includes('root')) {
+			res.status(401).json({
+				message: 'Access denied'
+			})
+			throw new Error('Access denied')
+			// TODO: Potentially remove this session since it could be a basd intention
+		}
 		try {
-			const userExist = await User.find({ username: req.body.username })
+			const userExist = await User.findOne({ username: req.body.username })
 			if (userExist) {
 				return res.status(400).json({
 					success: false,
@@ -25,30 +33,33 @@ class UserController extends Controller {
 				})
 			}
 
-			const b = req.body
-			const fullName = b.firstName && b.lastName ? `${b.firstName.trim()} ${b.lastName.trim()}` : null
+			// const b = req.body
+			// const fullName = b.firstName && b.lastName ? `${b.firstName.trim()} ${b.lastName.trim()}` : null
 			// Create Stripe customer
-			// TODO: Move to Stripe/other controller
-			const customer = await stripe.customers.create({
-				name: fullName,
-				email: b.email,
-				address: {
-					line1: b.address || null,
-					line2: b.suiteNumber || null,
-					city: b.city || null,
-					country: b.country || null,
-					postal_code: b.postalCode || null
-				},
-				description: 'Customer created while creating a user account.',
-				phone: b.phone || null
-			})
-			let user = b
-			user.stripeCustomer = customer.id
+			// // TODO: Move to Stripe/other controller
+			// const customer = await stripe.customers.create({
+			// 	name: fullName,
+			// 	email: b.email,
+			// 	address: {
+			// 		line1: b.address || null,
+			// 		line2: b.suiteNumber || null,
+			// 		city: b.city || null,
+			// 		country: b.country || null,
+			// 		postal_code: b.postalCode || null
+			// 	},
+			// 	description: 'Customer created while creating a user account.',
+			// 	phone: b.phone || null
+			// })
+			// let user = b
+			// user.stripeCustomer = customer.id
 			// Hash password
-			const hashedPassword = await User.hashPassword(b.password)
-			user.password = hashedPassword
+			const hashedPassword = await User.hashPassword(req.body.password)
+			const user = new User({
+				...req.body,
+				password: hashedPassword
+			})
 			// Save user in the db
-			const savedUser = await User.createUser(user)
+			const savedUser = await user.save()
 
 			return res.status(201).json(savedUser)
 		} catch (err) {
@@ -59,9 +70,15 @@ class UserController extends Controller {
 	static async getUsers(req, res) {
 		try {
 			// TODO: Only return all users if admin/root is making a request
-			const users = await User.getUsers()
-
-			return res.status(200).json(users)
+			console.log('req.user: ', req.user)
+			if (req.user.roles.includes('root')) {
+				const users = await User.find({})
+				return res.status(200).json(users)
+			} else {
+				return res.status(401).json({
+					message: 'Access denied'
+				})
+			}
 		} catch (err) {
 			throw err
 		}
@@ -69,7 +86,7 @@ class UserController extends Controller {
 
 	static async getUserById(req, res) {
 		try {
-			const user = await User.getUserById(req.params.id)
+			const user = await User.findById({ _id: req.params.id })
 
 			return res.status(200).json(user)
 		} catch (err) {
@@ -79,8 +96,8 @@ class UserController extends Controller {
 
 	static async deleteUserById(req, res) {
 		try {
-			const user = await User.deleteUserById(req.params.id)
-
+			const user = await User.findOneAndDelete({ _id: req.params.id })
+			if (!user) return res.status(404).json({ message: 'Resource not found' })
 			return res.status(200).json(user)
 		} catch (err) {
 			throw err

@@ -116,40 +116,12 @@ module.exports.createUser = (user) => {
 	})
 }
 
-module.exports.getUsers = () => {
-	return new Promise((resolve, reject) => {
-		User.find({}, (err, docs) => {
-			if (err) reject(err)
-			resolve(docs)
-		})
-	})
-}
-
-module.exports.getUserById = (id) => {
-	return new Promise((resolve, reject) => {
-		User.findById({ _id: id }, (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
-}
-
 module.exports.updateUserById = (id, fields) => {
 	fields.updated = Date.now()
 	const data = { $set: fields }
 	const options = { new: true }
 	return new Promise((resolve, reject) => {
 		User.findByIdAndUpdate(id, data, options, (err, doc) => {
-			if (err) reject(err)
-			resolve(doc)
-		})
-	})
-}
-
-module.exports.deleteUserById = (id) => {
-	return new Promise((resolve, reject) => {
-		// TODO: Dont allow deleting of root user
-		User.findByIdAndDelete({ id }, (err, doc) => {
 			if (err) reject(err)
 			resolve(doc)
 		})

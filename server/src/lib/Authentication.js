@@ -1,6 +1,6 @@
 const Controller = require('../controllers/v1/Controller.js')
 const Token = require('../lib/Token.js')
-const Login = require('../models/Login.js')
+const Session = require('../models/Session.js')
 const User = require('../models/User.js')
 const Endpoint = require('../models/Endpoint.js')
 const { haveCommonElements } = require('../lib/helpers.js')
@@ -33,53 +33,50 @@ class Authentication extends Controller {
 			const operation = Controller.getCRUDFromMethod(req.method)
 			if (endpoint) {
 				// Check if authorization is required
-				if (endpoint._schema.access[operation].roles.includes('anon')) {
-					// Proceed since anonymous can access this resource & operation
 					// TODO: Create session for the anon user
-					return next()
-				} else {
-					// Get token and run permission validation
-					let token = Token.getTokenFromHeaders(req.headers)
-					// TODO: Handle errors in catch, add Controller.errors.forbidden (error handling)
-					if(!token) {
-						// Also check for a token sent as the query parameter
-						if (req.urlParsed.searchParams.get('token')) {
-							token = req.urlParsed.searchParams.get('token');
-						} else {
-							return res.status(401).json({
-								message: 'Access denied'
-							})
-						}
-					}
-					
-					// Validate JWT
-					const { validToken, decoded } = await Token.validateToken(token)
-				
-					// Check that there is a login record with this token
-					const loginRecord = await Login.getLoginByToken(validToken)
-					if (!loginRecord) {
+				if (endpoint._schema.access[operation].roles.includes('anon')) 	return next()
+
+				// Get token and run permission validation
+				let token = Token.getTokenFromHeaders(req.headers)
+				// TODO: Handle errors in catch, add Controller.errors.forbidden (error handling)
+				if(!token) {
+					// Also check for a token sent as the query parameter
+					if (req.urlParsed.searchParams.get('token')) {
+						token = req.urlParsed.searchParams.get('token');
+					} else {
 						return res.status(401).json({
 							message: 'Access denied'
 						})
 					}
-
-					// TODO: Get user from session instead
-					const user = await User.getUserById(loginRecord.userId)
-					if (!user) {
-						return res.status(401).json({
-							message: 'Access denied'
-						})
-					}
-
-					user.token = validToken
-					// Set user in request
-					req.user = user
-
-					// Check permissions
-					const authorized = await this.checkPermissions(resource, operation, endpoint, req.user)
-					if (authorized) return next()
-					else return res.status(403).json({ message: 'Invalid permission' })
 				}
+				
+				// Validate JWT
+				const { validToken, decoded } = await Token.validateToken(token)
+			
+				// Check that there is a login record with this token
+				const loginRecord = await Session.findOne({ token: validToken })
+				if (!loginRecord) {
+					return res.status(401).json({
+						message: 'Access denied'
+					})
+				}
+
+				// TODO: Get user from session instead
+				const user = await User.findById({ _id: loginRecord.userId })
+				if (!user) {
+					return res.status(401).json({
+						message: 'Access denied'
+					})
+				}
+
+				user.token = validToken
+				// Set user in request
+				req.user = user
+
+				// Check permissions
+				const authorized = await this.checkPermissions(resource, operation, endpoint, req.user)
+				if (authorized) return next()
+				else return res.status(403).json({ message: 'Invalid permission' })
 			} else {
 				// const msg = `There is no defined Endpoint for this resource: ${resource}`
 				// let err = new Error(msg)

@@ -20,7 +20,7 @@ router.get('/', (req, res) => res.redirect(`${apiPath}/dashboard/login`))
 router.use('*', (req, res) => {
 	return res.status(404).json({
 		name: 'NotFoundError',
-		message: 'Resource you are looking for is not found.'
+		message: 'Resource you are looking for is not found'
 	})
 })
 

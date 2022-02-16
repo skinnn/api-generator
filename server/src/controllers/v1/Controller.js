@@ -98,11 +98,11 @@ class Controller {
 			})
 			const db = Controller.api.db
 			var url = `mongodb://${db.host}:${db.port}/${db.name}`
-			var options = { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
+			var options = { useNewUrlParser: true, useUnifiedTopology: true }
 			
 			// if (process.env.NODE_ENV === 'production' ) {
 			// 	url = `mongodb://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}`
-			// 	options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false }
+			// 	options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true }
 			// }
 
 			// TODO Use official nodejs mongodb driver or implement fortunejs

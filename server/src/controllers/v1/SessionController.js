@@ -1,18 +1,18 @@
 const Controller = require('./Controller.js')
 const Token = require('../../lib/Token.js')
 // Models
-const Login = require('../../models/Login.js')
+const Session = require('../../models/Session.js')
 const User = require('../../models/User.js')
 
 /**
  * Provides CRUD operations for login endpoints
  */
-class LoginController extends Controller {
+class SessionController extends Controller {
 	constructor(api) {
 		super(api)
 	}
 
-	static async createLogin(req, res) {
+	static async createSession(req, res) {
 		try {
 			res.set('Accept', 'application/json')
 			const user = await User.findOne({ username: req.body.username }).select('+password')
@@ -37,7 +37,7 @@ class LoginController extends Controller {
 				token: await Token.jwtSignUser(user)
 			}
 			// Save login record in the db
-			const newSession = await Login.createLogin(data)
+			const newSession = await Session.create(data)
 
 			// TODO: Create and send refreshToken
 			return res.status(200).json({
@@ -50,11 +50,11 @@ class LoginController extends Controller {
 	}
 
 	// User logout
-	static async deleteLogin(req, res) {
+	static async deleteSession(req, res) {
 		try {
 			let token = req.user.token
 			// if (token.startsWith('Bearer')) token = token.split(' ')[1]
-			const removedLogin = await Login.deleteLoginByToken(token)
+			const removedLogin = await Session.deleteOne({ token: token })
 			
 			if (!removedLogin) {
 				return res.status(500).json({
@@ -76,11 +76,11 @@ class LoginController extends Controller {
 		}
 	}
 
-	static async getLogins(req, res) {
-		const logins = await Login.getLogins()
+	static async getSessions(req, res) {
+		const logins = await Session.find({})
 
 		return res.status(200).json(logins)
 	}
 }
 
-module.exports = LoginController
+module.exports = SessionController
