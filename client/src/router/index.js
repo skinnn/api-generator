@@ -22,7 +22,7 @@ const routes = [
 		path: '/api/docs',
 		name: 'api-docs-public',
 		component: () => import(/* webpackChunkName: "api-docs-public" */ '../views/dashboard/api-docs.vue'),
-		meta: { title: 'API Documentation', roles: [] }
+		meta: { title: 'Documentation', roles: [] }
 	},
 	{
 		path: '/dashboard',
@@ -32,7 +32,6 @@ const routes = [
 		component: () => import(/* webpackChunkName: "dashboard" */ '@/components/dashboard/DashboardLayout.vue'),
 		meta: { roles: ['root'] },
 		children: [
-			// Home page
 			{
 				path: '',
 				name: 'home',
@@ -43,7 +42,7 @@ const routes = [
 				path: 'api-docs',
 				name: 'api-docs',
 				component: () => import(/* webpackChunkName: "api-docs" */ '@/views/dashboard/api-docs.vue'),
-				meta: { title: 'API Documentation', roles: ['root'] }
+				meta: { title: 'Documentation', roles: ['root'] }
 			},
 			{
 				path: 'endpoints',

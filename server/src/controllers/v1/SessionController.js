@@ -38,7 +38,6 @@ class SessionController extends Controller {
 			}
 			// Save login record in the db
 			const newSession = await Session.create(data)
-
 			// TODO: Create and send refreshToken
 			return res.status(200).json({
 				token: newSession.token,
@@ -55,18 +54,16 @@ class SessionController extends Controller {
 			let token = req.user.token
 			// if (token.startsWith('Bearer')) token = token.split(' ')[1]
 			const removedLogin = await Session.deleteOne({ token: token })
-			
 			if (!removedLogin) {
 				return res.status(500).json({
 					success: false,
 					message: 'An error occurred.'
 				})
 			}
-	
+
 			return res.status(200).json({
 				success: true
 			})
-			
 		} catch (err) {
 			console.error(err)
 			return res.status(500).json({
@@ -78,7 +75,6 @@ class SessionController extends Controller {
 
 	static async getSessions(req, res) {
 		const logins = await Session.find({})
-
 		return res.status(200).json(logins)
 	}
 }

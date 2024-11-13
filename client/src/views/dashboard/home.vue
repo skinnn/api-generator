@@ -1,6 +1,6 @@
 <template>
 	<div class="home-page">
-		<h2>Home</h2>
+		<h4>Dashboard</h4>
 	</div>
 </template>
 
@@ -10,6 +10,6 @@ export default {
 };
 </script>
 
-<style>
+<style scoped lang="scss">
 
 </style>

@@ -1,7 +1,7 @@
 const Controller = require('../controllers/v1/Controller.js')
 
 /**
- * Generates REST API documentation.
+ * Generates REST Documentation.
  * @extends Controller
  */
 class DocsController extends Controller {

@@ -17,7 +17,7 @@ class EndpointController extends Controller {
 			let schema = await Endpoint.getEndpointByName(req.params.name)
 			if (schema) return res.status(200).json(schema)
 			else throw new BadRequestError(`Schema with the name "${req.params.name}" is not found`)
-		
+
 		} catch (err) {
 			return next(err)
 		}
@@ -32,11 +32,15 @@ class EndpointController extends Controller {
 		}
 	}
 
-	static async createEndpoint(req, res) {
+	static async createEndpoint(req, res, next) {
 		// TODO: Create support for adding nested parameters, e.g. /posts/category, /posts/category/:id
+		// TODO: Validate endpoint req body and endpoint properties
 		res.set('Accept', 'application/json')
-		const endpoint = req.body
 		try {
+			const endpoint = req.body
+			if (!endpoint.name) {
+				throw new BadRequestError('Endpoint name is required');
+			}
 			const exists = await Endpoint.getEndpointByName(endpoint.name)
 			if (exists) {
 				return res.status(400).json({
@@ -58,22 +62,28 @@ class EndpointController extends Controller {
 
 			for (const prop in endpoint.properties) {
 				if (endpoint.properties.hasOwnProperty(prop)) {
+					if (endpoint.properties[prop].name === '') {
+						throw new BadRequestError('Endpoint property name is required');
+					}
 					// Delete unnecessary endpoint property data
 					delete endpoint.properties[prop].id
 					delete endpoint.properties[prop].name
 					delete endpoint.properties[prop].required
 					// Allow prop type only if prop format is string
-					if (!endpoint.properties[prop].format || endpoint.properties[prop].type !== 'string') delete endpoint.properties[prop].format
-					// TODO use relation and then delete it
+					if (!endpoint.properties[prop].format || endpoint.properties[prop].type !== 'string') {
+						delete endpoint.properties[prop].format
+					}
+					// TODO: use relation and then delete it
 					delete endpoint.properties[prop].relation
 				}
 			}
 
 			// Validate with builtin JSON schema model for endpoints
 			const schemaErrors = await Controller.validateToSchema('endpoint', endpoint)
-			const error = Controller.formatSchemaErrors(schemaErrors)
-			if (error) {
-				return res.status(400).json({ message: 'BadRequestError', message: error })
+			if (schemaErrors) {
+				const errors = Controller.formatSchemaErrors(schemaErrors)
+				throw new BadRequestError('Schema validation error', { schemaErrors: errors });
+				// return res.status(400).json({ message: 'BadRequestError', message: error })
 			}
 
 			const newEndpoint = {
@@ -85,9 +95,9 @@ class EndpointController extends Controller {
 			// Save endpoint in the db
 			const savedEndpoint = await Endpoint.createEndpoint(newEndpoint)
 
-			// TODO: Potentially create helper for adding a single (new) endpoint to improve performance
+			// TODO: Create helper for adding a single (new) endpoint to improve performance
 			// Reload dynamic routes so new endpoint is added, no need to await
-			Controller.loadDynamicEndpoints()
+			Controller.loadDynamicEndpoints([savedEndpoint])
 
 			// TODO: Generate docs for created endpoint (DocsController)
 
@@ -136,7 +146,6 @@ class EndpointController extends Controller {
 			// 	}
 			// }
 			const schema = await Endpoints.updateEndpointById(req.params.id, fields)
-
 			return res.status(200).json(schema)
 		} catch (err) {
 			return next(err)
@@ -144,29 +153,25 @@ class EndpointController extends Controller {
 	}
 
 	static async deleteEndpointById(req, res, next) {
-		console.log('PARAMS:', req.params);
-		// TODO: Delete default controller instance for deleted dynamic endpoint
 		// TODO: Get schema for dynamic endpoint, e.g posts
 		try {
 			const deletedEndpoint = await Endpoint.deleteEndpointById(req.params.id)
-			if (deletedEndpoint) {
-				// Remove deleted endpoint from the app
-				await Controller.removeDynamicEndpoint(deletedEndpoint.name)
-				await Controller.loadDynamicEndpoints()
-				try {
-					// Remove collection
-					const isCollectionDeleted = await Controller.api.db.connection.dropCollection(`${deletedEndpoint.name}`)				
-				} catch (err) {
-					if (err.name === 'MongoError') {
-						if (err.message === 'ns not found' || err.errmsg === 'ns not found' || err.codeName === 'NamespaceNotFound') {
-							console.log(`Collection "${deletedEndpoint.name}" does not exit`)
-						}
-					} else {
-						throw err
+			if (!deletedEndpoint) throw new Controller.errors.NotFoundError('Endpoint not found');
+			// Remove deleted endpoint from the app
+			await Controller.removeDynamicEndpoint(deletedEndpoint.name)
+			await Controller.loadDynamicEndpoints()
+			try {
+				// Remove collection
+				const isCollectionDeleted = await Controller.api.db.connection.dropCollection(`${deletedEndpoint.name}`)
+			} catch (err) {
+				if (err.name === 'MongoError') {
+					if (err.message === 'ns not found' || err.errmsg === 'ns not found' || err.codeName === 'NamespaceNotFound') {
+						console.log(`Collection "${deletedEndpoint.name}" does not exist`)
 					}
+				} else {
+					throw err
 				}
 			}
-			
 			return res.status(200).json(deletedEndpoint)
 		} catch (err) {
 			return next(err)
@@ -174,18 +179,22 @@ class EndpointController extends Controller {
 	}
 
 	// Get contents from schema file, add new schema and save file
-	// static writeSchemaToFile(resource, schemaToSave) {
-	// 	return new Promise((resolve, reject) => {
-	// 		const schemaFile = path.join(__dirname, '../../config/schemas/Access.js')
-	// const builtInEndpoints = require('../../config/schemas/Endpoints.js')
-	// 		builtInEndpointss[resource] = schemaToSave
-	// 		const data = 'module.exports = ' + JSON.stringify(builtInEndpointss, null, 2)
-	// 		fs.writeFile(schemaFile, data, 'utf-8', (err) => {
-	// 			if (err) reject(err)
-	// 			resolve(data)
-	// 		})
-	// 	})
-	// }
+	static writeSchemaToFile(resource, schemaToSave) {
+		return new Promise((resolve, reject) => {
+			const schemaFilePath = path.join(__dirname, '../../config/schemas/schemas.json')
+			fs.readFile(schemaFilePath, 'utf8', (err, data) => {
+				if (err) throw err
+				console.log('schemas.json:', JSON.parse(data))
+			});
+			// // const builtInEndpoints = require('../../config/schemas/Endpoints.js')
+			// // builtInEndpoints[resource] = schemaToSave
+			// const data = 'module.exports = ' + JSON.stringify(builtInEndpointss, null, 2)
+			// fs.writeFile(schemaFilePath, data, 'utf-8', (err) => {
+			// 	if (err) reject(err)
+			// 	resolve(data)
+			// })
+		})
+	}
 }
 
 module.exports = EndpointController

@@ -1,25 +1,23 @@
 <template>
-	<div class="sidebar-container">
-		<div class="sidebar">
-			<router-link :to="{ name: 'home' }">
-				<div class="sidebar-button">
-				<!-- <div class="sidebar-icon"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
-				<div class="sidebar-title">Dashboard</div>
-			</div>
-			</router-link>
-			<router-link :to="{ name: 'endpoints' }">
-				<div class="sidebar-button">
-				<!-- <div class="sidebar-icon"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
-				<div class="sidebar-title">Endpoints</div>
-			</div>
-			</router-link>
-			<router-link :to="{ name: 'api-docs' }">
-				<div class="sidebar-button">
-				<!-- <div class="sidebar-icon"><img src="@/assets/img/icons/ico_sidebar_02.svg"></div> -->
-				<div class="sidebar-title">API Documentation</div>
-			</div>
-			</router-link>
+	<div class="sidebar">
+		<router-link :to="{ name: 'home' }">
+			<div class="sidebar-button">
+			<div class="sidebar-icon"><img src="@/assets/icons/feather/sidebar.svg"></div>
+			<div class="sidebar-title">Dashboard</div>
 		</div>
+		</router-link>
+		<router-link :to="{ name: 'endpoints' }">
+			<div class="sidebar-button">
+			<div class="sidebar-icon"><img src="@/assets/icons/feather/sidebar.svg"></div>
+			<div class="sidebar-title">Endpoints</div>
+		</div>
+		</router-link>
+		<router-link :to="{ name: 'api-docs' }">
+			<div class="sidebar-button">
+			<div class="sidebar-icon"><img src="@/assets/icons/feather/key.svg"></div>
+			<div class="sidebar-title">Documentation</div>
+		</div>
+		</router-link>
 	</div>
 </template>
 
@@ -35,25 +33,22 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.sidebar-container{
-	display: flex;
-	z-index: 11;
-}
 .sidebar {
+	z-index: 11;
   position: fixed;
+	left: 0px;
 	top: $top-bar-height;
   background-color: $sections-bg-color;
   min-height: 100%;
 	width: $sidebar-width;
   font-size: 0.8em;
-  padding-top: 25px;
+  padding: 0;
 	transition: all 0.2s;
 	overflow: hidden;
-	left: 0px;
 }
 
 .sidebar--hidden {
-  left: -300px;
+	width: 0;
 }
 
 .sidebar-button {

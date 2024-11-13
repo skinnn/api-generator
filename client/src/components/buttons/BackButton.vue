@@ -38,7 +38,7 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .back-btn {
 	border: 1px solid $medium-grey;
 	font-size: 0.8rem;

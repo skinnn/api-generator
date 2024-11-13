@@ -1,7 +1,7 @@
 <template>
-	<div id="main_container">
-		<TopBar :payload="test" />
-		<CoreSidebar />
+	<div class="dashboard-layout">
+		<Topbar :payload="test" />
+		<Sidebar />
 		<PageView />
 	</div>
 </template>
@@ -17,17 +17,16 @@ export default {
 	},
 
 	components: {
-		CoreSidebar: () => import('./core/Sidebar'),
-		TopBar: () => import('./core/TopBar'),
-		PageView: () => import('./core/PageView'),
+		Sidebar: () => import('./core/Sidebar'),
+		Topbar: () => import('./core/Topbar'),
+		PageView: () => import('./core/PageView')
 	}
 };
 </script>
 
 <style lang="scss">
-#main_container {
-	display: flex;
-	flex-direction: row;
+.dashboard-layout {
+	width: 100vw;
 	height: 100vh;
 	overflow-y: hidden;
 }

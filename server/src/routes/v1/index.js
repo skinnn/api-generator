@@ -22,7 +22,7 @@ router.get('/', (req, res) => res.redirect(`${apiPath}/dashboard/login`))
  */
 router.use('/endpoint', require('./endpoint.js'))
 router.use('/user', require('./user.js'))
-router.use('/login', require('./login.js'))
+router.use('/session', require('./session.js'))
 router.use('/docs', require('./docs.js'))
 
 module.exports = router

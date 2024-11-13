@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const MongooseSchema = mongoose.Schema
-// const tst = require('../controllers/v1/Users.ctrl.js')
 
 const Schema = new MongooseSchema({
 	name: { type: String, lowercase: true, required: true },
@@ -34,7 +33,7 @@ const EndpointSchema = new MongooseSchema({
 		type: String,
 		required: true
 	},
-	_schema: Schema, 
+	_schema: Schema,
 	created: {
 		type: Date,
 		default: Date.now
@@ -66,7 +65,7 @@ module.exports.createEndpoint = async (endpoint) => {
 	}
 	try {
 		const doc = await Endpoint.create(endpoint)
-		return doc		
+		return doc
 	} catch (err) {
 		throw err
 	}

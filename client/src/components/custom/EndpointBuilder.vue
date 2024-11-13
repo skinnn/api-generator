@@ -3,8 +3,8 @@
 	<h3>Endpoint builder</h3>
 	<form @submit="handleSubmit" class="endpoint-form">
 		<div class="form-group">
-			<label for="name">
-				Name
+			<label for="name" data-error="EmptyEndpointName">
+				Name <span class="required">*</span>
 				<BaseHelper>
 					Name of your endpoint, used in URL-s, e.g. <strong>posts</strong>
 				</BaseHelper>
@@ -108,13 +108,13 @@
 						{{ err.message }}
 					</div>
 					<div class="options-rght">
-						<button v-if="err.name === 'DuplicatePropertyName'" type="button" @click="scrollToProperty(err)" class="scroll-to-property">
+						<button type="button" @click="scrollToInput(err)" class="scroll-to-property">
 							Go there
 						</button>
-						<button v-if="err.name === 'DuplicatePropertyName'" type="button" class="error-details">
+						<button type="button" class="error-details">
 							<BaseHelper text="Details" position="bottom">
 								<span>Error: <b>{{ err.name }}</b></span><br>
-								<span>Property: <b>{{ err.property.name }}</b></span>
+								<!-- <span>Property: <b>{{ err.property.name }}</b></span> -->
 							</BaseHelper>
 						</button>
 					</div>
@@ -197,23 +197,26 @@ export default {
 			e.preventDefault();
 			console.log('endpoint on submit:', this.endpoint);
 
+			// TODO: Validation on submit
+			const errors = this.validateEndpoint();
+
+			if (Array.isArray(errors) && errors.length) {
+				return console.error('errors: ', this.messages.errors);
+			}
+
+			const { propertiesObject, requiredProperties, propError } = this.createObjectFromPropsArray(this.endpoint.properties);
+			if (propError) {
+				console.log('propError: ', propError);
+				this.messages.errors.push(propError);
+				return console.error('propError: ', propError);
+			}
+
 			if (this.endpoint.properties.length === 0) {
 				if (!confirm('Creating an endpoint without any properties?\nAre you sure?')) {
 					return;
 				}
 			}
 
-			// TODO: Validation on submit
-			const errors = this.validate();
-			if (errors > 0) {
-				return console.error('errors: ', this.messages.errors);
-			}
-
-			const { propertiesObject, requiredProperties, propError } = this.createObjectFromPropsArray(this.endpoint.properties);
-			if (propError) {
-				this.messages.errors.push(propError);
-				return console.error('propError: ', propError);
-			}
 			// console.log('propertiesObject', propertiesObject);
 			// console.log('requiredProperties', requiredProperties);
 			// console.log('propError', propError);
@@ -229,12 +232,12 @@ export default {
 				type: 'object'
 			};
 
-			// console.log('data:', data);
 			try {
 				const res = await this.$http.endpoint.createEndpoint(data);
-				const createdEndpoint = res.data.record;
-				this.mutateAddEndpoint(createdEndpoint);
+				const endpoint = res.data.record;
+				this.mutateAddEndpoint(endpoint);
 				this.messages.success = `<span class="success-message">Endpoint <span class="highlighted">/${res.data.record.name}</span> created successfully.</span>`;
+				this.$emit('onSuccess', endpoint);
 			} catch (err) {
 				console.error(err);
 				this.messages.success = '';
@@ -277,7 +280,6 @@ export default {
 		},
 
 		addNewPropField() {
-			// TODO: Add suport for adding custom number of props at once (Add property x 10)
 			const newProperty = {
 				error: null,
 				id: uuidv4(),
@@ -318,10 +320,14 @@ export default {
 			return { propertiesObject, requiredProperties, propError };
 		},
 
-		validate() {
+		validateEndpoint() {
+			if (!this.endpoint.name) {
+				const error = { name: 'EmptyEndpointName', message: 'Endpoint name is required' };
+				this.messages.errors.push(error);
+			}
 			this.endpoint.properties.forEach((prop, index) => {
-				if (prop.name === '') {
-					const error = { name: 'EmptyPropertyName', message: `Property with index ${index + 1} has no name`, property: prop };
+				if (!prop.name) {
+					const error = { name: 'EmptyPropertyName', message: `Property ${index + 1}. has no name`, property: prop };
 					const errAlreadyExist = this.messages.errors.some((err) => err.message === error.message);
 					if (!errAlreadyExist) {
 						prop.error = error;
@@ -362,15 +368,26 @@ export default {
 			});
 		},
 
-		scrollToProperty(error) {
-			// Scroll to duplicate, apply some styles
-			const el = document.querySelector(`li[data-id="${error.property.id}"]`);
-			const heading = el.querySelector('.prop-heading');
-			heading.classList.add('scrolled-to-error');
-			setTimeout(() => {
-				heading.classList.remove('scrolled-to-error');
-			}, 1200);
-			heading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		scrollToInput(error) {
+			console.log('error: ', error);
+			if (error.property) {
+				// Scroll to property, apply some styles
+				const el = document.querySelector(`li[data-id="${error.property.id}"]`);
+				const heading = el.querySelector('.prop-heading');
+				heading.classList.add('scrolled-to-error');
+				setTimeout(() => {
+					heading.classList.remove('scrolled-to-error');
+				}, 1200);
+				heading.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			} else {
+				// Scroll to input
+				const el = document.querySelector(`label[data-error="${error.name}"]`);
+				el.classList.add('scrolled-to-error');
+				setTimeout(() => {
+					el.classList.remove('scrolled-to-error');
+				}, 1200);
+				el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			}
 		},
 
 		getRoles() {
@@ -385,30 +402,32 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
-// TODO: Refactor CSS to SCSS
-
+<style lang="scss">
 .endpoint-builder {
 	scroll-behavior: smooth;
 
-	fieldset.endpoint-properties {
+	.scrolled-to-error {
+		color: rgb(255, 0, 0);
+		background-color: #fff !important;
+	}
 
+	fieldset.endpoint-properties {
 		ul.endpoint-property-list {
 			list-style: none;
 
-			/deep/ .endpoint-property {
+			.endpoint-property {
 				border: 2px solid lightgray;
 				border-radius: 10px;
 			}
 
-			/deep/ .endpoint-property:not(:first-child) {
+			.endpoint-property:not(:first-child) {
 				margin-top: 30px;
 			}
 		}
 	}
 }
 
-/deep/ .helper-question-mark {
+.helper-question-mark {
 	width: 18px;
 	height: 18px;
 	border-radius: 50%;
@@ -465,7 +484,7 @@ form.endpoint-form .create-endpoint-btn .feather {
 			margin-right: 5px;
 		}
 
-		/deep/ .helper-question-mark {
+		.helper-question-mark {
 			width: 100%;
 			font-size: 13px;
 			margin-left: 0;

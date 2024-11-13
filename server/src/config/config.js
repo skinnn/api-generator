@@ -20,7 +20,7 @@ const config = {
 		user: env.DB_USER || 'apigenerator_user',
 		password: env.DB_PASSWORD || '123123',
 		host: env.DB_HOST || 'localhost',
-		name: env.DB_NAME || 'apigenerator',
+		name: env.DB_NAME || 'api-generator',
 		port: env.DB_PORT || '27017' // Default MongoDB port
 	},
 

@@ -53,7 +53,7 @@
 		const data = { username: u, password: p }
 		var API_PATH = {{{json apiPath}}}
 
-		fetch(`${API_PATH}/login`, {
+		fetch(`${API_PATH}/session`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'

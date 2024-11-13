@@ -27,7 +27,7 @@ class Controller {
 	static boot(masterConfig, app) {
 		Controller.modify(Controller.api, masterConfig)
 		Controller.app = app //  express app instance
-		Controller.ajv = new Ajv()
+		Controller.ajv = new Ajv({ allErrors: true })
 		Controller.api.model = {}
 		Controller.api.bootModel = builtinEndpoints
 		Controller.errors = Controller.createErrors()
@@ -54,20 +54,19 @@ class Controller {
 			await Controller.saveStaticEndpoints()
 			// Load dynamic routes created from the GUI/endpoint builder
 			await Controller.loadDynamicEndpoints()
-			
+
 			console.log('Init complete')
 		} catch (err) {
-			// Controller.logError(err)
 			throw err
 		}
 	}
 
 	/**
 	 * Application-level middleware, triggered for each incoming request to the application.
-	 * Called before each 
+	 * Called before each
 	 * @param 	{Object} 		req 		The request object
 	 * @param 	{Object} 		res 		The response object
-	 * @param 	{function} 	next 		The callback to the next program handler 
+	 * @param 	{function} 	next 		The callback to the next program handler
 	 */
 	static async middleware(req, res, next) {
 		res.setHeader('X-Powered-By', Controller.api.name)
@@ -79,42 +78,41 @@ class Controller {
 		return next()
 	}
 
-	static connectDB() {
-		return new Promise((resolve, reject) => {
-			mongoose.connection.once('open', () => {
-				console.log('MongoDB connected')
+	static async connectDB() {
+		mongoose.connection.once('open', () => {
+			console.log('MongoDB connected')
 
-				mongoose.connection.on('disconnected', () => {
-					console.log('MongoDB event disconnected')
-				})
-				mongoose.connection.on('reconnected', () => {
-					console.log('MongoDB event reconnected')
-				})
-				mongoose.connection.on('error', (err) => {
-					Controller.logError(err)
-				})
+			mongoose.connection.on('disconnected', () => {
+				console.log('MongoDB event disconnected')
 			})
-			const db = Controller.api.db
-			var url = `mongodb://${db.host}:${db.port}/${db.name}`
-			var options = { useNewUrlParser: true, useUnifiedTopology: true }
-			
-			// if (process.env.NODE_ENV === 'production' ) {
-			// 	url = `mongodb://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}`
-			// 	options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true }
-			// }
-
-			// TODO Use official nodejs mongodb driver or implement fortunejs
-			mongoose.connect(url, options, (err, a) => {
-				if (err) reject(err)
-				resolve(mongoose.connection.db)
+			mongoose.connection.on('reconnected', () => {
+				console.log('MongoDB event reconnected')
+			})
+			mongoose.connection.on('error', (err) => {
+				Controller.logError(err)
 			})
 		})
+		const db = Controller.api.db
+		var url = `mongodb://${db.host}:${db.port}/${db.name}`
+		var options = { useNewUrlParser: true, useUnifiedTopology: true }
+
+		// if (process.env.NODE_ENV === 'production' ) {
+		// 	url = `mongodb://${db.user}:${db.password}@${db.host}:${db.port}/${db.name}`
+		// 	options = { authSource: db.name, useNewUrlParser: true, useUnifiedTopology: true }
+		// }
+
+		// TODO Use official nodejs mongodb driver or implement fortunejs
+		try {
+			const response = await mongoose.connect(url, options)
+			return response.connection.db
+		} catch (err) {
+			throw err
+		}
 	}
 
 	static async saveStaticEndpoints() {
 		try {
 			const builtinModels = builtinEndpoints
-
 			for (let modelName in builtinModels) {
 				if (builtinModels.hasOwnProperty(modelName)) {
 					const endpoint = await Endpoint.getEndpointByName(modelName)
@@ -122,12 +120,12 @@ class Controller {
 					if (!endpoint) {
 						// Assign root as static/default endpoints owner
 						const db = Controller.api.db.connection
-						let root = await db.collection('users').findOne({ roles: ['root'] })
-						let rootId = root._id.toString()
+						const root = await db.collection('users').findOne({ roles: ['root'] })
+						const rootId = root._id.toString()
 						builtinModels[modelName].__owner = rootId
 						// Save endpoint
 						await Endpoint.createEndpoint(builtinModels[modelName])
-						console.log(`Created new static endpoint: ${modelName}`)
+						console.log(`Created a built-in endpoint: ${modelName}`)
 					}
 				}
 			}
@@ -136,41 +134,52 @@ class Controller {
 		}
 	}
 
-	static async loadDynamicEndpoints() {
+	static async loadDynamicEndpoints(endpointList = null) {
 		try {
-			var endpoints = await Endpoint.getEndpoints()
-		
-			// TODO: Remove this when proper hooks are implemented in builtin Controllers [create, read, get, update, delete], and they work with 
+			const endpoints = endpointList || await Endpoint.getEndpoints()
 			// Remove builtin endpoints from loading
-			var i = endpoints.length
+			let i = endpoints.length
 			while (i-- ) {
 				if (endpoints[i].name === 'dashboard') {
 					endpoints.splice(i, 1)
 				}
 			}
-			
+
 			// Load models for all endpoints
-			endpoints.forEach((endpoint) => Controller.api.model[endpoint.name] = endpoint._schema)
+			endpoints.forEach((endpoint) => {
+				Controller.api.model[endpoint.name] = endpoint._schema
+			})
 
-			const methods = ['get', 'post', 'patch', 'delete']
-			// Make hooks for all models
-			Controller.api.hooks = this.makeHooks(Controller.api.model, Controller.api.version)
-			// console.log('Hooks: ', Controller.api.hooks)
-			var router = require(`../../routes/${Controller.api.version}/index.js`)
+			const methods = ['get', 'post', 'patch', 'put', 'delete']
+			// Make default hooks for all models
+			Controller.api.hooks = this.makeHooks(methods)
+			const router = require(`../../routes/${Controller.api.version}/index.js`)
 
-			// Load hooks for all models
+			// Create default endpoints for default hooks
 			for (let modelName in Controller.api.hooks) {
-				methods.forEach((method) => {
-					if (method === 'get') {
-						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].read(req, res, next))
-						router[method](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].get(req, res, next))
-					} else if (method === 'delete') {
-						router[method](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName].delete(req, res, next))
-					} else {
-						const operation = this.getCRUDFromMethod(method)
-						router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => Controller.instances[modelName][operation](req, res, next))
-					}
-				})
+				const controller = Controller.instances[modelName]
+
+
+				// TODO: Create separate endpoint and model collections
+				// 1. Creating a model from the GUI will just create these "default"
+				// dynamic endpoints for that model
+				// 2. Create endpoints separately from the models so we can have
+				// deeply nested endpoints like /posts/category/:id that can be related
+				// to any model
+
+
+				// const nestedRoute = `/${modelName}/test/:id`
+				// const nestedHook = `GET ${nestedRoute}`
+				// router['get'](nestedRoute, this.RESTMiddleware, (req, res, next) => controller[nestedHook](req, res, next))
+
+				router['get'](`/${modelName}`, this.RESTMiddleware, (req, res, next) => controller.read(req, res, next))
+				router['get'](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => controller.get(req, res, next))
+				router['post'](`/${modelName}`, this.RESTMiddleware, (req, res, next) => controller.create(req, res, next))
+				router['patch'](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => controller.update(req, res, next))
+				router['put'](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => controller.update(req, res, next))
+				router['delete'](`/${modelName}/:id`, this.RESTMiddleware, (req, res, next) => controller.delete(req, res, next))
+				// const operation = this.getCRUDFromMethod(method)
+				// router[method](`/${modelName}`, this.RESTMiddleware, (req, res, next) => controller[operation](req, res, next))
 			}
 		} catch (err) {
 			throw err
@@ -178,7 +187,7 @@ class Controller {
 	}
 
 	static async removeDynamicEndpoint(endpointName) {
-		var router = require(`../../routes/${Controller.api.version}/index.js`)
+		const router = require(`../../routes/${Controller.api.version}/index.js`)
 		// Remove controller instance for this endpoint
 		delete Controller.instances[endpointName]
 		// Remove validators for this endpoint's model
@@ -189,23 +198,20 @@ class Controller {
 		const url = `/${endpointName}`
 		var i = router.stack.length
 		while (i--) {
-			if (router.stack[i].route && router.stack[i].route.path === url) { 
+			if (router.stack[i].route && router.stack[i].route.path === url) {
 				router.stack.splice(i, 1)
-			} 
+			}
 		}
 	}
 
 	/**
-	 * REST API middleware (router-level middelware). 
-	 * @param {Object} 		req 
-	 * @param {Object} 		res 
-	 * @param {Function}	next 
+	 * REST API middleware (router-level middelware).
+	 * @param {Object} 		req
+	 * @param {Object} 		res
+	 * @param {Function}	next
 	 */
-	static RESTMiddleware (req, res, next) {
-		console.log('RESTMiddleware: ', req.url)
-		// Controller.getAPIResourceFromRequest(req)
-
-
+	static RESTMiddleware(req, res, next) {
+		req.resource = Controller.getAPIResourceFromRequest(req)
 		// TODO: Handle nested routes, if its /posts/:id || /posts/categories/:id, etc.
 		if (req.params && req.params.length && req.params.length > 0) {
 			let par = Object.values(req.params[0].split('/'))
@@ -213,48 +219,49 @@ class Controller {
 			req.params = { ...par }
 			// var containsNumber = /\d+/;
 			// if(obj[0].match(containsNumber)) console.log('Contains number')
-			next()
-		} else next()
+		}
+		next()
 	}
 
 	/**
-	 * 
+	 *
 	 * @param 	{String} 									modelName  		[Name of the model to be validated]
 	 * @param 	{Object} 									record 		 		[Record to be validated against JSON schema]
 	 * @return 	{Array.<Object>|Boolean} 								[Returns array of errors or boolean false]
 	 */
 	static validateToSchema(modelName, record) {
 		if(!this.api.validators) this.api.validators = {}
-		// let schema = JSON.parse(JSON.stringify(this.api.model[modelName]))
-		let schema = this.api.model[modelName]
+		const schema = this.api.model[modelName]
 		// If property which is not specified in the schema exist, give an error
 		schema.additionalProperties = false
 
-		if(!this.api.validators[modelName]) {
+		if (!this.api.validators[modelName]) {
 			this.api.validators[modelName] = this.ajv.compile(schema)
 		}
-		var valid = this.api.validators[modelName](record)
+		const valid = this.api.validators[modelName](record)
 		if (!valid) {
-			// console.log(`Endpoint: ${modelName}, record doesnt match the schema: `, this.api.validators[modelName].errors)
 			return this.api.validators[modelName].errors
 		}
-		// valid
 		return false
 	}
 
 	static formatSchemaErrors(errors) {
-		if (errors && errors.length) {
-			let errMsg = `Property ${errors[0].dataPath ? errors[0].dataPath+' ' :''}${errors[0].message}.`
-			if(errors[0].params) {
-				if (errors[0].params.additionalProperty) {
-					errMsg += ` Property .${errors[0].params.additionalProperty} is not allowed.`
+		let formattedErrors = []
+		if (Array.isArray(errors) && errors.length) {
+			formattedErrors = errors.map((error) => {
+				let errMsg = `Property ${error.dataPath ? error.dataPath+' ' :''}${error.message}.`
+				if (error.params) {
+					if (error.params.additionalProperty) {
+						errMsg += ` Property .${error.params.additionalProperty} is not allowed.`
+					}
+					if (error.params.allowedValues) {
+						errMsg += ` Allowed values: ${error.params.allowedValues.join(', ')}.`
+					}
 				}
-				if(errors[0].params.allowedValues) {
-					errMsg += ` Allowed values: ${errors[0].params.allowedValues.join(', ')}.`
-				}
-			}
-			return errMsg
+				return errMsg
+			})
 		}
+		return formattedErrors
 	}
 
 	// Create root user if it doesnt exist
@@ -262,14 +269,14 @@ class Controller {
 		const user = Controller.api.rootUser
 		try {
 			const rootExist = await User.findOne({ username: user.username })
-			
+
 			if (!rootExist) {
 				// If root's username changes in config.js,
 				// delete the previous root user
 				await User.deleteOne({ roles: 'root' })
 
 				const plainPassword = user.password
-				const hashedPassword = await User.hashPassword(user.password) 
+				const hashedPassword = await User.hashPassword(user.password)
 				user.roles = ['root']
 				user.password = hashedPassword
 
@@ -287,59 +294,49 @@ class Controller {
 	/**
 	 * Makes and assignes hooks for all models. If there is a custom controller with a valid hook name,
 	 * assign hook from that custom controller to the model, otherwise assign a default hook.
-	 * @param {Object} models 
-	 * @param {String} apiVersion 
+	 * @param {Object} models
+	 * @param {String} apiVersion
 	 */
-	static makeHooks(models, apiVersion) {
-		var hooks = {}
-		var DefaultController = require(`${__dirname}../../../controllers/${apiVersion}/Default.js`)
+	static makeHooks(methods) {
+		const models = Controller.api.model
+		const apiVersion = Controller.api.version
+		const hooks = {}
+		const DefaultController = require(`${__dirname}../../../controllers/${apiVersion}/Default.js`)
 
 		for (let modelName in models) {
-			const controllerName = modelName[0].toUpperCase() + modelName.slice(1) + 'Controller'
-			
-			// TODO: Ading custom controller will work when valid hooks are implemented in built-in Controllers
+			const controllerName = modelName[0].toUpperCase() + modelName.slice(1) + 'Controller.js'
+			const defaultCtrl = new DefaultController(Controller.api, models[modelName])
 			// Check if there is a custom controller defined for this model
-			var controllerPath = path.resolve(`${__dirname}../../../controllers/${apiVersion}/${controllerName}.js`)
-			var ctrl
 			try {
-				ctrl = require(controllerPath)
-				// Instantiate custom controller for this endpoint with the right model
+				const ctrl = require(path.resolve(`${__dirname}../../../controllers/${apiVersion}/${controllerName}`))
+				// Instantiate custom controller for this endpoint with the correct model
 				Controller.instances[modelName] = new ctrl(Controller.api, models[modelName])
 			} catch (err) {
 				// If custom controller is not found, assign the default controller
-				if(err.code === 'MODULE_NOT_FOUND') {
-					// controllerPath = path.resolve(`${__dirname}../../../controllers/${apiVersion}/Default.js`)
-					// var DefaultController = require(controllerPath)
+				if (err.code === 'MODULE_NOT_FOUND') {
 					// Instantiate default controller for this endpoint with the right model
-					Controller.instances[modelName] = new DefaultController(Controller.api, models[modelName])
+					Controller.instances[modelName] = defaultCtrl
 				} else {
 					throw err
 				}
 			}
 
-			if (!hooks[modelName]) hooks[modelName] = {}
-			let defaultCtrl = new DefaultController(Controller.api, hooks[modelName])
-
-			// Assign hooks to the model instance
-			// If there is a custom controller with a valid hook name, assign hook from that custom controller, otherwise assign a default hook
-			// 2 hooks for GET method, read() and get()
-			Controller.instances[modelName]['read'] ? Controller.instances[modelName]['read'] = Controller.instances[modelName]['read'] : Controller.instances[modelName]['read'] = defaultCtrl['read']
-			Controller.instances[modelName]['get'] ? Controller.instances[modelName]['get'] = Controller.instances[modelName]['get'] : Controller.instances[modelName]['get'] = defaultCtrl['get']
-			Controller.instances[modelName]['create'] ? Controller.instances[modelName]['create'] = Controller.instances[modelName]['create'] : Controller.instances[modelName]['create'] = defaultCtrl['create']
-			Controller.instances[modelName]['update'] ? Controller.instances[modelName]['update'] = Controller.instances[modelName]['update'] : Controller.instances[modelName]['update'] = defaultCtrl['update']
-			Controller.instances[modelName]['delete'] ? Controller.instances[modelName]['delete'] = Controller.instances[modelName]['delete'] : Controller.instances[modelName]['delete'] = defaultCtrl['delete']
+			// Load custom & default hooks for each model
+			// If there is a custom controller with a valid hook assign that hook, otherwise assign a default hook
+			const instance = Controller.instances[modelName]
+			instance['read'] = instance['read'] || defaultCtrl['read']
+			instance['get'] = instance['get'] || defaultCtrl['get']
+			instance['create'] = instance['create'] || defaultCtrl['create']
+			instance['update'] = instance['update'] || defaultCtrl['update']
+			instance['delete'] = instance['delete'] || defaultCtrl['delete']
 
 			// Add assigned hooks to all hooks
-			hooks[modelName].read = Controller.instances[modelName]['read']
-			hooks[modelName].get = Controller.instances[modelName]['get']
-			hooks[modelName].create = Controller.instances[modelName]['create']
-			hooks[modelName].update = Controller.instances[modelName]['update']
-			hooks[modelName].delete = Controller.instances[modelName]['delete']
-
-			// if (modelName === 'test') {
-			// 	console.log('------------------- TEST model --------------------')
-			// 	console.log('READ HOOK ASSIGNED for TEST: ', Controller.instances[modelName]['read'])
-			// }
+			if (!hooks[modelName]) hooks[modelName] = {}
+			hooks[modelName].read = instance['read']
+			hooks[modelName].get = instance['get']
+			hooks[modelName].create = instance['create']
+			hooks[modelName].update = instance['update']
+			hooks[modelName].delete = instance['delete']
 		}
 		return hooks
 	}
@@ -358,22 +355,17 @@ class Controller {
     }
 	}
 
-	// Get resource name from URL - /api-path/{resource_name}
+	// Get resource name from URL - /api/path/{resource_name}
 	static getAPIResourceFromRequest(req) {
-		// let apiUrlParsed = new URL(req.url, [Controller.api.protocol, '://', req.headers.host].join(''))
-		// console.log('apiUrlParsed: ', apiUrlParsed)
-		// console.log('urlParsed: ', req.urlParsed)
-
-		req.resource = apiUrlParsed.pathname.split('/')[1].toLowerCase()
-
-		// return req.resource
+		const apiUrlParsed = new URL(req.url, [Controller.api.protocol, '://', req.headers.host].join(''))
+		return apiUrlParsed.pathname.split('/')[1].toLowerCase()
 	}
-	
+
 	/**
 	 *Parses query parameters: `limit`, `fields`, `sort`, `match` and `include`.
 	 * Parsed query params are attached to request object - req.queryParsed.
-	 *	
-	 * limit:number, fields:Object, sort:Object, match:Object, include:Object 
+	 *
+	 * limit:number, fields:Object, sort:Object, match:Object, include:Object
 	 * @param 	{Object} 	req 	[The request object]
 	 */
 	static parseQueryStringsFromRequest(req) {
@@ -381,7 +373,7 @@ class Controller {
 			req.queryParsed = {}
 			if (isEmptyObject(req.query)) resolve(true)
 
-			var limit = 0, fields = {}, sort = {}, match = {}, include = {}
+			let limit = 0, fields = {}, sort = {}, match = {}, include = {}
 			if (req.query.limit) limit = parseInt(req.query.limit)
 			if (req.query.fields) fields = req.query.fields
 			if (req.query.sort) sort = req.query.sort
@@ -397,7 +389,7 @@ class Controller {
 					else delete sort[field]
 				}
 			}
-				
+
 			// Fields (handle format JSON object - fields={"id":true})
 			if (typeof fields === 'string') {
 				try {
@@ -429,7 +421,7 @@ class Controller {
 	 * Default error handler.
 	 * @param 	{Object} 		req 		The request object
 	 * @param 	{Object} 		res 		The response object
-	 * @param 	{function} 	next 		The callback to the next program handler 
+	 * @param 	{function} 	next 		The callback to the next program handler
 	 */
   static async errorHandler(err, req, res, next) {
 		const statusCodeMap = {
@@ -458,11 +450,7 @@ class Controller {
 			data: { ...err.data || {} },
 			stack: err.details || err.stack
 		};
-
-		// console.log(`[${req.body.campaignId}]`, err);
-
-		if (!res.headersSent) await res.status(code).json(errObj);
-		
+		if (!res.headersSent) res.status(code).json(errObj);
 		return Controller.logError(err)
   }
 
@@ -476,7 +464,6 @@ class Controller {
 			if (Error.captureStackTrace) {
 				Error.captureStackTrace(instance, Controller.errors[name]);
 			}
-			
 			return instance;
 		}
 		return {
@@ -499,7 +486,7 @@ class Controller {
 
 	static get api() { return _api }
 	static get instances() { return _instances }
-	
+
 	static modify(obj, newObj) {
     Object.keys(obj).forEach((key) => {
 			delete obj[key]

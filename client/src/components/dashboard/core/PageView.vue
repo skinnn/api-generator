@@ -1,5 +1,5 @@
 <template>
-	<div class="pageView">
+	<div class="page-view">
 		<transition name="fade" mode="out-in">
 			<router-view></router-view>
 		</transition>
@@ -16,15 +16,15 @@ export default {
 };
 </script>
 
-<style lang="scss">
-	.pageView {
-		display: flex;
+<style scoped lang="scss">
+	.page-view {
 		position: relative;
-		flex-direction: column;
-		width: 100%;
-		padding: 0px 0px;
-		margin-left: $sidebar-width;
 		top: $top-bar-height;
+		left: $sidebar-width;
+		display: flex;
+		flex-direction: column;
+		width: calc(100% - $sidebar-width);
+		padding: 0px;
 		min-height: calc(90vh - #{$top-bar-height});
 		transition: all 200ms;
 		overflow-y: auto;
@@ -35,12 +35,8 @@ export default {
 			opacity: 0;
 		}
 	}
-	.pageView--full-size{
-		padding-left: 0px;
+	.page-view--full-size {
+		width: 100%;
+		left: 0;
 	}
-	@media screen and (max-width: 768px) {
-	.pageView {
-		padding-left: 0px;
-  }
-}
 </style>

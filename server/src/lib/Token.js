@@ -34,20 +34,20 @@ class Token {
 		})
 	}
 
-	static getTokenFromHeaders(headers) {
+	static getTokenFromRequest(req) {
 		// Express headers are auto converted to lowercase
-		// let token = headers['authorization'] || headers['cookie'] || headers['x-access-token'] || ''
-		let token = headers['authorization'] || headers['x-access-token'] || null
+		const headers = req.headers
+		let token = req.query.token || headers['authorization'] || headers['cookie'] || headers['x-access-token'] || null
 		if (!token) return null
 		if (token.startsWith('Bearer')) {
-			// Remove Bearer from string
+			// Remove "Bearer" from string
 			token = token.split(' ')[1]
 		} else if (token.startsWith('token=')) {
 			token = token.split('token=')[1]
 		}
-	
 		return token
 	}
+
 }
 
 module.exports = Token

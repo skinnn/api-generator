@@ -3,9 +3,9 @@ import Api from '../Api';
 export default {
 	login(data) {
 		const config = { headers: { 'Content-Type': 'application/json' } };
-		return Api().post('/login', data, config);
+		return Api().post('/session', data, config);
 	},
 	logout() {
-		return Api().delete('/login');
+		return Api().delete('/session');
 	}
 };

@@ -17,10 +17,10 @@
 				</thead>
 				<tbody>
 					<tr v-for="endpoint in endpoints" :key="endpoint.id">
-						<th class="endpoint-id" @click="viewEndpoint(endpoint)">{{ endpoint._id }}</th>
+						<th class="endpoint-id" @click="handleViewEndpoint(endpoint)">{{ endpoint._id }}</th>
 						<td>{{endpoint.name}}</td>
 						<td class="schema">
-							<button @click="viewSchema(endpoint)" class="btn">View</button>
+							<button @click="handleViewSchema(endpoint)" class="btn">View</button>
 						</td>
 						<td class="created">{{ endpoint.created}}</td>
 						<td class="updated">{{ endpoint.updated ? endpoint.updated : 'Never' }}</td>
@@ -30,10 +30,10 @@
 						<!-- TODO: Implement edit functionality -->
 						<!-- Dont load operations buttons for builtin endpoints -->
 						<td class="operations">
-							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-info" @click="editEndpoint(endpoint)">
+							<button v-if="!isDefaultEndpoint(endpoint.name)" type="button" class="btn btn-outline-info" @click="editEndpoint(endpoint)">
 								Edit
 							</button>
-							<button v-if="notBuiltinEndpoint(endpoint.name)" type="button" class="btn btn-outline-danger" @click="deleteEndpoint(endpoint)">
+							<button v-if="!isDefaultEndpoint(endpoint.name)" type="button" class="btn btn-outline-danger" @click="deleteEndpoint(endpoint)">
 								Delete
 							</button>
 						</td>
@@ -42,9 +42,13 @@
 			</table>
 		</div>
 
-		<div ref="schemaModal" class="modal modal-hide">
-			<div class="modal-content" name="modal-content"></div>
-		</div>
+		<BaseModal v-if="!!endpoint" :show="true" @closeModal="handleCloseSchemaModal">
+			<h4 style="text-align: center;">Schema: {{endpoint.name}}</h4>
+			<a style="text-align: center;" :href="`${this.$config.api.base_url}/${endpoint.name}?token=${this.$store.state.user.token}`" target="_blank">
+        {{`${this.$config.api.base_url}/${endpoint.name}`}}
+      </a>
+			<pre>{{JSON.stringify(endpoint._schema, null, 4)}}</pre>
+		</BaseModal>
 	</div>
 </template>
 
@@ -53,23 +57,26 @@
 import { mapState, mapMutations } from 'vuex';
 // Components
 import EndpointRoles from '@/components/custom/EndpointRoles.vue';
+import BaseModal from '@/components/base/BaseModal.vue';
 
 export default {
 	name: 'EndpointTable',
-	components: { EndpointRoles },
-
+	components: { BaseModal, EndpointRoles },
 	computed: {
 		...mapState('endpoints', {
 			endpoints: (state) => state.endpoints
 		})
 	},
 
-	created() {
-		this.getEndpoints();
+	data() {
+		return {
+			endpoint: null,
+			showSchemaModal: false
+		};
 	},
 
-	destroyed() {
-		document.removeEventListener('click', this.closeSchemaModal);
+	created() {
+		this.getEndpoints();
 	},
 
 	methods: {
@@ -91,12 +98,10 @@ export default {
 		},
 
 		editEndpoint(endpoint) {
-			event.stopPropagation();
 			console.log('edit', endpoint);
 		},
 
 		async deleteEndpoint(endpoint) {
-			event.stopPropagation();
 			if (!confirm(`Are you sure you want to delete the endpoint named: ${endpoint.name}`)) return;
 
 			try {
@@ -107,65 +112,37 @@ export default {
 			}
 		},
 
-		viewSchema(endpoint) {
-			event.preventDefault();
-			event.stopPropagation();
-			const modal = this.$refs.schemaModal;
-			modal.classList.add('modal-show');
-			// TODO: Refactor adding innerHTML, create EndpointSchema component
-			const href = `${this.$config.api.base_url}/${endpoint.name}?token=${this.$store.state.user.token}`;
-			modal.children[0].innerHTML = `
-				<h4 style="text-align: center;">${endpoint.name}</h4>
-				<a style="text-align: center;" href="${href}" target="_blank">${this.$config.api.base_url}/${endpoint.name}</a>
-				<pre>${JSON.stringify(endpoint._schema, null, 4)}</pre>
-			`;
-
-			// Add close event listener
-			document.addEventListener('click', this.closeSchemaModal);
+		handleViewSchema(endpoint) {
+			this.endpoint = endpoint;
 		},
 
-		closeSchemaModal(event) {
-			const modal = this.$refs.schemaModal;
-			if (event.target.classList.contains('modal')) {
-				modal.children[0].innerHTML = '';
-				// Close modal
-				modal.classList.remove('modal-show');
-			}
+		handleCloseSchemaModal() {
+			this.endpoint = null;
 		},
 
-		viewEndpoint(endpoint) {
+		handleViewEndpoint(endpoint) {
 			this.$router.push({
 				name: 'view-endpoint',
 				params: { id: endpoint._id }
 			});
 		},
 
-		notBuiltinEndpoint(endpointName) {
-			return endpointName !== 'dashboard' && endpointName !== 'endpoint' && endpointName !== 'user' && endpointName !== 'login';
+		isDefaultEndpoint(endpointName) {
+			return endpointName === 'dashboard' || endpointName === 'endpoint' || endpointName === 'user' || endpointName === 'session';
 		}
 	}
 };
 </script>
 
 <style scoped lang="scss">
-/*
- * Tables
- */
 table {
 	display: block;
 	overflow-x: auto;
 	width: 100%;
 	font-family: Monospace;
-
 	border-collapse: unset;
 	border-spacing: 2px 10px;
  }
-
-table thead .updated,
-table thead .created {
-	// min-width: 180px;
-	min-width: 100px;
-}
 
 table td,
 table th {
@@ -177,7 +154,7 @@ table th {
 .table th,
 .table td {
 	min-width: 50px;
-	border-top: none;
+	border: none;
 }
 
 .table-hover tbody tr:hover {
@@ -236,37 +213,5 @@ table tbody .endpoint-id {
 	&:hover {
 		text-decoration: underline;
 	}
-}
-
-/* Modals */
-.modal-show {
-	/* display: block; */
-	visibility: visible !important;
-  opacity: 1 !important;
-}
-/* Modal */
-.modal {
-	visibility: hidden;
-	opacity: 0;
-	display: block;
-  position: fixed;
-  z-index: 9999;
-	left: 0;
-	top: 0;
-  width: 100%;
-	height: 100%;
-	padding: 2% 0;
-  overflow-y: auto;
-  background-color: rgb(0, 0, 0);
-	background-color: rgba(0, 0, 0, 0.45);
-
-	transition: visibility 0s, opacity 0.3s ease-in-out;
-}
-
-.modal .modal-content {
-	width: 55%;
-	margin: 0 auto;
-	padding: 3% 4%;
-	background-color: rgb(255,255,255);
 }
 </style>

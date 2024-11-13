@@ -1,7 +1,6 @@
 <template>
 	<transition name="fade" mode="out-in">
 		<div
-			v-show="show"
 			ref="modalContainer"
 			:class="['modal-container', {'modal-show': show}]"
 		>
@@ -20,15 +19,42 @@ export default {
 			type: Boolean,
 			default: false
 		}
-	}
+	},
+
+	mounted() {
+		// Add close event listener
+		this.$refs.modalContainer.addEventListener('click', this.handleOutsideClick);
+		// Add title close to outside of the endpoint builder
+		this.$refs.modalContainer.addEventListener('mousemove', this.handleMouseMove);
+	},
+
+	beforeDestroy() {
+		this.$refs.modalContainer.removeEventListener('click', this.handleOutsideClick);
+		this.$refs.modalContainer.removeEventListener('mousemove', this.handleMouseMove);
+	},
+
+	methods: {
+		handleOutsideClick(e) {
+			if (e.target.classList.contains('modal-container')) {
+				this.$emit('closeModal');
+			}
+		},
+
+		handleMouseMove(e) {
+			if (e.target.classList.contains('modal-container')) {
+				this.$refs.modalContainer.setAttribute('title', 'Click to close the modal');
+			} else {
+				this.$refs.modalContainer.removeAttribute('title');
+			}
+		}
+	},
 };
 </script>
 
 <style lang="scss">
-
 .modal-container{
-	visibility: hidden;
 	opacity: 0;
+	visibility: hidden;
 	display: block;
 	position: fixed;
 	left: 0;
@@ -45,19 +71,19 @@ export default {
 	.modal {
 		width: 55%;
 		height: fit-content;
-    margin: 0 auto;
-    padding: 3% 4%;
+		margin: 0 auto;
+		padding: 3% 4%;
 		background-color: rgb(255,255,255);
 		position: relative;
-    display: flex;
-    -ms-flex-direction: column;
-    flex-direction: column;
-    pointer-events: auto;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid rgba(0,0,0,.2);
-    border-radius: .3rem;
-    outline: 0;
+		display: flex;
+		-ms-flex-direction: column;
+		flex-direction: column;
+		pointer-events: auto;
+		background-color: #fff;
+		background-clip: padding-box;
+		border: 1px solid rgba(0,0,0,.2);
+		border-radius: .3rem;
+		outline: 0;
 	}
 }
 
@@ -67,9 +93,9 @@ export default {
 }
 
 .fade-enter-active, .fade-leave-active {
-  transition: opacity 300ms;
+	transition: opacity 300ms;
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
-  opacity: 0;
+	opacity: 0;
 }
 </style>

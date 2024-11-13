@@ -32,7 +32,6 @@ module.exports = {
 				"access": {
 					"type": "object",
 					"properties": {
-
 						"create": {
 							"type": "object",
 							"properties": {
@@ -46,7 +45,6 @@ module.exports = {
 							},
 							"required": ["roles"]
 						},
-
 						"read": {
 							"type": "object",
 							"properties": {
@@ -63,7 +61,6 @@ module.exports = {
 							},
 							"required": ["roles", "owner"]
 						},
-
 						"update": {
 							"type": "object",
 							"properties": {
@@ -80,7 +77,6 @@ module.exports = {
 							},
 							"required": ["roles", "owner"]
 						},
-
 						"delete": {
 							"type": "object",
 							"properties": {
@@ -101,11 +97,11 @@ module.exports = {
 					"required": ["create", "read", "update", "delete"]
 				}
 			},
-			"type": "object" ,
+			"type": "object",
 			"required": ["name", "access", "properties"]
 		}
 	},
-	
+
 	dashboard: {
 		"name": "dashboard",
 		"_schema": {
@@ -130,7 +126,7 @@ module.exports = {
 				}
 			},
 			"properties": {},
-			"type": "object" ,
+			"type": "object",
 			"required": []
 		}
 	},
@@ -162,17 +158,17 @@ module.exports = {
 				"username": { "title": "Username", "description": "Username used for logging in", "type": "string" },
 				"password": { "title": "Password", "description": "User password", "type": "string" }
 			},
-			"type": "object" ,
+			"type": "object",
 			"required": ["username", "password"]
 		}
 	},
 
-	login: {
-		"name": "login",
+	session: {
+		"name": "session",
 		"_schema": {
-			"name": "login",
-			"title": "Login endpoint",
-			"description": "Endpoint for login resource",
+			"name": "session",
+			"title": "Session endpoint",
+			"description": "Endpoint for session resource",
 			"access": {
 				"create": {
 					"roles": ["root", "admin", "user", "anon"]
@@ -195,9 +191,9 @@ module.exports = {
 				"password": { "title": "Password", "description": "Password hash", "type": "string" },
 				"token": { "title": "Token", "description": "Authorization token", "type": "string" }
 			},
-			"type": "object" ,
+			"type": "object",
 			"required": ["userId", "password", "token"]
 		}
 	}
-	
+
 }

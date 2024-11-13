@@ -4,8 +4,11 @@
     "module": "commonjs",
 		"target": "es6",
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["src/*"]
 		}
   },
-	"exclude": ["node_modules"]
+	"include": [
+		"src/**/*"
+	],
+	"exclude": ["node_modules", ".git", ".github", ".vscode", "dist", "server", "docker", "bin"]
 }

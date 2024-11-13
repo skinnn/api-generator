@@ -20,7 +20,12 @@ app.set('view engine', 'hbs')
 // Logger
 app.use(morgan('dev', { skip: logFilter }))
 // Cors
-app.use(cors({ origin: '*', allowedHeaders: ['Content-Type', 'Authorization', 'Location', 'X-Total-Count'], methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'] }))
+app.use(cors({
+	origin: '*',
+	allowedHeaders: ['Content-Type', 'Authorization', 'Location', 'X-Total-Count'],
+	methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
+	preflightContinue: false
+}))
 // Some headers for security
 app.use(helmet(), helmet.contentSecurityPolicy({
   directives: {
@@ -38,7 +43,7 @@ app.use('/', express.static(path.join(__dirname, './public')))
 Controller.boot(masterConfig, app).then((ctx) => {
 	// Setup Application-level middleware
 	ctx.app.use(ctx.api.settings.restApi.path, ctx.middleware)
-	
+
 	// Mount dashboard router
 	ctx.app.use(`${ctx.api.settings.restApi.path}/dashboard`, new Dashboard(ctx.api).router)
 	// Mount main router
@@ -55,12 +60,12 @@ Controller.boot(masterConfig, app).then((ctx) => {
 		ctx.api.server = http.createServer(app)
 	}
 
-	// Spin up the server
+	// Start the server
 	ctx.api.server.listen(ctx.api.port, (err) => {
 		console.log(`Server running in ${ctx.api.mode} mode - ${ctx.api.protocol}://${ctx.api.host}:${ctx.api.port}`)
 		// TODO: Will contain hooks for all models when built-in Controllers get refactored
 		// (currently contains only hooks for dynamic models added throuh GUI)
-		// console.log(ctx.api.hooks)s
+		// console.log(ctx.api.hooks)
 	})
 })
 .catch(err => Controller.logError(err))

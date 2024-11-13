@@ -9,26 +9,27 @@ export default {
 	methods: {
 		async handleLogout() {
 			try {
-				await this.$http.authentication.logout();
+				this.$http.authentication.logout();
+			} catch (err) {
+				console.error(err);
+			} finally {
 				// Remove user data
 				this.$store.dispatch('user/logout');
 				// Redirect
 				this.$router.push({ name: 'login' });
-			} catch (err) {
-				console.error(err);
 			}
 		}
 	}
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .logout-button {
 	border: 1px solid $dark-grey;
 	border-radius: 5px;
 	padding: 2px 10px;
 	&:hover {
-		background-color: lighten($dark-grey, 50%);
+		background-color: $light-grey;
 	}
 }
 </style>

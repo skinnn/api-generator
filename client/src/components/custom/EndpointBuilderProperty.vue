@@ -41,7 +41,7 @@
 				<label for="prop-type"><strong>Type</strong> <span class="required">*</span></label>
 				<select
 					v-model="property.type"
-					@input="$emit('update:type', property);"
+					@input="$emit('update:type', property)"
 					class="custom-select"
 				>
 					<option value="string">string</option>
@@ -57,7 +57,7 @@
 				<label for="prop-format"><strong>Format</strong><span class="optional"> (optional)</span></label>
 				<select
 					v-model="property.format"
-					@input="$emit('update:format', property);"
+					@input="$emit('update:format', property)"
 					class="custom-select"
 				>
 					<option selected value="">(none)</option>
@@ -80,7 +80,7 @@
 				</select>
 			</div>
 
-			<!-- <p style="color:red;">Relations are not yet implemented</p>
+			<!-- <p style="color: red;">Relations are not yet implemented</p>
 			<div class="form-group relation-group">
 				<fieldset>
 					<h6>Relation <span class="optional"> (optional)</span></h6>
@@ -89,8 +89,8 @@
 					<div class="form-group">
 						<label for="prop-relation-endpoint">Link to endpoint</label>
 						<input type="text"
-						v-model="property.relation.endpoint"
-						@change="$emit('update:relationEndpoint', property.);"
+							v-model="property.relation.endpoint"
+							@change="$emit('update:relationEndpoint', property.relation.endpoint)"
 							class="form-control"
 							placeholder="Endpoint name"
 						>
@@ -101,7 +101,7 @@
 						<div class="form-check">
 							<input type="checkbox"
 								v-model="property.relation.many"
-								@change="$emit('update:relationMany', property.relation.many);"
+								@change="$emit('update:relationMany', property.relation.many)"
 								class="form-check-input"
 							>
 							<label class="form-check-label" for="prop-relation-many">Many</label>
@@ -112,7 +112,7 @@
 						<label for="prop-relation-endpoint">Inverse</label>
 						<input type="text"
 							v-model="property.relation.inverse"
-							@change="$emit('update:name', property.relation.inverse);"
+							@change="$emit('update:name', property.relation.inverse)"
 							class="form-control"
 							placeholder="Inverse field in the linked endpoint (optional)"
 						>
@@ -166,7 +166,7 @@ export default {
 
 	data() {
 		return {
-			currentlyEditing: false,
+			// currentlyEditing: false,
 			// error: null
 		};
 	},

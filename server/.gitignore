@@ -4,4 +4,7 @@ node_modules
 !README.md
 .env
 package-lock.json
-zNOTES>md
+zNOTES.md
+
+.notes
+.notes/

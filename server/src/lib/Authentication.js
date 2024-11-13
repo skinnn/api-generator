@@ -7,7 +7,7 @@ const { haveCommonElements } = require('../lib/helpers.js')
 
 /**
  * REST API Authentication
- * 
+ *
  * 1. First get endpoint & CRUD operation user is trying to access
  * 2. If endpoint doesnt require authentication then proceed
  * 3. If endpoint requires authenticated user then:
@@ -43,15 +43,15 @@ class Authentication extends Controller {
 
 			// Check if authorization is required
 				// TODO: Create session for the anon user
-			if (endpoint._schema.access[operation].roles.includes('anon')) 	return next()
+			if (endpoint._schema.access[operation].roles.includes('anon')) return next()
 
 			// Get token and run permission validation
-			let token = Token.getTokenFromHeaders(req.headers)
+			const token = Token.getTokenFromRequest(req)
 			// TODO: Handle errors in catch, add Controller.errors.forbidden (error handling)
-			
+
 			// Validate JWT
 			const { validToken, decoded } = await Token.validateToken(token)
-		
+
 			// Check that there is a login record with this token
 			const session = await Session.findOne({ token: validToken })
 			if (!session) throw new Controller.errors.UnauthorizedError('Access denied')
@@ -69,7 +69,7 @@ class Authentication extends Controller {
 			req.user = user
 
 			// Check permissions
-			const authorized = await this.checkPermissions(resource, operation, endpoint, req.user)
+			const authorized = await this.isAuthorized(resource, operation, endpoint, req.user)
 			if (authorized) return next()
 			else return res.status(403).json({ message: 'Invalid permission' })
 		} catch (err) {
@@ -79,7 +79,7 @@ class Authentication extends Controller {
 	}
 
 	// Check privileges/permissions of user sending the request
-	static async checkPermissions(resource, operation, endpoint, user) {
+	static async isAuthorized(resource, operation, endpoint, user) {
 		var authorized = false
 		if (Array.isArray(user.roles) && user.roles.length <= 0) user.roles = ['anon']
 		console.log(`Requested operation ${operation.toUpperCase()} on protected endpoint: ${resource} `)
@@ -106,31 +106,31 @@ class Authentication extends Controller {
 
 	}
 
-	static handleErrors(err, res) {
-		console.error(err)
-		// JWT errors
-		if (err.name === 'JsonWebTokenError') {
-			if (err.message === 'jwt malformed') {
-			return res.status(401).json({
-				success: false,
-				message: 'Token is not valid'
-			})
+	// static handleErrors(err, res) {
+	// 	console.error(err)
+	// 	// JWT errors
+	// 	if (err.name === 'JsonWebTokenError') {
+	// 		if (err.message === 'jwt malformed') {
+	// 		return res.status(401).json({
+	// 			success: false,
+	// 			message: 'Token is not valid'
+	// 		})
 
-			}	else if (err.message === 'invalid signature') {
-				return res.status(401).json({
-					success: false,
-					message: 'Token is not valid'
-				})
-			
-			// If nothing matches send generic 401
-			} else {
-				return res.status(401).json({
-					success: false,
-					message: 'Forbidden'
-				})
-			}
-		}
-	}
+	// 		}	else if (err.message === 'invalid signature') {
+	// 			return res.status(401).json({
+	// 				success: false,
+	// 				message: 'Token is not valid'
+	// 			})
+
+	// 		// If nothing matches send generic 401
+	// 		} else {
+	// 			return res.status(401).json({
+	// 				success: false,
+	// 				message: 'Forbidden'
+	// 			})
+	// 		}
+	// 	}
+	// }
 
 	// static isAdmin = (req) => {
 	// 	if (req.user.roles.includes('admin')) {

@@ -74,7 +74,7 @@ export default {
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 .helper-tooltip {
 	display: inline-block;
 }
@@ -98,7 +98,7 @@ export default {
 	font-weight: 600;
 	&:hover {
 		cursor: pointer;
-		background-color: darken(lightgray, 10%);
+		background-color: rgb(189, 188, 188);
 	}
 }
 

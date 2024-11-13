@@ -1,39 +1,40 @@
 <template>
-<div class="login-page">
-	<div class="login-box">
-		<header>
-			<h2>API</h2>
-		</header>
-		<main>
-			<form @submit="handleLogin($event)">
-				<input type="text"
-					v-model="fields.username"
-					:class="['form-control', {'is-invalid': error}]"
-					placeholder="Username"
-					required
-				>
-				<input type="password"
-					v-model="fields.password"
-					:class="['form-control', {'is-invalid': error}]"
-					placeholder="Password"
-					required
-				>
-				<div class="remember-wrapper">
-					<input type="checkbox" id="remember" v-model="remember">
-					<label for="remember">Remember me</label>
-				</div>
-				<button type="submit">Login</button>
-			</form>
-		</main>
+	<div class="login-form">
+		<div class="login-box">
+			<header>
+				<h2>{{ $config.appName }}</h2>
+			</header>
+			<main>
+				<form @submit="handleLogin($event)">
+					<input
+						type="text"
+						v-model="fields.username"
+						:class="['form-control', { 'is-invalid': error }]"
+						placeholder="Username"
+						required
+					/>
+					<input
+						type="password"
+						v-model="fields.password"
+						:class="['form-control', { 'is-invalid': error }]"
+						placeholder="Password"
+						required
+					/>
+					<div class="remember-wrapper">
+						<input type="checkbox" id="remember" v-model="remember" />
+						<label for="remember">Remember me</label>
+					</div>
+					<button type="submit">Login</button>
+				</form>
+			</main>
+		</div>
+		<div v-if="error" class="error-message">
+			{{ error }}
+		</div>
 	</div>
-	<div v-if="error" class="error-message">
-		{{ error }}
-	</div>
-</div>
 </template>
 
 <script>
-
 export default {
 	name: 'LoginForm',
 
@@ -48,10 +49,10 @@ export default {
 		return {
 			fields: {
 				username: '',
-				password: ''
+				password: '',
 			},
 			remember: false,
-			error: null
+			error: null,
 		};
 	},
 
@@ -61,7 +62,7 @@ export default {
 			try {
 				const credentials = {
 					username: this.fields.username,
-					password: this.fields.password
+					password: this.fields.password,
 				};
 				// Remember me
 				if (this.remember) {
@@ -81,22 +82,15 @@ export default {
 				this.error = err.response.data.message;
 				console.error(err.response);
 			}
-		}
-	}
+		},
+	},
 };
 </script>
 
-<style scoped lang="scss">
+<style lang="scss">
 html,
 body {
 	min-height: 100%;
-}
-
-.login-page {
-	padding: 20vh;
-	min-height: 100vh;
-	background-color: #333;
-	height: 100%;
 }
 
 .login-box {
@@ -182,7 +176,7 @@ body {
 .login-box main .remember-wrapper label {
 	font-size: 12px;
 	color: #f4f4f4;
-	font-weight:600;
+	font-weight: 600;
 	height: 100%;
 	vertical-align: middle;
 	margin-bottom: 0;

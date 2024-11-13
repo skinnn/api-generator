@@ -1,6 +1,6 @@
 <template>
 	<div class="api-docs-page">
-		<p>API Documentation</p>
+		<h4>API Documentation</h4>
 	</div>
 </template>
 
